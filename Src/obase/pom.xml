@@ -175,7 +175,8 @@
                 <extensions>true</extensions>
                 <configuration>
                     <publishingServerId>central</publishingServerId>
-                    <autoPublish>false</autoPublish>
+                    <autoPublish>true</autoPublish>
+                    <deploymentName>${project.version}</deploymentName>
                 </configuration>
             </plugin>
             <!-- Release发布插件 -->
