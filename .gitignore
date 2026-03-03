@@ -1,0 +1,8 @@
+/.idea
+/Src/*/*/target
+/Src/*/*/*/target
+/*.iml
+/Src/*/*.iml
+/Src/*/*/*.iml
+/Src/*/*/*/*.iml
+/Src/obase/unit-test/test/src/main/resources/Obase.Test.Config.json

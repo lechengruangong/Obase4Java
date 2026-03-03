@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 以下为父级项目名称 打包方式 版本号 仅在此文件有较大修改时更改以下内容 -->
+    <parent>
+        <artifactId>parent</artifactId>
+        <groupId>io.obase</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 当前模块的打包配置 -->
+    <artifactId>providers.sql</artifactId>
+    <packaging>jar</packaging>
+    <version>${packageVersion}</version>
+
+    <!-- 添加模块描述 -->
+    <name>Obase Providers Sql</name>
+    <description>适用于Sql数据库的Obase存储提供程序中间件</description>
+
+    <!-- 具体依赖配置 -->
+    <dependencies>
+        <!-- 引用Obase核心库  -->
+        <dependency>
+            <groupId>io.obase</groupId>
+            <artifactId>core</artifactId>
+            <version>${packageVersion}</version>
+        </dependency>
+
+        <!-- HikariCP 版本号于父项目指定  -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

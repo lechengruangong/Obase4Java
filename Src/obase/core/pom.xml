@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 父项目配置 一般不需要更改 -->
+    <parent>
+        <artifactId>parent</artifactId>
+        <groupId>io.obase</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 当前模块的打包配置 -->
+    <artifactId>core</artifactId>
+    <packaging>jar</packaging>
+    <version>${packageVersion}</version>
+
+    <!-- 添加模块描述 -->
+    <name>Obase Core</name>
+    <description>Obase存储抽象层框架中间件</description>
+
+    <!-- 具体依赖配置 -->
+    <dependencies>
+        <!-- 引用Obase通用库  -->
+        <dependency>
+            <groupId>io.obase</groupId>
+            <artifactId>common</artifactId>
+            <version>${packageVersion}</version>
+        </dependency>
+        <!-- asm库 版本号于父项目指定  -->
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+        </dependency>
+        <!-- byte-buddy 版本号于父项目指定  -->
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+        </dependency>
+        <!-- jinq 版本号于父项目指定  -->
+        <dependency>
+            <groupId>org.jinq</groupId>
+            <artifactId>analysis</artifactId>
+        </dependency>
+        <!-- commons-lang3 版本号于父项目指定  -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>

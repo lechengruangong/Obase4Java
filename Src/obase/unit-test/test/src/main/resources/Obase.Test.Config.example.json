@@ -1,0 +1,13 @@
+﻿{
+  "MySqlUserName": "放置一个MySql数据源的用户名",
+  "MySqlPassWord": "放置一个MySql数据源的密码",
+  "MySqlConnectionString": "放置一个MySql数据源的连接字符串",
+  "SqliteConnectionString": "放置一个Sqlite数据源的连接字符串",
+  "SqlServerUserName": "放置一个SqlServer数据源的用户名",
+  "SqlServerPassWord": "放置一个SqlServer数据源的密码",
+  "SqlServerConnectionString": "放置一个SqlServer数据源的连接字符串",
+  "PostgreSqlUserName": "放置一个PostgreSql数据源的用户名",
+  "PostgreSqlPassWord": "放置一个PostgreSql数据源的密码",
+  "PostgreSqlConnectionString": "放置一个PostgreSql数据源的连接字符串",
+  "NeedStructMapping": true
+}

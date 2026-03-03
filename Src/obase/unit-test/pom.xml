@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!-- 父项目配置 一般不需要更改 -->
+    <parent>
+        <artifactId>parent</artifactId>
+        <groupId>io.obase</groupId>
+        <version>1.0.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- 当前模块的打包配置 本项目为单元测试项目的聚合模块 实际不会进行打包 -->
+    <artifactId>unit-test</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0</version>
+
+    <!-- 模块配置 -->
+    <modules>
+        <!-- 本体单元测试的域类 -->
+        <module>test-domain</module>
+        <!-- 插件单元测试的域类 -->
+        <module>addon-test-domain</module>
+        <!-- 单元测试的基础设施-->
+        <module>test-infrastructure</module>
+        <!-- 单元测试 -->
+        <module>test</module>
+    </modules>
+
+    <!-- 属性配置 -->
+    <properties>
+        <!-- 是否跳过打包 测试项目此属性覆写为true -->
+        <maven.deploy.skip>true</maven.deploy.skip>
+        <maven.install.skip>true</maven.install.skip>
+        <!-- 编译版本 测试项目使用17 -->
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+    </properties>
+
+    <!-- 构建配置 -->
+    <build>
+        <plugins>
+            <!-- 发布插件 -->
+            <plugin>
+                <groupId>io.github.mavenplugins</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <configuration>
+                    <!-- 测试项目 不打包 -->
+                    <skipBundling>true</skipBundling>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

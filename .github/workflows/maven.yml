@@ -1,0 +1,40 @@
+# Action名称
+name: Publish Maven Package
+# 设置触发器
+on:
+  # master分支无法push 所以直接使用push来作为接受pull request的触发条件即可
+  push:
+    branches:
+      - master
+  # 手动触发
+  workflow_dispatch:
+# 执行步骤
+jobs:
+  # 用Linux构建
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      # 迁出
+      - name: Checkout code
+        uses: actions/checkout@v2
+      # 配置环境
+      - name: Set up Apache Maven Central
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          server-id: central
+          server-username: SERVER_USERNAME
+          server-password: SERVER_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_SECRET }}
+          gpg-passphrase: GPG_PASSPHRASE
+      # 发布
+      - name: Publish to Apache Maven Central
+        run: |
+          cd Src
+          cd obase
+          mvn deploy -DskipTests
+        env:
+          SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
+          SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSWORD }}

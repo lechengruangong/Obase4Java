@@ -1,0 +1,63 @@
+/*
+┌──────────────────────────────────────────────────────────────┐
+│　描   述：Last索引运算执行器.
+│　作   者：Obase开发团队
+│　版权所有：武汉乐程软工科技有限公司
+│　创建时间：2025-12-30 16:52:23
+└──────────────────────────────────────────────────────────────┘
+*/
+package io.obase.core.query.oop;
+
+import io.obase.core.query.LastOp;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Last索引运算执行器
+ */
+public class LastExecutor extends OopExecutor {
+
+    /**
+     * 要执行的查询运算
+     */
+    private final LastOp op;
+
+    /**
+     * 构造FirstExecutor的新实例
+     *
+     * @param op 要执行的查询运算
+     */
+    public LastExecutor(LastOp op) {
+        super(op, null);
+        this.op = op;
+    }
+
+    /**
+     * 执行运算
+     *
+     * @param oopContext 运算上下文
+     */
+    @Override
+    public void execute(OopContext oopContext) {
+        if (oopContext.getResult() instanceof Iterable) {
+            Iterable<Object> iterable = (Iterable<Object>) oopContext.getResult();
+            List<Object> list = new ArrayList<>();
+            iterable.forEach(list::add);
+            Object result = list.stream().skip(list.size() - 1).findFirst().orElse(null);
+            if (this.op.getReturnDefault()) {
+                oopContext.setResult(result);
+            } else {
+                if (result == null)
+                    throw new IllegalArgumentException("Sequence does not contains any matching element");
+                else
+                    oopContext.setResult(result);
+            }
+        }
+
+        if (this.next instanceof OopExecutor) {
+            OopExecutor executor = (OopExecutor) this.next;
+            executor.execute(oopContext);
+        }
+    }
+}

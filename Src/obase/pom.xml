@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <!-- 以下为父级项目名称 打包方式 版本号 仅在此文件有较大修改时更改以下内容 -->
+    <groupId>io.obase</groupId>
+    <artifactId>parent</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0</version>
+
+    <!-- 添加项目元信息（必需） -->
+    <name>Obase Framework</name>
+    <description>Java Prototype ORM Framework</description>
+    <url>https://github.com/lechengruangong/Obase4Java</url>
+
+    <!-- 许可证信息 -->
+    <licenses>
+        <license>
+            <name>GNU Lesser General Public License 3.0</name>
+            <url>https://www.gnu.org/licenses/lgpl-3.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <!-- 开发者信息 -->
+    <developers>
+        <developer>
+            <id>Athloniux</id>
+            <name>Athloniux</name>
+            <email>athlon6062@gmail.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <!-- 添加源控制信息 -->
+    <scm>
+        <connection>scm:git:https://github.com/lechengruangong/Obase4Java.git</connection>
+        <developerConnection>scm:git:https://github.com/lechengruangong/Obase4Java.git</developerConnection>
+        <url>https://github.com/lechengruangong/Obase4Java</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <!-- 添加Issue跟踪系统 -->
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/lechengruangong/Obase4Java/issues</url>
+    </issueManagement>
+
+    <!-- 模块配置 -->
+    <modules>
+        <!-- 通用模块 包含带参数的委托接口 REF关键字实现 OUT参数实现等内容 -->
+        <module>common</module>
+        <!-- 核心模块 包含了Obase的基础功能和核心逻辑 -->
+        <module>core</module>
+        <!-- 逻辑删除模块 提供逻辑删除扩展 -->
+        <module>logic-deletion</module>
+        <!-- 多租户模块 提供多租户扩展 -->
+        <module>multi-tenant</module>
+        <!-- 标注建模模块 提供标注建模扩展 -->
+        <module>annotation</module>
+        <!-- sql模块 包含SQL数据库的逻辑 -->
+        <module>sql</module>
+        <!-- mysql模块 包含特定于MYSQL数据库的逻辑 -->
+        <module>mysql</module>
+        <!-- sqlserver模块 包含特定于SQLSERVER数据库的逻辑 -->
+        <module>sqlserver</module>
+        <!-- postgresql模块 包含特定于POSTGRESQL数据库的逻辑 -->
+        <module>postgresql</module>
+        <!-- oracle模块 包含特定于ORACLE数据库的逻辑 -->
+        <module>oracle</module>
+        <!-- sqlite模块 包含特定于SQLITE数据库的逻辑 -->
+        <module>sqlite</module>
+        <!-- 单元测试聚合模块 下有所有的单元测试 -->
+        <module>unit-test</module>
+
+
+    </modules>
+    <!-- 属性配置 -->
+    <properties>
+        <!-- 自定义的配置部分 -->
+        <!-- 打包版本 具体规则参见Obase的版本号文档 -->
+        <packageVersion>6.4.6</packageVersion>
+        <!-- 统一的配置部分 -->
+        <!-- 编译版本 -->
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>${maven.compiler.source}</maven.compiler.target>
+        <!-- 代码编码 -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- 是否跳过打包 测试项目需将此属性覆写为true -->
+        <maven.deploy.skip>false</maven.deploy.skip>
+    </properties>
+
+    <!-- 构建配置 -->
+    <build>
+        <plugins>
+            <!-- 使用编译插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.source}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <!-- 使用源代码插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.1</version>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <id>attach-source</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 使用文档插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <nohelp>true</nohelp>
+                    <charset>${project.build.sourceEncoding}</charset>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <docencoding>${project.build.sourceEncoding}</docencoding>
+                    <additionalOptions>-Xdoclint:none</additionalOptions>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadoc</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- GPG 相关插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.6</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- 发布插件 -->
+            <plugin>
+                <groupId>io.github.mavenplugins</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>1.1.1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>false</autoPublish>
+                    <deploymentName>${project.groupId}:${project.artifactId}:${project.version}</deploymentName>
+                </configuration>
+            </plugin>
+            <!-- Release发布插件 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- 发布配置 -->
+    <distributionManagement>
+
+    </distributionManagement>
+
+    <!-- 第三方依赖配置 此处仅为声明 -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- asm库 用于操作字节码  -->
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>9.4</version>
+            </dependency>
+            <!-- byte-buddy 用于动态生成类型  -->
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>1.14.2</version>
+            </dependency>
+            <!-- jinq 用于分析Lambda表达式  -->
+            <dependency>
+                <groupId>org.jinq</groupId>
+                <artifactId>analysis</artifactId>
+                <version>2.0.3</version>
+            </dependency>
+            <!-- commons-lang3 提供一些常用的工具类  -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.18.0</version>
+            </dependency>
+            <!-- HikariCP 提供连接池  -->
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>4.0.3</version>
+            </dependency>
+            <!-- MySql JDBC驱动  -->
+            <dependency>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
+                <version>8.3.0</version>
+            </dependency>
+            <!-- Oracle JDBC驱动  -->
+            <dependency>
+                <groupId>com.oracle.database.jdbc</groupId>
+                <artifactId>ojdbc8</artifactId>
+                <version>23.2.0.0</version>
+            </dependency>
+            <!-- PostgreSql JDBC驱动  -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>42.7.5</version>
+            </dependency>
+            <!-- Sqlite JDBC驱动  -->
+            <dependency>
+                <groupId>org.xerial</groupId>
+                <artifactId>sqlite-jdbc</artifactId>
+                <version>3.43.2.1</version>
+            </dependency>
+            <!-- SqlServer JDBC驱动  -->
+            <dependency>
+                <groupId>com.microsoft.sqlserver</groupId>
+                <artifactId>mssql-jdbc</artifactId>
+                <version>12.2.0.jre8</version>
+            </dependency>
+            <!-- junit 单元测试  -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>5.9.3</version>
+            </dependency>
+            <!-- slf4j 日志 -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-simple</artifactId>
+                <version>2.0.5</version>
+            </dependency>
+            <!-- fastjson 处理json -->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>2.0.32</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+</project>
