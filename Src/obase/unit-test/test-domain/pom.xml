@@ -2,17 +2,16 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <!-- 父项目配置 一般不需要更改 -->
+    <!-- 父项目配置 -->
     <parent>
         <artifactId>unit-test</artifactId>
         <groupId>io.obase</groupId>
-        <version>1.0.0</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <!-- 当前模块的打包配置 -->
     <artifactId>test-domain</artifactId>
-    <version>${packageVersion}</version>
 
     <!-- 具体依赖配置 -->
     <dependencies>
@@ -20,7 +19,7 @@
         <dependency>
             <groupId>io.obase</groupId>
             <artifactId>common</artifactId>
-            <version>${packageVersion}</version>
+            <version>${project.version}</version>
         </dependency>
     </dependencies>
 </project>

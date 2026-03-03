@@ -6,14 +6,14 @@
     <parent>
         <artifactId>parent</artifactId>
         <groupId>io.obase</groupId>
-        <version>1.0.0</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <!-- 当前模块的打包配置 本项目为单元测试项目的聚合模块 实际不会进行打包 -->
     <artifactId>unit-test</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>${revision}</version>
 
     <!-- 模块配置 -->
     <modules>

@@ -2,17 +2,16 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <!-- 父项目配置 一般不需要更改 -->
+    <!-- 父项目配置 -->
     <parent>
         <artifactId>unit-test</artifactId>
         <groupId>io.obase</groupId>
-        <version>1.0.0</version>
+        <version>${revision}</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <!-- 当前模块的打包配置 -->
     <artifactId>test-infrastructure</artifactId>
-    <version>${packageVersion}</version>
 
     <!-- 具体依赖配置 -->
     <dependencies>
@@ -20,37 +19,37 @@
         <dependency>
             <groupId>io.obase</groupId>
             <artifactId>test-domain</artifactId>
-            <version>${packageVersion}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- 引用插件单元测试的域类  -->
         <dependency>
             <groupId>io.obase</groupId>
             <artifactId>addon-test-domain</artifactId>
-            <version>${packageVersion}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- 引用Obase MySql库  -->
         <dependency>
             <groupId>io.obase</groupId>
             <artifactId>providers.mysql</artifactId>
-            <version>${packageVersion}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- 引用Obase Sqlite库  -->
         <dependency>
             <groupId>io.obase</groupId>
             <artifactId>providers.sqlite</artifactId>
-            <version>${packageVersion}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- 引用Obase SqlServer库  -->
         <dependency>
             <groupId>io.obase</groupId>
             <artifactId>providers.sqlserver</artifactId>
-            <version>${packageVersion}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- 引用Obase PostgreSql库  -->
         <dependency>
             <groupId>io.obase</groupId>
             <artifactId>providers.postgresql</artifactId>
-            <version>${packageVersion}</version>
+            <version>${project.version}</version>
         </dependency>
         <!-- fastjson 处理json -->
         <dependency>
