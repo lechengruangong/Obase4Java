@@ -50,6 +50,15 @@ public class AbstractConstructor extends InstanceConstructor {
     }
 
     /**
+     * 获取派生类型的属性的名称
+     *
+     * @return 派生类型的属性的名称
+     */
+    public String getTypeAttributeName() {
+        return this.typeAttributeName;
+    }
+
+    /**
      * 构造对象
      *
      * @param arguments 构造函数参数

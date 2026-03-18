@@ -957,7 +957,7 @@ public final class Utils {
 
         List<Class<?>> result = new ArrayList<>();
 
-        ParameterizedType realType = null;
+        ParameterizedType realType;
         if (field.getType() != String.class &&
                 Iterable.class.isAssignableFrom(field.getType())) {
 
@@ -993,5 +993,22 @@ public final class Utils {
         }
 
         return result.toArray(new Class<?>[0]);
+    }
+
+    /**
+     * 获取自己和继承类的区分标记值
+     *
+     * @param structuralType 结构化类型
+     * @return 区分标记值
+     */
+    public static List<Object> getDerivingConcreteTypeValue(StructuralType structuralType) {
+        //加入自己的区分标记
+        List<Object> result = new ArrayList<>();
+        result.add(structuralType.getConcreteTypeSign().getItem2());
+        for (StructuralType derivedType : structuralType.getDerivedTypes()) {
+            //加入自己继承类的区分标记
+            result.addAll(getDerivingConcreteTypeValue(derivedType));
+        }
+        return result;
     }
 }

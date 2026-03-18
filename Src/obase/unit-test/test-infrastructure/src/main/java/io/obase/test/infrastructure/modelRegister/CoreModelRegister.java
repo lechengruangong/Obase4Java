@@ -527,9 +527,9 @@ public class CoreModelRegister {
         //配置汽车车轮 显式关联型 默认是存储在类名的表内 也可以指定为伴随存储
         var carWheelAssociation = modelBuilder.association(CarWheel.class);
         //配置Car端
-        carWheelAssociation.associationEnd(p -> p.getCar());
+        carWheelAssociation.associationEnd("Car");
         //配置Wheel端
-        carWheelAssociation.associationEnd(p -> p.getWheel());
+        carWheelAssociation.associationEnd("Wheel");
         //没有独立映射表 和 Wheel存储在一起
         carWheelAssociation.toTable("Wheel");
 
@@ -705,12 +705,11 @@ public class CoreModelRegister {
         var bikeEntity = modelBuilder.entity(Bike.class);
         bikeEntity.hasKeyAttribute(p -> p.getCode()).hasKeyIsSelfIncreased(false);
         //此处需要配置类型判别器和根据哪个数据源字段的值来判断 不再需要配置自定义的构造器
-        //具体配置见下方的BikeConcreteTypeDiscriminator
-        bikeEntity.hasConcreteTypeDiscriminator(new BikeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        //如果此处的具体类型判别器没有特殊逻辑 可以只传入判别字段名 使用Obase内置的判别器
+        bikeEntity.hasConcreteTypeDiscriminator("Type");
         //Bike的Type字段是1 这里的类型需要根据具体的类型进行调整
         //如果此基础类型是抽象的 此处可以配置一个如-1一类的值抽象的类型不会被创建 所以配置一个特殊值即可
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        bikeEntity.hasConcreteTypeSign("Type", 1);
+        bikeEntity.hasConcreteTypeSign(1);
 
         //定义车灯实体配置
         var bikeLightEntity = modelBuilder.entity(BikeLight.class);
@@ -734,10 +733,9 @@ public class CoreModelRegister {
         //设置继承关系
         myBikeAEntity.deriveFrom(Bike.class);
         //MyBikeA的Type字段是2 这里的类型需要根据具体的类型进行调整
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        myBikeAEntity.hasConcreteTypeSign("Type", 2);
-        //设置A和C的具体类型区分器
-        myBikeAEntity.hasConcreteTypeDiscriminator(new MyBikeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        myBikeAEntity.hasConcreteTypeSign(2);
+        //设置A和C的具体类型区分器  使用Obase内置的判别器
+        myBikeAEntity.hasConcreteTypeDiscriminator("Type");
         //此处与父类一起保存于Bike
         myBikeAEntity.toTable("Bike");
 
@@ -747,8 +745,7 @@ public class CoreModelRegister {
         //设置继承关系
         myBikeBEntity.deriveFrom(Bike.class);
         //MyBikeB的Type字段是3 这里的类型需要根据具体的类型进行调整
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        myBikeBEntity.hasConcreteTypeSign("Type", 3);
+        myBikeBEntity.hasConcreteTypeSign(3);
         //此处与父类一起保存于Bike
         myBikeBEntity.toTable("Bike");
 
@@ -758,8 +755,7 @@ public class CoreModelRegister {
         //设置继承关系
         myBikeCEntity.deriveFrom(MyBikeA.class);
         //MyBikeB的Type字段是4 这里的类型需要根据具体的类型进行调整
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        myBikeCEntity.hasConcreteTypeSign("Type", 4);
+        myBikeCEntity.hasConcreteTypeSign(4);
         //此处与父类一起保存于Bike
         myBikeCEntity.toTable("Bike");
 
@@ -813,11 +809,11 @@ public class CoreModelRegister {
         var prizeEntity = modelBuilder.entity(Prize.class);
         //配置主键
         prizeEntity.hasKeyAttribute(p -> p.getId());
-        //配置一个具体类型判别器 在判别器中返回具体的类型
+        // 使用Obase内置的判别器
         //实现见PrizeConcreteTypeDiscriminator中 此处类内没有定义Type Obase会其补充
-        prizeEntity.hasConcreteTypeDiscriminator(new PrizeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        prizeEntity.hasConcreteTypeDiscriminator("Type");
         //此类型是抽象的 不会被创建 用一个特殊值即可
-        prizeEntity.hasConcreteTypeSign("Type", -1);
+        prizeEntity.hasConcreteTypeSign(-1);
 
         //为实体奖品配置实体型
         var inKindPrizeEntity = modelBuilder.entity(InKindPrize.class);
@@ -825,8 +821,8 @@ public class CoreModelRegister {
         inKindPrizeEntity.hasKeyAttribute(p -> p.getId());
         //配置为从Prize派生而来
         inKindPrizeEntity.deriveFrom(Prize.class);
-        //配置一个类型判别属性和值
-        inKindPrizeEntity.hasConcreteTypeSign("Type", 1);
+        //配置一个类型判别属性的值
+        inKindPrizeEntity.hasConcreteTypeSign(1);
         //都存储在Prize里
         inKindPrizeEntity.toTable("Prize");
 
@@ -837,9 +833,9 @@ public class CoreModelRegister {
         //配置为从Prize派生而来
         redEnvelopEntity.deriveFrom(Prize.class);
         //配置类型判别器
-        redEnvelopEntity.hasConcreteTypeDiscriminator(new RedEnvelopeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
-        //配置一个判别属性和值
-        redEnvelopEntity.hasConcreteTypeSign("Type", 2);
+        redEnvelopEntity.hasConcreteTypeDiscriminator("Type", new RedEnvelopeConcreteTypeDiscriminator(modelBuilder.getContextType()));
+        //配置一个判别属性的值
+        redEnvelopEntity.hasConcreteTypeSign(2);
         //都存储在Prize里
         redEnvelopEntity.toTable("Prize");
 
@@ -849,8 +845,8 @@ public class CoreModelRegister {
         luckRedEnvelopeEntity.hasKeyAttribute(p -> p.getId());
         //配置为从RedEnvelope派生而来
         luckRedEnvelopeEntity.deriveFrom(RedEnvelope.class);
-        //配置一个判别属性和值
-        luckRedEnvelopeEntity.hasConcreteTypeSign("Type", 3);
+        //配置一个判别属性的值
+        luckRedEnvelopeEntity.hasConcreteTypeSign(3);
         //都存储在Prize里
         luckRedEnvelopeEntity.toTable("Prize");
 
@@ -869,10 +865,10 @@ public class CoreModelRegister {
         dialogueEntity.hasKeyAttribute(p -> p.getDialogueId()).hasKeyIsSelfIncreased(true);
         //配置映射表
         dialogueEntity.toTable("Dialogue");
-        //配置一个具体类型判别器 在判别器中返回具体的类型
-        dialogueEntity.hasConcreteTypeDiscriminator(new DialogueConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        //配置一个具体类型判别器 使用内置的判别器
+        dialogueEntity.hasConcreteTypeDiscriminator("Type");
         //此类型是抽象的 不会被创建 用一个特殊值即可
-        dialogueEntity.hasConcreteTypeSign("Type", 1);
+        dialogueEntity.hasConcreteTypeSign(1);
 
         //配置发言实体型
         var wordsEntity = modelBuilder.entity(Words.class);
@@ -887,8 +883,8 @@ public class CoreModelRegister {
         customerDialogueEntity.hasKeyAttribute(p -> p.getDialogueId()).hasKeyIsSelfIncreased(true);
         //配置为从Dialogue派生而来
         customerDialogueEntity.deriveFrom(Dialogue.class);
-        //配置一个判别属性和值
-        customerDialogueEntity.hasConcreteTypeSign("Type", 2);
+        //配置一个判别属性的值
+        customerDialogueEntity.hasConcreteTypeSign(2);
         //都存储在Prize里
         customerDialogueEntity.toTable("Dialogue");
 

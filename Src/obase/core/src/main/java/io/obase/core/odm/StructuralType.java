@@ -82,6 +82,10 @@ public abstract class StructuralType extends TypeBase {
     protected StructuralType(Class<?> clrType, StructuralType derivingFrom) {
         super(clrType);
         this.derivingFrom = derivingFrom;
+        //为当前类型的基类注册继承类
+        if (this.derivingFrom != null) {
+            this.derivingFrom.registerDerivedType(this);
+        }
     }
 
     /**
@@ -220,10 +224,6 @@ public abstract class StructuralType extends TypeBase {
      * @return 当前类型的基类型
      */
     public StructuralType getDerivingFrom() {
-        //为当前类型的基类注册继承类
-        if (this.derivingFrom != null) {
-            this.derivingFrom.registerDerivedType(this);
-        }
         //返回基类
         return this.derivingFrom;
     }

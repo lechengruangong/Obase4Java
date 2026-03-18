@@ -10,12 +10,12 @@ package io.obase.core.mapping.pipeline;
 
 import io.obase.common.TwoTuple;
 import io.obase.core.ObjectContext;
+import io.obase.core.common.Utils;
 import io.obase.core.expression.*;
 import io.obase.core.odm.StructuralType;
 import io.obase.core.query.QueryOp;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -63,7 +63,7 @@ public class ConcreteModule implements IMappingModule {
                 if (member != null) {
                     ParameterExpression parameterExp = Expression.parameter("o", structuralType.getRebuildingType());
                     //载入全局就组两个 否则一个
-                    List<Object> sourceObjs = this.getDerivingConcreteTypeValue(structuralType);
+                    List<Object> sourceObjs = Utils.getDerivingConcreteTypeValue(structuralType);
                     Expression segments = null;
                     for (Object obj : sourceObjs) {
 
@@ -83,21 +83,5 @@ public class ConcreteModule implements IMappingModule {
         }
     }
 
-    /**
-     * 获取自己和继承类的区分标记值
-     *
-     * @param structuralType 结构化类型
-     * @return 区分标记值
-     */
-    private List<Object> getDerivingConcreteTypeValue(StructuralType structuralType) {
-        //加入自己的区分标记
-        List<Object> result = new ArrayList<>();
-        result.add(structuralType.getConcreteTypeSign().getItem2());
-        for (StructuralType derivedType : structuralType.getDerivedTypes()) {
-            //加入自己继承类的区分标记
-            result.addAll(this.getDerivingConcreteTypeValue(derivedType));
-        }
 
-        return result;
-    }
 }

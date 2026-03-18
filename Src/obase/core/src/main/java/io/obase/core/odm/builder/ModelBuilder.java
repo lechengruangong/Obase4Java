@@ -290,11 +290,12 @@ public class ModelBuilder {
                     //取出基类
                     ObjectType derivingFrom = (ObjectType) objectType.getDerivingFrom();
                     //检查基类是否配置了类型判别器
-                    if (this.typeConfigs.get(derivingFrom.getClrType()).getConcreteTypeDiscriminator() == null)
-                        throw new IllegalArgumentException(derivingFrom.getName() + "未配置判别器.");
-                    //检查基类的类型判别器名称是否与当前类的类型标记名称相符
-                    if (objectType.getConcreteTypeSign() != null && !Objects.equals(objectType.getConcreteTypeSign().getItem1(), this.typeConfigs.get(derivingFrom.getClrType()).getTypeAttributeName()))
-                        throw new IllegalArgumentException(objectType.getName() + "与基类类型" + derivingFrom.getName() + "的判别字段名称不符,分别为" + objectType.getConcreteTypeSign().getItem1() + "和" + this.typeConfigs.get(derivingFrom.getClrType()).getTypeAttributeName());
+                    if (this.typeConfigs.get(derivingFrom.getClrType()).getConcreteTypeDiscriminator() == null) {
+                        //没有 则使用内置的判别器
+                        HashMap<String, StructuralType> chainCodes = this.getDerivingConcreteTypeValue(derivingFrom);
+                        typeConfigs.get(derivingFrom.getClrType()).setConcreteTypeDiscriminator(new ConcreteTypeDiscriminator(chainCodes));
+                    }
+
                     //存下来 之后设置具体类型判别器
                     if (!deriving.containsKey(derivingFrom))
                         deriving.put(derivingFrom, typeConfigs.get(derivingFrom.getClrType()));
@@ -397,6 +398,27 @@ public class ModelBuilder {
             executor.execute(this.objectDataModel);
 
         return this.objectDataModel;
+    }
+
+    /**
+     * 获取某个结构化类型及其所有派生类的具体类型标记值与结构化类型的字典
+     *
+     * @param structuralType 根类型
+     * @return 具体类型标记值与结构化类型的字典
+     */
+    private HashMap<String, StructuralType> getDerivingConcreteTypeValue(StructuralType structuralType) {
+        //加入自己的区分标记
+        HashMap<String, StructuralType> result = new HashMap<>();
+        result.put(structuralType.getConcreteTypeSign().getItem2().toString(), structuralType);
+        for (StructuralType derivedType : structuralType.getDerivedTypes()) {
+            //加入自己继承类的区分标记值
+            HashMap<String, StructuralType> derivedResult = this.getDerivingConcreteTypeValue(derivedType);
+            for (String key : derivedResult.keySet()) {
+                if (!result.containsKey(key))
+                    result.put(key, derivedResult.get(key));
+            }
+        }
+        return result;
     }
 
     /**

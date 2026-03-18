@@ -314,6 +314,20 @@ public abstract class ObjectType extends ReferringType implements IMappable {
             if (!derivingObjectType.getTargetTable().equalsIgnoreCase(this.getTargetTable()))
                 message.add(this.clrType.getName() + "配置为继承" + this.getDerivingFrom().getClrType().getName() + ",但映射表与父类不一致,父类映射表为" + derivingObjectType.getTargetTable() + ",当前为" + this.getTargetTable() + ".");
         }
+        //有标记
+        if (this.getConcreteTypeSign() != null) {
+            //检查自己和自己的子类
+            List<String> chain = Utils.getDerivingConcreteTypeValue(this).stream().map(Object::toString).collect(Collectors.toList());
+            boolean hasDuplicates = chain.stream().distinct().count() < chain.size();
+            if (hasDuplicates)
+                message.add(this.clrType.getName() + "的具体类型判别标志配置中自己和自己的子类中存在重复的具体类型判别标志值，具体类型判别标志值序列为：" + String.join(", ", chain) + ".");
+            //顺带检查一下构造器的类型判别字段名是否和自己的类型判别标志一致
+            if (this.getConstructor() instanceof AbstractConstructor) {
+                AbstractConstructor abstractConstructor = (AbstractConstructor) this.getConstructor();
+                if (!abstractConstructor.getTypeAttributeName().equalsIgnoreCase(this.getConcreteTypeSign().getItem1()))
+                    message.add(this.clrType.getName() + "的构造函数使用的类型判别字段名与自身的类型判别标识不一致，前者为" + abstractConstructor.getTypeAttributeName() + "，后者为" + this.getConcreteTypeSign().getItem1() + ".");
+            }
+        }
 
         //检查父类的构造器
         if (this.getDerivingFrom() != null) {

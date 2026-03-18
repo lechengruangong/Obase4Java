@@ -211,6 +211,15 @@ public abstract class StructuralTypeConfiguration<TStructural> {
     }
 
     /**
+     * 设置具体类型判别器
+     *
+     * @param concreteTypeDiscriminator 具体类型判别器
+     */
+    public void setConcreteTypeDiscriminator(IConcreteTypeDiscriminator concreteTypeDiscriminator) {
+        this.concreteTypeDiscriminator = concreteTypeDiscriminator;
+    }
+
+    /**
      * 获取判别类型标记
      *
      * @return 判别类型标记
