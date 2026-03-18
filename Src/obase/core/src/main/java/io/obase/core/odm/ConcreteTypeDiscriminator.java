@@ -38,6 +38,11 @@ public class ConcreteTypeDiscriminator implements IConcreteTypeDiscriminator {
      */
     @Override
     public StructuralType discriminate(Object typeCode) {
+
+        //如果没有配置具体类型区分字典 则返回null 表示无法区分具体类型
+        if (this.dictionary == null)
+            return null;
+        //根据类型代码在具体类型区分字典中查找对应的具体类型 如果找到则返回 否则返回null
         if (this.dictionary.containsKey(typeCode.toString())) {
             return this.dictionary.get(typeCode.toString());
         }
