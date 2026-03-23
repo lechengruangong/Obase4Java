@@ -857,13 +857,14 @@ public class SimpleTypeEnumerableTest {
         assertEquals(1, list.get(0).getIntNumber());
         assertEquals("1号字符串", list.get(0).getString());
 
-        //复杂条件拼接 ((IntNumber == 1 && IntNumber < 20) && (String == "1号字符串" || String == "19号字符串"))
+        //复杂条件拼接 ((IntNumber == 1 && IntNumber < 20) && (String == "1号字符串" || String == "19号字符串") && (1=1))
         sub1 = new PredicateCombiner<>();
         sub1.or(combiner.getWrapper().eq(JavaBean::getIntNumber, 1)).and(combiner.getWrapper().lt(JavaBean::getIntNumber, 20));
         sub2 = new PredicateCombiner<>();
         sub2.or(combiner.getWrapper().eq(JavaBean::getString, "1号字符串")).or(combiner.getWrapper().eq(JavaBean::getString, "19号字符串"));
+        var sub3 = new PredicateCombiner<JavaBean>(p -> true);
 
-        list = context.createSet(JavaBean.class).filter(PredicateCombiner.and(sub1.getLambdaExpression(), sub2.getLambdaExpression())).toList();
+        list = context.createSet(JavaBean.class).filter(PredicateCombiner.and(PredicateCombiner.and(sub1.getLambdaExpression(), sub2.getLambdaExpression()), sub3.getLambdaExpression())).toList();
 
         assertNotNull(list);
         assertEquals(1, list.size());

@@ -110,7 +110,7 @@ public class BinaryLogicExpression extends BinaryExpression {
     }
 
     /**
-     * 获取有结果的字符串
+     * 获取结果字符串
      *
      * @param sourceType         数据源类型
      * @param creator            参数构造器
