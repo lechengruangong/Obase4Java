@@ -8,6 +8,7 @@
 */
 package io.obase.core.odm.builder.implicitAssociationConfigor;
 
+import io.obase.core.common.Utils;
 import io.obase.core.odm.*;
 
 import java.util.ArrayList;
@@ -167,14 +168,7 @@ public class AssociationReferenceValueWrapper implements IValueGetter, IValueSet
         }
 
         //关联型对象集合
-        List<Object> assTypeObj = new ArrayList<>();
-        if (value instanceof Iterable<?>) {
-            Iterable<?> iEnumerable = (Iterable<?>) value;
-            for (Object o : iEnumerable)
-                assTypeObj.add(o);
-        } else {
-            assTypeObj.add(value);
-        }
+        List<Object> assTypeObj = Utils.getObjectList(value);
 
         //所有的关联端
         List<AssociationEnd> ends = this.associationType.getAssociationEnds();

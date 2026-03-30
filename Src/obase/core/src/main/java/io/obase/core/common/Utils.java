@@ -1011,4 +1011,26 @@ public final class Utils {
         }
         return result;
     }
+
+    /**
+     * 用LIST包装值
+     * 如果是单值 则包装成一个只有一个元素的LIST 如果已经是集合 则直接转换成LIST返回
+     *
+     * @param value 值
+     * @return list
+     */
+    public static List<Object> getObjectList(Object value) {
+        //取值 无论单值还是集合 都以集合的形式进行处理
+        List<Object> targets = new ArrayList<>();
+        if (value instanceof Iterable<?>) {
+            Iterable<?> iEnumerable = (Iterable<?>) value;
+            for (Object o : iEnumerable) {
+                targets.add(o);
+            }
+        } else {
+            targets.add(value);
+        }
+
+        return targets;
+    }
 }

@@ -8,6 +8,7 @@
 */
 package io.obase.core.odm;
 
+import io.obase.core.odm.serialization.SerializationObjectDataModel;
 import io.obase.core.odm.typeviews.TypeView;
 
 import java.util.ArrayList;
@@ -32,6 +33,11 @@ public class ObjectDataModel {
     private final Map<Class<?>, Class<?>> proxyReal = new HashMap<>();
 
     /**
+     * 序列化对象数据模型
+     */
+    private final SerializationObjectDataModel serializationModel = new SerializationObjectDataModel();
+
+    /**
      * clr类型与模型字典
      */
     private final Map<Class<?>, StructuralType> structuralTypes = new HashMap<>();
@@ -53,6 +59,15 @@ public class ObjectDataModel {
      */
     public Map<Class<?>, StructuralType> getStructuralTypes() {
         return this.structuralTypes;
+    }
+
+    /**
+     * 获取序列化对象数据模型
+     *
+     * @return 序列化对象数据模型
+     */
+    public SerializationObjectDataModel getSerializationModel() {
+        return this.serializationModel;
     }
 
     /**
