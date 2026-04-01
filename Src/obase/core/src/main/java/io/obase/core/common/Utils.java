@@ -248,12 +248,18 @@ public final class Utils {
      * @return 转换后的值
      */
     public static Object convertDbValue(Object result, Class<?> typeClass) {
-
+        //空值 不处理
+        if (result == null)
+            return null;
         //enum
         if (typeClass.isEnum()) {
+
             Enum<?>[] cons = (Enum<?>[]) typeClass.getEnumConstants();
             for (Enum<?> con : cons) {
                 if (Objects.equals(String.valueOf(con.ordinal()), String.valueOf(result))) {
+                    result = con;
+                }
+                if (Objects.equals(con.name(), String.valueOf(result))) {
                     result = con;
                 }
             }
@@ -1027,10 +1033,57 @@ public final class Utils {
             for (Object o : iEnumerable) {
                 targets.add(o);
             }
+        } else if (value != null && value.getClass().isArray()) {
+            Object[] array = (Object[]) value;
+            targets.addAll(Arrays.asList(array));
         } else {
             targets.add(value);
         }
 
         return targets;
+    }
+
+    /**
+     * 转换要序列化的值
+     * 目前仅将DateTime转化为截断后的字符串
+     *
+     * @param value 要转换的值
+     * @return 值
+     */
+    public static Object convertSerializationValue(Object value) {
+        //序列化时将DateTime转化为字符串 以便在不同环境下的兼容性
+        if (value instanceof LocalDateTime) {
+            LocalDateTime dateTime = (LocalDateTime) value;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+            String result = formatter.format(dateTime);
+            return LocalDateTime.parse(result, formatter);
+        }
+
+        if (value instanceof LocalDate) {
+            LocalDate dateTime = (LocalDate) value;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String result = formatter.format(dateTime);
+            return LocalDateTime.parse(result, formatter);
+        }
+
+        if (value instanceof LocalTime) {
+            LocalTime dateTime = (LocalTime) value;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+            String result = formatter.format(dateTime);
+            return LocalDateTime.parse(result, formatter);
+        }
+
+        if (value instanceof Date) {
+            Date dateTime = (Date) value;
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            String result = formatter.format(dateTime);
+            try {
+                return formatter.parse(result);
+            } catch (ParseException e) {
+                throw new RuntimeException("转换Date失败,请参考内部异常", e);
+            }
+        }
+
+        return value;
     }
 }

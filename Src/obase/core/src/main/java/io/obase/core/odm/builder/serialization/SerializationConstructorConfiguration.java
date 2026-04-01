@@ -104,7 +104,7 @@ public class SerializationConstructorConfiguration<TStructural> {
         if (this.currentParameterIndex >= this.realParameterCount)
             throw new IllegalArgumentException("构造函数的参数个数超过了构造函数的真实参数个数。");
         //如果配置的参数类型与构造函数的参数类型不匹配，抛出异常
-        if (!Objects.equals(this.constructorInfo.getTypeParameters()[this.currentParameterIndex].getTypeName(), valueType.getName()))
+        if (!Objects.equals(this.constructorInfo.getParameters()[this.currentParameterIndex].getType(), valueType))
             throw new IllegalArgumentException("构造函数的第" + this.currentParameterIndex + "个参数的类型与配置的值类型不匹配。");
         //添加参数配置
         this.parameters.put(name,

@@ -176,7 +176,9 @@ public class AttributeConfiguration<TStructural>
                 throw new IllegalArgumentException("启用了序列化模型的属性前必须先设置设值器.");
             if (this.serializer == null)
                 throw new IllegalArgumentException("启用了序列化模型的属性前必须先设置序列化器.");
-            return new SerializedModelValueSetter(super.getValueSetter(), Utils.getIsMultiple(Utils.getProperty(this.getTypeConfiguration().getClrType(), this.getName()), new ObjectReferencePack<>()),
+            Property property = Utils.getProperty(this.getTypeConfiguration().getClrType(), this.getName());
+            boolean isMulti = Utils.getIsMultiple(property, new ObjectReferencePack<>()) || property.getPropertyType().isArray();
+            return new SerializedModelValueSetter(super.getValueSetter(), isMulti,
                     this.serializationModel, this.serializer, SerializationDataTransferObjectWrapper.class);
         }
 

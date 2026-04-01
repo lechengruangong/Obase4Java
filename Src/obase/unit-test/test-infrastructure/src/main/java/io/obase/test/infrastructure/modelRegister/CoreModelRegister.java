@@ -37,17 +37,16 @@ import io.obase.test.domain.functional.expression.Box;
 import io.obase.test.domain.functional.expression.Can;
 import io.obase.test.domain.functional.expression.WaterTank;
 import io.obase.test.domain.functional.keyValueVersion.*;
+import io.obase.test.domain.functional.serialization.*;
 import io.obase.test.domain.simpleType.*;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 核心的模型注册器
@@ -85,6 +84,12 @@ public class CoreModelRegister {
         modelBuilder.ignore(Box.class);
         modelBuilder.ignore(Can.class);
         modelBuilder.ignore(WaterTank.class);
+        modelBuilder.ignore(Route.class);
+        modelBuilder.ignore(Identity.class);
+        modelBuilder.ignore(AnalyserA.class);
+        modelBuilder.ignore(AnalyserB.class);
+        modelBuilder.ignore(AnalyserC.class);
+        modelBuilder.ignore(Component.class);
 
         //单独注册几个类型
         modelBuilder.registerType(School.class, Student.class);
@@ -1254,6 +1259,120 @@ public class CoreModelRegister {
         standardValueAssociation.associationEnd(p -> p.getSelectedValue()).hasMapping("CategoryId", "CategoryId")
                 .hasMapping("AttributeId", "AttributeId");
         standardValueAssociation.toTable("StandardValue");
+
+        //endregion
+        //对应测试文件core.functional文件夹内SerializationModelTest
+        //region 有序列化模型的序列化
+
+        //注册服务为实体型
+        var serviceEntity = modelBuilder.entity(Service.class);
+        serviceEntity.hasKeyAttribute(p -> p.getCode()).hasKeyIsSelfIncreased(false);
+        serviceEntity.toTable("Service");
+
+        //设置Route属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute(p -> p.getRoute(), String.class).hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), Route.class).useSerializationModel(true);
+
+        //设置SubRoute属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute("SubRoute", String.class).hasMaxCharNumber(1000).hasValueGetter((Service p) -> p.getSubRoute())
+                .hasValueSetter((Service p, List<Route> value) -> p.setSubRoute(value))
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), List.class).useSerializationModel(true);
+
+        //设置Identity属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute(p -> p.getIdentity(), String.class).hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), Identity.class).useSerializationModel(true);
+
+        //设置Analyser属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute(p -> p.getAnalyser(), String.class).hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), Analyser.class).useSerializationModel(true);
+
+        //设置Components属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute("Components", String.class).hasValueGetter((Service p) -> p.getComponents())
+                .hasValueSetter((Service p, List<Component> value) -> p.setComponents(value))
+                .hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), List.class).useSerializationModel(true);
+
+        //配置序列化模型Route
+        var routeEntity = modelBuilder.serializationEntity(Route.class);
+        //Route的属性 无需配置 自动侦测
+        //为了测试配置 故写两个属性配置
+        Field ruleField;
+        try {
+            ruleField = Route.class.getDeclaredField("rule");
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException("无法获取Route的rule字段", e);
+        }
+        routeEntity.attribute(p -> p.getAction()).hasValueGetter((Route p) -> p.getAction())
+                .hasValueSetter((Route p, EAction value) -> p.setAction(value), EValueSettingMode.Assignment);
+        routeEntity.attribute("Rule", String.class)
+                .hasValueGetter(ruleField)
+                .hasValueSetter(ruleField);
+        //Route有无参的反序列化构造函数 无需配置 自动侦测
+        //Route没有引用 无需配置
+
+        //配置序列化模型Route
+        var idEntityConfiguration = modelBuilder.serializationEntity(Identity.class);
+        //Identity的属性 无需配置 自动侦测
+        //为了测试配置 故写一个属性配置
+        idEntityConfiguration.attribute("Role");
+        //Identity的构造函数需要配置
+        Constructor<Identity> identityConstructor;
+        try {
+            identityConstructor = Identity.class.getDeclaredConstructor(UUID.class, LocalDateTime.class, String.class, LocalDateTime.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("无法获取Identity的构造字段", e);
+        }
+        Field createTimeField;
+        try {
+            createTimeField = Identity.class.getDeclaredField("createTime");
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException("无法获取Identity的createTime字段", e);
+        }
+        var idConstructor = idEntityConfiguration.hasConstructor(identityConstructor);
+        //配置第一个参数 需要存储 从ID里取出Id属性的值存储
+        idConstructor.hasParameter((Identity p) -> p.getId(), UUID.class, true)
+                //配置第二个参数 需要存储 从字段_createTime里取出CreateTime属性的值存储
+                .hasParameter(createTimeField, LocalDateTime.class, true)
+                //配置第三个参数 需要存储 从Role里取出Role属性的值存储
+                .hasParameter((Identity p) -> p.getRole(), String.class, true)
+                //配置第四个参数 不需要存储 直接传入当前时间 注意这个委托的参数会传空
+                .hasParameter((Identity p) -> LocalDateTime.now(), LocalDateTime.class, false);
+
+        //Identity没有引用 无需配置
+        //忽略版本和次版本
+        idEntityConfiguration.ignore(p -> p.getSubVersion()).ignore("Version");
+
+        //配置序列化模型AnalyserA
+        var analyserAEntityConfiguration = modelBuilder.serializationEntity(AnalyserA.class);
+        //Analyser的属性 无需配置 自动侦测
+        //Analyser有无参的反序列化构造函数 无需配置 自动侦测
+        //Analyser有引用 为测试配置 故写一个引用配置
+        analyserAEntityConfiguration.reference(p -> p.getNext());
+
+        //配置序列化模型AnalyserB
+        var analyserBEntityConfiguration = modelBuilder.serializationEntity(AnalyserB.class);
+        //Analyser的属性 无需配置 自动侦测
+        //Analyser有无参的反序列化构造函数 无需配置 自动侦测
+        //Analyser有引用 为测试配置 故写一个引用配置
+        analyserBEntityConfiguration.reference("Next");
+
+        //配置序列化模型AnalyserB
+        var analyserCEntityConfiguration = modelBuilder.serializationEntity(AnalyserC.class);
+        //Analyser的属性 无需配置 自动侦测
+        //Analyser有无参的反序列化构造函数 无需配置 自动侦测
+        //Analyser有引用 为测试配置 故写一个引用配置
+        analyserCEntityConfiguration.reference("Next", false);
+
+        //配置序列化模型Component
+        modelBuilder.serializationEntity(Component.class);
+        //Component的属性 无需配置 自动侦测
+        //Component有无参的反序列化构造函数 无需配置 自动侦测
+        //Component有引用 无需配置 自动侦测
 
         //endregion
     }

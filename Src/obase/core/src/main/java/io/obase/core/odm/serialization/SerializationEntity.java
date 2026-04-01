@@ -75,7 +75,7 @@ public class SerializationEntity {
      */
     public List<SerializationConstructorParameter> getConstructorParameters() {
         if (this.constructor == null)
-            return null;
+            return new ArrayList<>();
         return new ArrayList<>(this.constructor.getParameters().values());
     }
 

@@ -88,8 +88,13 @@ public class SerializedModelValueSetter implements IValueSetter {
         SerializationObjectDataModelDeSerializer deSerializer = new SerializationObjectDataModelDeSerializer(this.model);
         //反序列化后的对象集合
         List<Object> objects = deSerializer.deSerialize((SerializationDataTransferObjectWrapper) realObj);
-        if (objects != null && objects.size() > 0)
+        if (objects != null && objects.size() > 0) {
             //如果是多值的属性 直接设置 否则 设置首个
-            this.baseValueSetter.setValue(obj, this.isAttitudeMultiple ? objects : objects.get(0));
+            if (this.isAttitudeMultiple) {
+                this.baseValueSetter.setValue(obj, objects);
+            } else {
+                this.baseValueSetter.setValue(obj, objects.get(0));
+            }
+        }
     }
 }

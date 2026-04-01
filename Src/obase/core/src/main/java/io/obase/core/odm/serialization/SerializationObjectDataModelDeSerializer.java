@@ -65,7 +65,15 @@ public class SerializationObjectDataModelDeSerializer {
             if (type != null) {
                 List<Object> parameterValues = new ArrayList<>();
                 //处理构造函数
-                for (SerializationConstructorParameter parameter : type.getConstructorParameters()) {
+                List<SerializationConstructorParameter> parameters = type.getConstructorParameters();
+                //按照Index排序
+                parameters.sort((o1, o2) -> {
+                    //根据具体的类型进行比较
+                    int xCode = Integer.parseInt(o1.getIndex().replace("#", ""));
+                    int yCode = Integer.parseInt(o2.getIndex().replace("#", ""));
+                    return xCode - yCode;
+                });
+                for (SerializationConstructorParameter parameter : parameters) {
                     //如果是需要存储 则从dto的构造函数参数字典中取出对应索引的值
                     if (parameter.getNeedStorage()) {
                         if (dto.getConstructorParameters().containsKey(parameter.getIndex())) {
