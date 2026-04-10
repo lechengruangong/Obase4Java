@@ -118,7 +118,7 @@ public class SerializationObjectDataModelSerializer {
                 //需要存储的构造函数参数 调用取值器获取值 进行存储
                 if (parameter.getNeedStorage()) {
                     Object value = parameter.getValue(obj);
-                    if (value != null && value.getClass() != parameter.getValueType())
+                    if (value != null && value.getClass() != parameter.getValueType() && Utils.isWrapperOrPrimitive(value.getClass(), parameter.getValueType()))
                         throw new IllegalArgumentException("序列化" + type.getClrType() + "的构造函数参数" + parameter.getIndex() + "时出错,配置的值类型为" + parameter.getValueType() + ",实际取到的为" + value.getClass() + ".");
                     dto.getConstructorParameters().put(parameter.getIndex(), Utils.convertSerializationValue(value));
                 }
@@ -127,7 +127,7 @@ public class SerializationObjectDataModelSerializer {
             //处理属性
             for (SerializationAttribute attribute : type.getAttributes()) {
                 Object value = attribute.getValue(obj);
-                if (value != null && value.getClass() != attribute.getValueType())
+                if (value != null && value.getClass() != attribute.getValueType() && Utils.isWrapperOrPrimitive(value.getClass(), attribute.getValueType()))
                     throw new IllegalArgumentException("序列化" + type.getClrType() + "的属性" + attribute.getName() + "时出错,配置的值类型为" + attribute.getValueType() + ",实际取到的为" + value.getClass() + ".");
                 dto.getAttributes().put(attribute.getName(), Utils.convertSerializationValue(value));
             }

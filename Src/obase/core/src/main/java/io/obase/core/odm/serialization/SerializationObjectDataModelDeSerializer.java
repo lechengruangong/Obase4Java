@@ -74,26 +74,40 @@ public class SerializationObjectDataModelDeSerializer {
                     return xCode - yCode;
                 });
                 for (SerializationConstructorParameter parameter : parameters) {
+                    Object value = null;
                     //如果是需要存储 则从dto的构造函数参数字典中取出对应索引的值
                     if (parameter.getNeedStorage()) {
                         if (dto.getConstructorParameters().containsKey(parameter.getIndex())) {
                             Object constructorParameter = dto.getConstructorParameters().get(parameter.getIndex());
-                            //进行一次通用的转换
-                            parameterValues.add(Utils.convertDbValue(constructorParameter, parameter.getValueType()));
+                            try {
+                                //进行一次通用的转换
+                                value = Utils.convertDbValue(constructorParameter, parameter.getValueType());
+                            } catch (Exception exception) {
+                                throw new IllegalArgumentException("无法转换" + type.getName() + "的" + parameter.getIndex() + "构造函数参数,如果是时间类型请不设置序列化格式或者设置为yyyy-MM-dd HH:mm:ss.SSS");
+                            }
                         }
                     } else {
                         //否则使用取值器获取 注意此时固定传参为null
-                        parameterValues.add(parameter.getValue(null));
+                        value = parameter.getValue(null);
                     }
+                    //统一进行一次类型检查 如果不为null且类型不匹配 则抛出异常
+                    if (value != null && value.getClass() != parameter.getValueType() && Utils.isWrapperOrPrimitive(value.getClass(), parameter.getValueType()))
+                        throw new IllegalArgumentException("反序列化" + type.getClrType() + "的构造函数参数" + parameter.getIndex() + "时出错,配置的值类型为" + parameter.getValueType() + ",实际取到的为" + value.getClass() + ".");
+                    parameterValues.add(value);
                 }
 
                 Object obj = type.getConstructor().construct(parameterValues.toArray());
 
                 //处理属性
                 for (SerializationAttribute attribute : type.getAttributes()) {
-                    Object value = Utils.convertDbValue(dto.getAttributes().get(attribute.getName()), attribute.getValueType());
-                    if (value != null)
-                        attribute.setValue(obj, value);
+                    try {
+                        Object value = Utils.convertDbValue(dto.getAttributes().get(attribute.getName()), attribute.getValueType());
+                        if (value != null)
+                            attribute.setValue(obj, value);
+                    } catch (Exception exception) {
+                        throw new IllegalArgumentException("无法转换" + type.getName() + "的" + attribute.getName() + "属性,如果是时间类型请不设置序列化格式或者设置为yyyy-MM-dd HH:mm:ss.SSS");
+                    }
+
                 }
 
                 //加入已处理的集合

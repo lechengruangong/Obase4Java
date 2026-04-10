@@ -29,6 +29,7 @@ public class JsonSerializer extends TextSerializer {
      */
     @Override
     public String doSerialize(Object obj) {
-        return JSON.toJSONString(obj);
+        //指定日期格式
+        return JSON.toJSONString(obj, "yyyy-MM-dd HH:mm:ss.SSS");
     }
 }

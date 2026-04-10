@@ -82,7 +82,7 @@
     <properties>
         <!-- 自定义的配置部分 -->
         <!-- 打包版本 具体规则参见Obase的版本号文档 -->
-        <revision>6.4.7</revision>
+        <revision>6.5.0</revision>
         <!-- 统一的配置部分 -->
         <!-- 编译版本 -->
         <maven.compiler.source>8</maven.compiler.source>

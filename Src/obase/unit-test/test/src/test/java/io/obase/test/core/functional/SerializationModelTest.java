@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -37,8 +38,23 @@ public class SerializationModelTest {
             //添加一个服务 Code为Simple
             var serviceSimple = new Service();
             serviceSimple.setCode("Simple");
-            serviceSimple.setRoute(new Route("*/Get", EAction.Pass));
-            serviceSimple.setSubRoute(List.of(new Route[]{new Route("*/Delete", EAction.Reject), new Route("*/Patch", EAction.Drop)}));
+            var route = new Route("*/Get", EAction.Pass);
+            route.setInner(BigDecimal.valueOf(123456));
+            route.setSort(0);
+            route.setWeight(123.456);
+            route.setEnabled(true);
+            serviceSimple.setRoute(route);
+            var route1 = new Route("*/Delete", EAction.Reject);
+            route1.setInner(BigDecimal.valueOf(123));
+            route1.setSort(1);
+            route1.setWeight(123);
+            route1.setEnabled(false);
+            var route2 = new Route("*/Patch", EAction.Drop);
+            route2.setInner(BigDecimal.valueOf(456));
+            route2.setSort(2);
+            route2.setWeight(456);
+            route2.setEnabled(false);
+            serviceSimple.setSubRoute(List.of(new Route[]{route1, route2}));
             var identity = new Identity(UUID.randomUUID(), LocalDateTime.now(), "Admin");
             identity.setVersion(1);
             identity.setSubVersion(2);
@@ -102,15 +118,26 @@ public class SerializationModelTest {
         assertEquals(service.getRoute().getAction(), EAction.Pass);
         assertEquals(service.getRoute().getRule(), "*/Get");
         assertNull(service.getRoute().getPalaceHolder());
+        assertTrue(service.getRoute().getEnabled());
+        assertEquals(service.getRoute().getSort(), 0);
+        assertEquals(service.getRoute().getWeight(), 123.456);
+        assertEquals(service.getRoute().getInner(), BigDecimal.valueOf(123456));
         //检查SubRoute
         assertNotNull(service.getSubRoute());
         assertEquals(service.getSubRoute().size(), 2);
         assertEquals(service.getSubRoute().get(0).getAction(), EAction.Reject);
         assertEquals(service.getSubRoute().get(0).getRule(), "*/Delete");
         assertNull(service.getSubRoute().get(0).getPalaceHolder());
+        assertFalse(service.getSubRoute().get(0).getEnabled());
+        assertEquals(service.getSubRoute().get(0).getSort(), 1);
+        assertEquals(service.getSubRoute().get(0).getWeight(), 123);
+        assertEquals(service.getSubRoute().get(0).getInner(), BigDecimal.valueOf(123));
         assertEquals(service.getSubRoute().get(1).getAction(), EAction.Drop);
         assertEquals(service.getSubRoute().get(1).getRule(), "*/Patch");
         assertNull(service.getSubRoute().get(1).getPalaceHolder());
+        assertEquals(service.getSubRoute().get(1).getSort(), 2);
+        assertEquals(service.getSubRoute().get(1).getWeight(), 456);
+        assertEquals(service.getSubRoute().get(1).getInner(), BigDecimal.valueOf(456));
         //检查Identity
         assertNotNull(service.getIdentity());
         assertNotEquals(service.getIdentity().getId(), new UUID(0, 0));

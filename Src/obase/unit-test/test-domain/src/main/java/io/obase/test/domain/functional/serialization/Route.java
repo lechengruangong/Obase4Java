@@ -1,5 +1,7 @@
 package io.obase.test.domain.functional.serialization;
 
+import java.math.BigDecimal;
+
 /**
  * 某种路由
  */
@@ -19,6 +21,26 @@ public class Route {
      * 空对象
      */
     private String PalaceHolder;
+
+    /**
+     * 排序
+     */
+    private int sort;
+
+    /**
+     * 权重
+     */
+    private double weight;
+
+    /**
+     * 是否启用
+     */
+    private boolean enabled;
+
+    /**
+     * 内部值
+     */
+    private BigDecimal inner;
 
     /**
      * 初始化某种路由
@@ -92,6 +114,78 @@ public class Route {
     }
 
     /**
+     * 排序
+     *
+     * @return 排序
+     */
+    public int getSort() {
+        return this.sort;
+    }
+
+    /**
+     * 排序
+     *
+     * @param sort 排序
+     */
+    public void setSort(int sort) {
+        this.sort = sort;
+    }
+
+    /**
+     * 权重
+     *
+     * @return 权重
+     */
+    public double getWeight() {
+        return this.weight;
+    }
+
+    /**
+     * 权重
+     *
+     * @param weight 权重
+     */
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
+    /**
+     * 是否启用
+     *
+     * @return 是否启用
+     */
+    public boolean getEnabled() {
+        return this.enabled;
+    }
+
+    /**
+     * 是否启用
+     *
+     * @param enabled 是否启用
+     */
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /**
+     * 内部值
+     *
+     * @return 内部值
+     */
+    public BigDecimal getInner() {
+        return this.inner;
+    }
+
+    /**
+     * 内部值
+     *
+     * @param inner 内部值
+     */
+    public void setInner(BigDecimal inner) {
+        this.inner = inner;
+    }
+
+    /**
      * 转换为字符串表示形式
      *
      * @return 字符串表示形式
@@ -101,6 +195,10 @@ public class Route {
         return "Route{" +
                 "action=" + this.action +
                 ", rule='" + this.rule + '\'' +
+                ", sort='" + this.sort + '\'' +
+                ", weight='" + this.weight + '\'' +
+                ", enabled='" + this.enabled + '\'' +
+                ", inner='" + this.inner + '\'' +
                 '}';
     }
 }

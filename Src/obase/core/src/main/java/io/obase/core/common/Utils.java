@@ -1086,4 +1086,47 @@ public final class Utils {
 
         return value;
     }
+
+    /**
+     * 判断两个类型是不是相等 或者是包装类型相等
+     *
+     * @param type1 类型1
+     * @param type2 类型2
+     * @return 是否相等
+     */
+    public static boolean isWrapperOrPrimitive(Class<?> type1, Class<?> type2) {
+        if (type1 == int.class || type1 == Integer.class) {
+            return type2 != int.class && type2 != Integer.class;
+        }
+
+        if (type1 == long.class || type1 == Long.class) {
+            return type2 != long.class && type2 != Long.class;
+        }
+
+        if (type1 == byte.class || type1 == Byte.class) {
+            return type2 != byte.class && type2 != Byte.class;
+        }
+
+        if (type1 == short.class || type1 == Short.class) {
+            return type2 != short.class && type2 != Short.class;
+        }
+
+        if (type1 == float.class || type1 == Float.class) {
+            return type2 != float.class && type2 != Float.class;
+        }
+
+        if (type1 == double.class || type1 == Double.class) {
+            return type2 != double.class && type2 != Double.class;
+        }
+
+        if (type1 == char.class || type1 == Character.class) {
+            return type2 != char.class && type2 != Character.class;
+        }
+
+        if (type1 == boolean.class || type1 == Boolean.class) {
+            return type2 != boolean.class && type2 != Boolean.class;
+        }
+
+        return true;
+    }
 }
