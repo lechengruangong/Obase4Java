@@ -35,7 +35,7 @@ public class Route {
     /**
      * 是否启用
      */
-    private boolean enabled;
+    private Boolean enabled;
 
     /**
      * 内部值
@@ -154,7 +154,7 @@ public class Route {
      *
      * @return 是否启用
      */
-    public boolean getEnabled() {
+    public Boolean getEnabled() {
         return this.enabled;
     }
 
@@ -163,7 +163,7 @@ public class Route {
      *
      * @param enabled 是否启用
      */
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
 
