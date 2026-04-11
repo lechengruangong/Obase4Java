@@ -1,7 +1,5 @@
 package io.obase.test.domain.functional.serialization;
 
-import java.util.List;
-
 /**
  * 组件类 用于测试循环引用的序列化和反序列化
  */
@@ -16,7 +14,7 @@ public class Component implements IComponent {
     /**
      * 组件
      */
-    private List<Component> components;
+    private Component[] components;
 
     /**
      * 组件名称
@@ -42,7 +40,7 @@ public class Component implements IComponent {
      *
      * @return 组件
      */
-    public List<Component> getComponents() {
+    public Component[] getComponents() {
         return this.components;
     }
 
@@ -51,7 +49,7 @@ public class Component implements IComponent {
      *
      * @param components 组件
      */
-    public void setComponents(List<Component> components) {
+    public void setComponents(Component[] components) {
         this.components = components;
     }
 

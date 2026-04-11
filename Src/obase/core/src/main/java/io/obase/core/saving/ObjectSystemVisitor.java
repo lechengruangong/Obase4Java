@@ -176,7 +176,22 @@ public class ObjectSystemVisitor {
 
         //是否是多重的
         if (reference.getIsMultiple()) {
-            Iterable<Object> values = (Iterable<Object>) value;
+            Iterable<Object> values;
+            if (value != null && value.getClass().isArray()) {
+                List<Object> temp = new ArrayList<>();
+                // 获取数组长度
+                int length = java.lang.reflect.Array.getLength(value);
+
+                for (int i = 0; i < length; i++) {
+                    // 反射获取数组元素，自动包装为 Object
+                    Object elem = java.lang.reflect.Array.get(value, i);
+                    temp.add(elem);
+                }
+                values = temp;
+            } else {
+                values = (Iterable<Object>) value;
+            }
+
             if (values == null)
                 values = new ArrayList<>();
             if (obj instanceof IIntervene) {

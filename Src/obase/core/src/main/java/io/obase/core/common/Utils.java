@@ -130,6 +130,10 @@ public final class Utils {
             return new Class[]{field.getType()};
         //如果获取GenericType是Class<?> 表示没有泛型 直接返回
         if (field.getGenericType() instanceof Class<?>) {
+            //如果是数组 应当取ComponentType
+            if (field.getType().isArray()) {
+                return new Class<?>[]{field.getType().getComponentType()};
+            }
             return new Class[]{(Class<?>) field.getGenericType()};
         }
         //不是Class<?> 是Map之类的可以获取多个泛型参数的
@@ -161,6 +165,10 @@ public final class Utils {
             //循环参数列表
             return convertTypesToClasses(actualTypes);
         } else if (genericReturnType instanceof Class<?>) {
+            //如果是数组 应当取ComponentType
+            if (((Class<?>) genericReturnType).isArray()) {
+                return new Class<?>[]{((Class<?>) genericReturnType).getComponentType()};
+            }
             return new Class[]{(Class<?>) genericReturnType};
         } else {
             //其他情况 暂不支持
@@ -411,6 +419,14 @@ public final class Utils {
         else if (UUID.class.getName().equals(typeClass.getName()) && result instanceof String) {
             String str = (String) result;
             return UUID.fromString(str);
+        }
+
+        //如果是列表要转数组
+        if (typeClass.isArray() && List.class.isAssignableFrom(result.getClass())) {
+            Class<?> componentType = typeClass.getComponentType();
+            List<Object> list = (List<Object>) result;
+            Object array = Array.newInstance(componentType, list.size());
+            return typeClass.cast(list.toArray((Object[]) array));
         }
 
         return result;

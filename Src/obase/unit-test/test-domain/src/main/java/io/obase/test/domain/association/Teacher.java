@@ -1,7 +1,5 @@
 package io.obase.test.domain.association;
 
-import java.util.List;
-
 /**
  * 教师
  */
@@ -30,7 +28,7 @@ public class Teacher {
     /**
      * 所拥有的的通行证
      */
-    private List<PassPaper> passPaperList;
+    private PassPaper[] passPaperList;
 
     /**
      * 获取学校ID
@@ -109,7 +107,7 @@ public class Teacher {
      *
      * @return 所拥有的的通行证
      */
-    public List<PassPaper> getPassPaperList() {
+    public PassPaper[] getPassPaperList() {
         return this.passPaperList;
     }
 
@@ -118,7 +116,7 @@ public class Teacher {
      *
      * @param passPaperList 所拥有的的通行证
      */
-    public void setPassPaperList(List<PassPaper> passPaperList) {
+    public void setPassPaperList(PassPaper[] passPaperList) {
         this.passPaperList = passPaperList;
     }
 

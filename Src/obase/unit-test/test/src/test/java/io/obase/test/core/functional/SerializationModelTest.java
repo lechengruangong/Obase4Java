@@ -71,9 +71,9 @@ public class SerializationModelTest {
             var component3 = new Component();
             component3.setName("Component3");
 
-            component1.setComponents(List.of(new Component[]{component2, component3}));
-            component2.setComponents(List.of(new Component[]{component1, component3}));
-            component3.setComponents(List.of(new Component[]{component1, component2}));
+            component1.setComponents(new Component[]{component2, component3});
+            component2.setComponents(new Component[]{component1, component3});
+            component3.setComponents(new Component[]{component1, component2});
             //将组件添加到服务中
             serviceSimple.setComponents(List.of(new Component[]{component1, component2, component3}));
 
@@ -166,17 +166,17 @@ public class SerializationModelTest {
         assertEquals(service.getComponents().get(1).getName(), "Component2");
         assertEquals(service.getComponents().get(2).getName(), "Component3");
         assertNotNull(service.getComponents().get(0).getComponents());
-        assertEquals(service.getComponents().get(0).getComponents().size(), 2);
-        assertEquals(service.getComponents().get(0).getComponents().get(0).getName(), "Component2");
-        assertEquals(service.getComponents().get(0).getComponents().get(1).getName(), "Component3");
+        assertEquals(service.getComponents().get(0).getComponents().length, 2);
+        assertEquals(service.getComponents().get(0).getComponents()[0].getName(), "Component2");
+        assertEquals(service.getComponents().get(0).getComponents()[1].getName(), "Component3");
         assertNotNull(service.getComponents().get(1).getComponents());
-        assertEquals(service.getComponents().get(1).getComponents().size(), 2);
-        assertEquals(service.getComponents().get(1).getComponents().get(0).getName(), "Component1");
-        assertEquals(service.getComponents().get(1).getComponents().get(1).getName(), "Component3");
+        assertEquals(service.getComponents().get(1).getComponents().length, 2);
+        assertEquals(service.getComponents().get(1).getComponents()[0].getName(), "Component1");
+        assertEquals(service.getComponents().get(1).getComponents()[1].getName(), "Component3");
         assertNotNull(service.getComponents().get(2).getComponents());
-        assertEquals(service.getComponents().get(2).getComponents().size(), 2);
-        assertEquals(service.getComponents().get(2).getComponents().get(0).getName(), "Component1");
-        assertEquals(service.getComponents().get(2).getComponents().get(1).getName(), "Component2");
+        assertEquals(service.getComponents().get(2).getComponents().length, 2);
+        assertEquals(service.getComponents().get(2).getComponents()[0].getName(), "Component1");
+        assertEquals(service.getComponents().get(2).getComponents()[1].getName(), "Component2");
 
 
         //查找对象Nan

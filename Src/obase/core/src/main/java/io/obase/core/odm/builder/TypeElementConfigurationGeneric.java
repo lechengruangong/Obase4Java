@@ -429,15 +429,6 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
      * @return 自身
      */
     public TConfiguration hasValueGetter(Method method) {
-        if (this.isMultiple) {
-            if (!Iterable.class.isAssignableFrom(method.getReturnType()))
-                throw new IllegalArgumentException(String.format("%s方法与目标多重性不一致.", method.getName()));
-
-        } else {
-            if (Iterable.class.isAssignableFrom(method.getReturnType()))
-                throw new IllegalArgumentException(String.format("%s方法与目标多重性不一致.", method.getName()));
-        }
-
         IValueGetter getter = Utils.makeDelegateValueGetter(method);
         return this.hasValueGetter(getter);
     }
