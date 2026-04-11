@@ -59,7 +59,9 @@ public class SerializationModelTest {
             identity.setVersion(1);
             identity.setSubVersion(2);
             serviceSimple.setIdentity(identity);
-            serviceSimple.setAnalyser(new AnalyserA(new AnalyserB(new AnalyserC(null))));
+            var analyser = new AnalyserA(new AnalyserB(new AnalyserC(null)));
+            analyser.setSubAnalysers(List.of(new AnalyserC(null)));
+            serviceSimple.setAnalyser(analyser);
 
             //构造一组互相引用的组件
             var component1 = new Component();
@@ -149,6 +151,9 @@ public class SerializationModelTest {
         //检查Analyser
         assertNotNull(service.getAnalyser());
         assertEquals(service.getAnalyser().getName(), "AnalyserA");
+        assertNotNull(service.getAnalyser().getSubAnalysers());
+        assertEquals(service.getAnalyser().getSubAnalysers().size(), 1);
+        assertEquals(service.getAnalyser().getSubAnalysers().get(0).getName(), "AnalyserC");
         assertNotNull(service.getAnalyser().getNext());
         assertEquals(service.getAnalyser().getNext().getName(), "AnalyserB");
         assertNotNull(service.getAnalyser().getNext().getNext());

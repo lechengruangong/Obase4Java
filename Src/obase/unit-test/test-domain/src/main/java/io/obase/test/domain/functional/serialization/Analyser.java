@@ -1,5 +1,7 @@
 package io.obase.test.domain.functional.serialization;
 
+import java.util.List;
+
 /**
  * 某种分析器
  */
@@ -14,6 +16,11 @@ public abstract class Analyser implements IComponent {
      * 下一个分析器
      */
     private Analyser next;
+
+    /**
+     * 子分析器
+     */
+    private List<Analyser> subAnalysers;
 
     /**
      * 初始化分析器
@@ -61,6 +68,24 @@ public abstract class Analyser implements IComponent {
      */
     void setNext(Analyser next) {
         this.next = next;
+    }
+
+    /**
+     * 子分析器
+     *
+     * @return 子分析器
+     */
+    public List<Analyser> getSubAnalysers() {
+        return this.subAnalysers;
+    }
+
+    /**
+     * 子分析器
+     *
+     * @param subAnalysers 子分析器
+     */
+    public void setSubAnalysers(List<Analyser> subAnalysers) {
+        this.subAnalysers = subAnalysers;
     }
 
     /**

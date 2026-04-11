@@ -155,8 +155,8 @@ public class SerializationObjectDataModelDeSerializer {
                 SerializationDataTransferObject dto = dtoS.stream().filter(p -> p.getId().equals(id)).findFirst().orElse(null);
                 if (dto != null) {
                     //根据dto的引用字典处理
-                    for (String referenceKey : dto.getReferences().keySet()) {
-                        if (!hasSetIds.contains(dto.getId())) {
+                    if (!hasSetIds.contains(dto.getId())) {
+                        for (String referenceKey : dto.getReferences().keySet()) {
                             SerializationReference refElement = type.getReferences().stream().filter(p -> p.getName().equals(referenceKey)).findFirst().orElse(null);
                             if (refElement != null) {
                                 //保存至已处理的集合中 避免下一层循环引用时重复处理
