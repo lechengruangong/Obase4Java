@@ -28,7 +28,7 @@ public class Teacher {
     /**
      * 所拥有的的通行证
      */
-    private PassPaper[] passPaperList;
+    private PassPaper[] passPaperList = new PassPaper[0];
 
     /**
      * 获取学校ID
