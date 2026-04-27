@@ -334,11 +334,15 @@ public abstract class ObjectType extends ReferringType implements IMappable {
             //比较当前构造器的参数个数和父类构造器的参数个数
             int currentCount = Utils.getConstructorParameterCount(this.constructor);
             int derivingCount = Utils.getConstructorParameterCount(this.getDerivingFrom().getConstructor());
+            //是否要检查类型 如果个数不一致 就没必要检查类型了
+            boolean needCheckType = true;
             //不一致 抛出异常
-            if (currentCount != derivingCount)
+            if (currentCount != derivingCount) {
+                needCheckType = false;
                 message.add(this.clrType.getName() + "的构造器参数个数与父类参数个数不一致," + this.clrType.getName() + "为" + currentCount + "个,但父类" + this.getDerivingFrom().getName() + "的构造器参数为" + derivingCount + "个.");
-            //如果个数大于0 再检查每一个的类型
-            if (currentCount > 0) {
+            }
+            //如果个数大于0 且个数一致 再检查每一个的类型
+            if (currentCount > 0 && needCheckType) {
                 for (int i = 0; i < currentCount; i++) {
                     Class<?> currentType = this.constructor.getParameters().get(i).getType();
                     Class<?> derivingType = this.getDerivingFrom().getConstructor().getParameters().get(i).getType();
