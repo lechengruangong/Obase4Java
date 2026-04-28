@@ -3,11 +3,11 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <!-- 以下为父级项目名称 打包方式 版本号 仅在此文件有较大修改时更改以下内容 -->
+    <!-- 以下为父级项目名称 打包方式 版本号 -->
     <groupId>io.obase</groupId>
     <artifactId>parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>${revision}</version>
 
     <!-- 添加项目元信息（必需） -->
     <name>Obase Framework</name>
@@ -82,7 +82,7 @@
     <properties>
         <!-- 自定义的配置部分 -->
         <!-- 打包版本 具体规则参见Obase的版本号文档 -->
-        <packageVersion>6.4.6</packageVersion>
+        <revision>6.5.0</revision>
         <!-- 统一的配置部分 -->
         <!-- 编译版本 -->
         <maven.compiler.source>8</maven.compiler.source>
@@ -176,14 +176,46 @@
                 <configuration>
                     <publishingServerId>central</publishingServerId>
                     <autoPublish>true</autoPublish>
-                    <deploymentName>${project.groupId}:${project.artifactId}:${project.version}</deploymentName>
+                    <deploymentName>${project.version}</deploymentName>
                 </configuration>
             </plugin>
             <!-- Release发布插件 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>3.0.1</version>
+                <configuration>
+                    <autoVersionSubmodules>true</autoVersionSubmodules>
+                    <useReleaseProfile>false</useReleaseProfile>
+                    <releaseProfiles>release</releaseProfiles>
+                    <goals>deploy</goals>
+                </configuration>
+            </plugin>
+            <!-- 版本号替换插件 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.1.0</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

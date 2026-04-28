@@ -130,6 +130,10 @@ public final class Utils {
             return new Class[]{field.getType()};
         //如果获取GenericType是Class<?> 表示没有泛型 直接返回
         if (field.getGenericType() instanceof Class<?>) {
+            //如果是数组 应当取ComponentType
+            if (field.getType().isArray()) {
+                return new Class<?>[]{field.getType().getComponentType()};
+            }
             return new Class[]{(Class<?>) field.getGenericType()};
         }
         //不是Class<?> 是Map之类的可以获取多个泛型参数的
@@ -161,6 +165,10 @@ public final class Utils {
             //循环参数列表
             return convertTypesToClasses(actualTypes);
         } else if (genericReturnType instanceof Class<?>) {
+            //如果是数组 应当取ComponentType
+            if (((Class<?>) genericReturnType).isArray()) {
+                return new Class<?>[]{((Class<?>) genericReturnType).getComponentType()};
+            }
             return new Class[]{(Class<?>) genericReturnType};
         } else {
             //其他情况 暂不支持
@@ -248,12 +256,18 @@ public final class Utils {
      * @return 转换后的值
      */
     public static Object convertDbValue(Object result, Class<?> typeClass) {
-
+        //空值 不处理
+        if (result == null)
+            return null;
         //enum
         if (typeClass.isEnum()) {
+
             Enum<?>[] cons = (Enum<?>[]) typeClass.getEnumConstants();
             for (Enum<?> con : cons) {
                 if (Objects.equals(String.valueOf(con.ordinal()), String.valueOf(result))) {
+                    result = con;
+                }
+                if (Objects.equals(con.name(), String.valueOf(result))) {
                     result = con;
                 }
             }
@@ -405,6 +419,14 @@ public final class Utils {
         else if (UUID.class.getName().equals(typeClass.getName()) && result instanceof String) {
             String str = (String) result;
             return UUID.fromString(str);
+        }
+
+        //如果是列表要转数组
+        if (typeClass.isArray() && List.class.isAssignableFrom(result.getClass())) {
+            Class<?> componentType = typeClass.getComponentType();
+            List<Object> list = (List<Object>) result;
+            Object array = Array.newInstance(componentType, list.size());
+            return typeClass.cast(list.toArray((Object[]) array));
         }
 
         return result;
@@ -957,7 +979,7 @@ public final class Utils {
 
         List<Class<?>> result = new ArrayList<>();
 
-        ParameterizedType realType = null;
+        ParameterizedType realType;
         if (field.getType() != String.class &&
                 Iterable.class.isAssignableFrom(field.getType())) {
 
@@ -993,5 +1015,134 @@ public final class Utils {
         }
 
         return result.toArray(new Class<?>[0]);
+    }
+
+    /**
+     * 获取自己和继承类的区分标记值
+     *
+     * @param structuralType 结构化类型
+     * @return 区分标记值
+     */
+    public static List<Object> getDerivingConcreteTypeValue(StructuralType structuralType) {
+        //加入自己的区分标记
+        List<Object> result = new ArrayList<>();
+        result.add(structuralType.getConcreteTypeSign().getItem2());
+        for (StructuralType derivedType : structuralType.getDerivedTypes()) {
+            //加入自己继承类的区分标记
+            result.addAll(getDerivingConcreteTypeValue(derivedType));
+        }
+        return result;
+    }
+
+    /**
+     * 用LIST包装值
+     * 如果是单值 则包装成一个只有一个元素的LIST 如果已经是集合 则直接转换成LIST返回
+     *
+     * @param value 值
+     * @return list
+     */
+    public static List<Object> getObjectList(Object value) {
+        //取值 无论单值还是集合 都以集合的形式进行处理
+        List<Object> targets = new ArrayList<>();
+        if (value instanceof Iterable<?>) {
+            Iterable<?> iEnumerable = (Iterable<?>) value;
+            for (Object o : iEnumerable) {
+                targets.add(o);
+            }
+        } else if (value != null && value.getClass().isArray()) {
+            Object[] array = (Object[]) value;
+            targets.addAll(Arrays.asList(array));
+        } else {
+            targets.add(value);
+        }
+
+        return targets;
+    }
+
+    /**
+     * 转换要序列化的值
+     * 目前仅将DateTime转化为截断后的字符串
+     *
+     * @param value 要转换的值
+     * @return 值
+     */
+    public static Object convertSerializationValue(Object value) {
+        //序列化时将DateTime转化为字符串 以便在不同环境下的兼容性
+        if (value instanceof LocalDateTime) {
+            LocalDateTime dateTime = (LocalDateTime) value;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+            String result = formatter.format(dateTime);
+            return LocalDateTime.parse(result, formatter);
+        }
+
+        if (value instanceof LocalDate) {
+            LocalDate dateTime = (LocalDate) value;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            String result = formatter.format(dateTime);
+            return LocalDateTime.parse(result, formatter);
+        }
+
+        if (value instanceof LocalTime) {
+            LocalTime dateTime = (LocalTime) value;
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
+            String result = formatter.format(dateTime);
+            return LocalDateTime.parse(result, formatter);
+        }
+
+        if (value instanceof Date) {
+            Date dateTime = (Date) value;
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+            String result = formatter.format(dateTime);
+            try {
+                return formatter.parse(result);
+            } catch (ParseException e) {
+                throw new RuntimeException("转换Date失败,请参考内部异常", e);
+            }
+        }
+
+        return value;
+    }
+
+    /**
+     * 判断两个类型是不是相等 或者是包装类型相等
+     *
+     * @param type1 类型1
+     * @param type2 类型2
+     * @return 是否相等
+     */
+    public static boolean isWrapperOrPrimitive(Class<?> type1, Class<?> type2) {
+        if (type1 == int.class || type1 == Integer.class) {
+            return type2 != int.class && type2 != Integer.class;
+        }
+
+        if (type1 == long.class || type1 == Long.class) {
+            return type2 != long.class && type2 != Long.class;
+        }
+
+        if (type1 == byte.class || type1 == Byte.class) {
+            return type2 != byte.class && type2 != Byte.class;
+        }
+
+        if (type1 == short.class || type1 == Short.class) {
+            return type2 != short.class && type2 != Short.class;
+        }
+
+        if (type1 == float.class || type1 == Float.class) {
+            return type2 != float.class && type2 != Float.class;
+        }
+
+        if (type1 == double.class || type1 == Double.class) {
+            return type2 != double.class && type2 != Double.class;
+        }
+
+        if (type1 == char.class || type1 == Character.class) {
+            return type2 != char.class && type2 != Character.class;
+        }
+
+        if (type1 == boolean.class || type1 == Boolean.class) {
+            return type2 != boolean.class && type2 != Boolean.class;
+        }
+
+        return true;
     }
 }

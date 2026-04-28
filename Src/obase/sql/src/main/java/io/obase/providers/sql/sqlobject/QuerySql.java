@@ -655,7 +655,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Avg(cast(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " as decimal(10,2))),0) from " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                    sqlStrBuilder.append("  where ").append(this.getCriteria().toString(sourceType, paras, creator)).append("   ");
+                    sqlStrBuilder.append("  WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append("   ");
                     sqlParameters.realValue.addAll(paras.realValue);
                 }
                 return sqlStrBuilder.toString();
@@ -663,7 +663,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 sqlStrBuilder = new StringBuilder("select count(1) from " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                    sqlStrBuilder.append(" where ").append(this.getCriteria().toString(sourceType, paras, creator)).append("  ");
+                    sqlStrBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append("  ");
                     sqlParameters.realValue.addAll(paras.realValue);
                 }
                 return sqlStrBuilder.toString();
@@ -671,7 +671,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Max(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                    sqlStrBuilder.append(" where  ").append(this.getCriteria().toString(sourceType, paras, creator)).append(" ");
+                    sqlStrBuilder.append(" WHERE  ").append(this.getCriteria().toString(sourceType, paras, creator)).append(" ");
                     sqlParameters.realValue.addAll(paras.realValue);
                 }
                 return sqlStrBuilder.toString();
@@ -679,7 +679,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Min(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                    sqlStrBuilder.append("  where ").append(this.getCriteria().toString(sourceType, paras, creator)).append(" ");
+                    sqlStrBuilder.append("  WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append(" ");
                     sqlParameters.realValue.addAll(paras.realValue);
                 }
                 return sqlStrBuilder.toString();
@@ -687,7 +687,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Sum(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                    sqlStrBuilder.append(" where ").append(this.getCriteria().toString(sourceType, paras, creator)).append("   ");
+                    sqlStrBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append("   ");
                     sqlParameters.realValue.addAll(paras.realValue);
                 }
                 return sqlStrBuilder.toString();
@@ -716,7 +716,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 //Where部分
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> cParas = new ObjectReferencePack<>();
-                    sqlStrBuilder.append("  where ").append(this.getCriteria().toString(sourceType, cParas, creator)).append("  ");
+                    sqlStrBuilder.append("  WHERE ").append(this.getCriteria().toString(sourceType, cParas, creator)).append("  ");
                     sqlParameters.realValue.addAll(cParas.realValue);
                 }
                 //Group部分

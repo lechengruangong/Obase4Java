@@ -666,11 +666,30 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
      * 设置此类型的具体类型判别规范
      * 用于判断此类型的要如何创建具体的类型
      *
-     * @param concreteTypeDiscriminator 具体类型判别器
+     * @param typeAttributeName 用于判断类型的字段名称
+     * @return 自身
+     */
+    public StructuralTypeConfiguration<TStructural> hasConcreteTypeDiscriminator(String typeAttributeName) {
+        return this.hasConcreteTypeDiscriminator(typeAttributeName, null);
+    }
+
+    /**
+     * 设置此类型的具体类型判别规范
+     * 用于判断此类型的要如何创建具体的类型
+     *
+     * @param concreteTypeDiscriminator 具体类型判别器 传空则表示使用内置的具体类型判别器
      * @param typeAttributeName         用于判断类型的字段名称
      * @return 自身
      */
-    public StructuralTypeConfiguration<TStructural> hasConcreteTypeDiscriminator(IConcreteTypeDiscriminator concreteTypeDiscriminator, String typeAttributeName) {
+    public StructuralTypeConfiguration<TStructural> hasConcreteTypeDiscriminator(String typeAttributeName, IConcreteTypeDiscriminator concreteTypeDiscriminator) {
+        if (Utils.getStringIsEmpty(typeAttributeName))
+            throw new IllegalArgumentException("类型判别字段名称不能为空.");
+        //获取类型判别字段的名称
+        List<StructuralTypeConfiguration<?>> chain = Utils.getDerivingConfigChain(this, this.getModelBuilder());
+        String typeName = chain.stream().map(StructuralTypeConfiguration::getTypeAttributeName).filter(attributeName -> !Utils.getStringIsEmpty(attributeName)).findFirst().orElse(null);
+        if (typeName != null && !typeName.equalsIgnoreCase(typeAttributeName))
+            throw new IllegalArgumentException("类型判别字段名称冲突,在" + this.clrType.getName() + "的基类上已经配置了类型判别字段名称为" + typeName + ",不能再配置为" + typeAttributeName + ".");
+
         this.concreteTypeDiscriminator = concreteTypeDiscriminator;
         this.typeAttributeName = typeAttributeName;
         return this;
@@ -679,16 +698,24 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
     /**
      * 设置此类型的判别字段和判别字段的值
      *
-     * @param typeName 判别字段名称
-     * @param value    判别字段的值
+     * @param value 判别字段的值
      * @return 自身
      */
-    public StructuralTypeConfiguration<TStructural> hasConcreteTypeSign(String typeName, Object value) {
+    public StructuralTypeConfiguration<TStructural> hasConcreteTypeSign(Object value) {
         if (value == null)
-            throw new IllegalArgumentException("不能设置空的类型判别字段.");
+            throw new IllegalArgumentException("不能设置空的类型判别字段值.");
         Class<?> valueType = value.getClass();
         if (valueType != Integer.class && valueType != Long.class && valueType != String.class)
             throw new IllegalArgumentException("判别字段必须为string,int,long类型中的一种");
+
+        //获取类型判别字段的名称
+        List<StructuralTypeConfiguration<?>> chain = Utils.getDerivingConfigChain(this, this.getModelBuilder());
+        String typeName = chain.stream().map(StructuralTypeConfiguration::getTypeAttributeName).findFirst().orElse(null);
+        if (Utils.getStringIsEmpty(typeName))
+            throw new IllegalArgumentException("没有找到类型判别字段,请先在基类上用HasConcreteTypeDiscriminator配置判别字段");
+        //如果当前类型没有配置类型判别字段的名称 则使用从基类上找到的类型判别字段的名称
+        if (Utils.getStringIsEmpty(this.typeAttributeName))
+            this.typeAttributeName = typeName;
 
         this.concreteTypeSign = new TwoTuple<>(typeName, value);
         return this;

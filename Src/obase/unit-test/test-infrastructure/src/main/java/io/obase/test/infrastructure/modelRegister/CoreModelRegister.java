@@ -37,17 +37,16 @@ import io.obase.test.domain.functional.expression.Box;
 import io.obase.test.domain.functional.expression.Can;
 import io.obase.test.domain.functional.expression.WaterTank;
 import io.obase.test.domain.functional.keyValueVersion.*;
+import io.obase.test.domain.functional.serialization.*;
 import io.obase.test.domain.simpleType.*;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * 核心的模型注册器
@@ -85,6 +84,12 @@ public class CoreModelRegister {
         modelBuilder.ignore(Box.class);
         modelBuilder.ignore(Can.class);
         modelBuilder.ignore(WaterTank.class);
+        modelBuilder.ignore(Route.class);
+        modelBuilder.ignore(Identity.class);
+        modelBuilder.ignore(AnalyserA.class);
+        modelBuilder.ignore(AnalyserB.class);
+        modelBuilder.ignore(AnalyserC.class);
+        modelBuilder.ignore(Component.class);
 
         //单独注册几个类型
         modelBuilder.registerType(School.class, Student.class);
@@ -527,9 +532,9 @@ public class CoreModelRegister {
         //配置汽车车轮 显式关联型 默认是存储在类名的表内 也可以指定为伴随存储
         var carWheelAssociation = modelBuilder.association(CarWheel.class);
         //配置Car端
-        carWheelAssociation.associationEnd(p -> p.getCar());
+        carWheelAssociation.associationEnd("Car");
         //配置Wheel端
-        carWheelAssociation.associationEnd(p -> p.getWheel());
+        carWheelAssociation.associationEnd("Wheel");
         //没有独立映射表 和 Wheel存储在一起
         carWheelAssociation.toTable("Wheel");
 
@@ -705,12 +710,11 @@ public class CoreModelRegister {
         var bikeEntity = modelBuilder.entity(Bike.class);
         bikeEntity.hasKeyAttribute(p -> p.getCode()).hasKeyIsSelfIncreased(false);
         //此处需要配置类型判别器和根据哪个数据源字段的值来判断 不再需要配置自定义的构造器
-        //具体配置见下方的BikeConcreteTypeDiscriminator
-        bikeEntity.hasConcreteTypeDiscriminator(new BikeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        //如果此处的具体类型判别器没有特殊逻辑 可以只传入判别字段名 使用Obase内置的判别器
+        bikeEntity.hasConcreteTypeDiscriminator("Type");
         //Bike的Type字段是1 这里的类型需要根据具体的类型进行调整
         //如果此基础类型是抽象的 此处可以配置一个如-1一类的值抽象的类型不会被创建 所以配置一个特殊值即可
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        bikeEntity.hasConcreteTypeSign("Type", 1);
+        bikeEntity.hasConcreteTypeSign(1);
 
         //定义车灯实体配置
         var bikeLightEntity = modelBuilder.entity(BikeLight.class);
@@ -734,10 +738,9 @@ public class CoreModelRegister {
         //设置继承关系
         myBikeAEntity.deriveFrom(Bike.class);
         //MyBikeA的Type字段是2 这里的类型需要根据具体的类型进行调整
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        myBikeAEntity.hasConcreteTypeSign("Type", 2);
-        //设置A和C的具体类型区分器
-        myBikeAEntity.hasConcreteTypeDiscriminator(new MyBikeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        myBikeAEntity.hasConcreteTypeSign(2);
+        //设置A和C的具体类型区分器  使用Obase内置的判别器
+        myBikeAEntity.hasConcreteTypeDiscriminator("Type");
         //此处与父类一起保存于Bike
         myBikeAEntity.toTable("Bike");
 
@@ -747,8 +750,7 @@ public class CoreModelRegister {
         //设置继承关系
         myBikeBEntity.deriveFrom(Bike.class);
         //MyBikeB的Type字段是3 这里的类型需要根据具体的类型进行调整
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        myBikeBEntity.hasConcreteTypeSign("Type", 3);
+        myBikeBEntity.hasConcreteTypeSign(3);
         //此处与父类一起保存于Bike
         myBikeBEntity.toTable("Bike");
 
@@ -758,8 +760,7 @@ public class CoreModelRegister {
         //设置继承关系
         myBikeCEntity.deriveFrom(MyBikeA.class);
         //MyBikeB的Type字段是4 这里的类型需要根据具体的类型进行调整
-        //字段名需要与基类类型的HasConcreteTypeDiscriminator方法的第二个参数相同
-        myBikeCEntity.hasConcreteTypeSign("Type", 4);
+        myBikeCEntity.hasConcreteTypeSign(4);
         //此处与父类一起保存于Bike
         myBikeCEntity.toTable("Bike");
 
@@ -813,11 +814,11 @@ public class CoreModelRegister {
         var prizeEntity = modelBuilder.entity(Prize.class);
         //配置主键
         prizeEntity.hasKeyAttribute(p -> p.getId());
-        //配置一个具体类型判别器 在判别器中返回具体的类型
+        // 使用Obase内置的判别器
         //实现见PrizeConcreteTypeDiscriminator中 此处类内没有定义Type Obase会其补充
-        prizeEntity.hasConcreteTypeDiscriminator(new PrizeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        prizeEntity.hasConcreteTypeDiscriminator("Type");
         //此类型是抽象的 不会被创建 用一个特殊值即可
-        prizeEntity.hasConcreteTypeSign("Type", -1);
+        prizeEntity.hasConcreteTypeSign(-1);
 
         //为实体奖品配置实体型
         var inKindPrizeEntity = modelBuilder.entity(InKindPrize.class);
@@ -825,8 +826,8 @@ public class CoreModelRegister {
         inKindPrizeEntity.hasKeyAttribute(p -> p.getId());
         //配置为从Prize派生而来
         inKindPrizeEntity.deriveFrom(Prize.class);
-        //配置一个类型判别属性和值
-        inKindPrizeEntity.hasConcreteTypeSign("Type", 1);
+        //配置一个类型判别属性的值
+        inKindPrizeEntity.hasConcreteTypeSign(1);
         //都存储在Prize里
         inKindPrizeEntity.toTable("Prize");
 
@@ -837,9 +838,9 @@ public class CoreModelRegister {
         //配置为从Prize派生而来
         redEnvelopEntity.deriveFrom(Prize.class);
         //配置类型判别器
-        redEnvelopEntity.hasConcreteTypeDiscriminator(new RedEnvelopeConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
-        //配置一个判别属性和值
-        redEnvelopEntity.hasConcreteTypeSign("Type", 2);
+        redEnvelopEntity.hasConcreteTypeDiscriminator("Type", new RedEnvelopeConcreteTypeDiscriminator(modelBuilder.getContextType()));
+        //配置一个判别属性的值
+        redEnvelopEntity.hasConcreteTypeSign(2);
         //都存储在Prize里
         redEnvelopEntity.toTable("Prize");
 
@@ -849,8 +850,8 @@ public class CoreModelRegister {
         luckRedEnvelopeEntity.hasKeyAttribute(p -> p.getId());
         //配置为从RedEnvelope派生而来
         luckRedEnvelopeEntity.deriveFrom(RedEnvelope.class);
-        //配置一个判别属性和值
-        luckRedEnvelopeEntity.hasConcreteTypeSign("Type", 3);
+        //配置一个判别属性的值
+        luckRedEnvelopeEntity.hasConcreteTypeSign(3);
         //都存储在Prize里
         luckRedEnvelopeEntity.toTable("Prize");
 
@@ -869,10 +870,10 @@ public class CoreModelRegister {
         dialogueEntity.hasKeyAttribute(p -> p.getDialogueId()).hasKeyIsSelfIncreased(true);
         //配置映射表
         dialogueEntity.toTable("Dialogue");
-        //配置一个具体类型判别器 在判别器中返回具体的类型
-        dialogueEntity.hasConcreteTypeDiscriminator(new DialogueConcreteTypeDiscriminator(modelBuilder.getContextType()), "Type");
+        //配置一个具体类型判别器 使用内置的判别器
+        dialogueEntity.hasConcreteTypeDiscriminator("Type");
         //此类型是抽象的 不会被创建 用一个特殊值即可
-        dialogueEntity.hasConcreteTypeSign("Type", 1);
+        dialogueEntity.hasConcreteTypeSign(1);
 
         //配置发言实体型
         var wordsEntity = modelBuilder.entity(Words.class);
@@ -887,8 +888,8 @@ public class CoreModelRegister {
         customerDialogueEntity.hasKeyAttribute(p -> p.getDialogueId()).hasKeyIsSelfIncreased(true);
         //配置为从Dialogue派生而来
         customerDialogueEntity.deriveFrom(Dialogue.class);
-        //配置一个判别属性和值
-        customerDialogueEntity.hasConcreteTypeSign("Type", 2);
+        //配置一个判别属性的值
+        customerDialogueEntity.hasConcreteTypeSign(2);
         //都存储在Prize里
         customerDialogueEntity.toTable("Dialogue");
 
@@ -1258,6 +1259,120 @@ public class CoreModelRegister {
         standardValueAssociation.associationEnd(p -> p.getSelectedValue()).hasMapping("CategoryId", "CategoryId")
                 .hasMapping("AttributeId", "AttributeId");
         standardValueAssociation.toTable("StandardValue");
+
+        //endregion
+        //对应测试文件core.functional文件夹内SerializationModelTest
+        //region 有序列化模型的序列化
+
+        //注册服务为实体型
+        var serviceEntity = modelBuilder.entity(Service.class);
+        serviceEntity.hasKeyAttribute(p -> p.getCode()).hasKeyIsSelfIncreased(false);
+        serviceEntity.toTable("Service");
+
+        //设置Route属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute(p -> p.getRoute(), String.class).hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), Route.class).useSerializationModel(true);
+
+        //设置SubRoute属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute("SubRoute", String.class).hasMaxCharNumber(1000).hasValueGetter((Service p) -> p.getSubRoute())
+                .hasValueSetter((Service p, List<Route> value) -> p.setSubRoute(value))
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), List.class).useSerializationModel(true);
+
+        //设置Identity属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute(p -> p.getIdentity(), String.class).hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), Identity.class).useSerializationModel(true);
+
+        //设置Analyser属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute(p -> p.getAnalyser(), String.class).hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), Analyser.class).useSerializationModel(true);
+
+        //设置Components属性 长度设置的长一些 保证存储的下
+        serviceEntity.attribute("Components", String.class).hasValueGetter((Service p) -> p.getComponents())
+                .hasValueSetter((Service p, List<Component> value) -> p.setComponents(value))
+                .hasMaxCharNumber(1000)
+                //需要有模型的序列化和设置序列化器
+                .useSerializer(new JsonSerializer(), List.class).useSerializationModel(true);
+
+        //配置序列化模型Route
+        var routeEntity = modelBuilder.serializationEntity(Route.class);
+        //Route的属性 无需配置 自动侦测
+        //为了测试配置 故写两个属性配置
+        Field ruleField;
+        try {
+            ruleField = Route.class.getDeclaredField("rule");
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException("无法获取Route的rule字段", e);
+        }
+        routeEntity.attribute(p -> p.getAction()).hasValueGetter((Route p) -> p.getAction())
+                .hasValueSetter((Route p, EAction value) -> p.setAction(value), EValueSettingMode.Assignment);
+        routeEntity.attribute("Rule", String.class)
+                .hasValueGetter(ruleField)
+                .hasValueSetter(ruleField);
+        //Route有无参的反序列化构造函数 无需配置 自动侦测
+        //Route没有引用 无需配置
+
+        //配置序列化模型Route
+        var idEntityConfiguration = modelBuilder.serializationEntity(Identity.class);
+        //Identity的属性 无需配置 自动侦测
+        //为了测试配置 故写一个属性配置
+        idEntityConfiguration.attribute("Role");
+        //Identity的构造函数需要配置
+        Constructor<Identity> identityConstructor;
+        try {
+            identityConstructor = Identity.class.getDeclaredConstructor(UUID.class, LocalDateTime.class, String.class, LocalDateTime.class);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException("无法获取Identity的构造字段", e);
+        }
+        Field createTimeField;
+        try {
+            createTimeField = Identity.class.getDeclaredField("createTime");
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException("无法获取Identity的createTime字段", e);
+        }
+        var idConstructor = idEntityConfiguration.hasConstructor(identityConstructor);
+        //配置第一个参数 需要存储 从ID里取出Id属性的值存储
+        idConstructor.hasParameter((Identity p) -> p.getId(), UUID.class, true)
+                //配置第二个参数 需要存储 从字段_createTime里取出CreateTime属性的值存储
+                .hasParameter(createTimeField, LocalDateTime.class, true)
+                //配置第三个参数 需要存储 从Role里取出Role属性的值存储
+                .hasParameter((Identity p) -> p.getRole(), String.class, true)
+                //配置第四个参数 不需要存储 直接传入当前时间 注意这个委托的参数会传空
+                .hasParameter((Identity p) -> LocalDateTime.now(), LocalDateTime.class, false);
+
+        //Identity没有引用 无需配置
+        //忽略版本和次版本
+        idEntityConfiguration.ignore(p -> p.getSubVersion()).ignore("Version");
+
+        //配置序列化模型AnalyserA
+        var analyserAEntityConfiguration = modelBuilder.serializationEntity(AnalyserA.class);
+        //Analyser的属性 无需配置 自动侦测
+        //Analyser有无参的反序列化构造函数 无需配置 自动侦测
+        //Analyser有引用 为测试配置 故写一个引用配置
+        analyserAEntityConfiguration.reference(p -> p.getNext());
+
+        //配置序列化模型AnalyserB
+        var analyserBEntityConfiguration = modelBuilder.serializationEntity(AnalyserB.class);
+        //Analyser的属性 无需配置 自动侦测
+        //Analyser有无参的反序列化构造函数 无需配置 自动侦测
+        //Analyser有引用 为测试配置 故写一个引用配置
+        analyserBEntityConfiguration.reference("Next");
+
+        //配置序列化模型AnalyserB
+        var analyserCEntityConfiguration = modelBuilder.serializationEntity(AnalyserC.class);
+        //Analyser的属性 无需配置 自动侦测
+        //Analyser有无参的反序列化构造函数 无需配置 自动侦测
+        //Analyser有引用 为测试配置 故写一个引用配置
+        analyserCEntityConfiguration.reference("Next", false);
+
+        //配置序列化模型Component
+        modelBuilder.serializationEntity(Component.class);
+        //Component的属性 无需配置 自动侦测
+        //Component有无参的反序列化构造函数 无需配置 自动侦测
+        //Component有引用 无需配置 自动侦测
 
         //endregion
     }

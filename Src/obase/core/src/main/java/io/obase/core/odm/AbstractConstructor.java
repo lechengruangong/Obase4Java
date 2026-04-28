@@ -50,6 +50,15 @@ public class AbstractConstructor extends InstanceConstructor {
     }
 
     /**
+     * 获取派生类型的属性的名称
+     *
+     * @return 派生类型的属性的名称
+     */
+    public String getTypeAttributeName() {
+        return this.typeAttributeName;
+    }
+
+    /**
      * 构造对象
      *
      * @param arguments 构造函数参数
@@ -86,17 +95,23 @@ public class AbstractConstructor extends InstanceConstructor {
             throw new IllegalArgumentException("无法获取用于判别类型的属性" + this.typeAttributeName + ".");
         //获取判别用值
         Object value = arguments[arguments.length - 1];
-        //进行判别
-        StructuralType discriminate = this.typeDiscriminator.discriminate(value);
+
+        if (value == null)
+            throw new IllegalArgumentException("用于判别类型的属性" + this.typeAttributeName + "值不能为空.");
+        String typeCode = value.toString();
+        //获取判别的类型
+        StructuralType discriminate = this.typeDiscriminator.discriminate(typeCode);
         //如果是空 没找到
         if (discriminate == null)
-            throw new IllegalArgumentException(
-                    "无法根据判别器" + this.typeDiscriminator.getClass() + "配置的判别类型的属性" + this.typeAttributeName + "值" + value + "获取用于判别的" + this.getInstanceType().getName() + "类型的具体类型.");
+            throw new IllegalArgumentException("判别器" + this.typeDiscriminator.getClass() + "无法使用值" + typeCode + "获取到" + this.getInstanceType().getName() + "类型的具体类型.");
         //判断当前类型是否是基类的派生类型
         if (!this.getInstanceType().getClrType().isAssignableFrom(discriminate.getClrType()))
-            throw new IllegalArgumentException(
-                    "根据判别器" + this.typeDiscriminator.getClass() + "配置的判别类型的属性" + this.typeAttributeName + "值" + value + "获取的具体类型" + discriminate.getName() + "不是" + this.getInstanceType().getName() + "的派生类型.");
-
+            throw new IllegalArgumentException("判别器" + this.typeDiscriminator.getClass() + "使用值" + typeCode + "获取的具体类型" + discriminate.getClrType().getName() + "不是" + this.getInstanceType().getName() + "的派生类型.");
+        //此类型配置的判别标记代码值
+        String discriminatedTypeCode = discriminate.getConcreteTypeSign().getItem2().toString();
+        //判断值是否一致
+        if (!discriminatedTypeCode.equalsIgnoreCase(typeCode))
+            throw new IllegalArgumentException(discriminate.getClrType().getName() + "类型配置的类型判别值为" + discriminatedTypeCode + ",而类型判别器" + this.typeDiscriminator.getClass() + "获取到具体类型" + discriminate.getClrType().getName() + "时使用的值为" + typeCode + "而不是" + discriminatedTypeCode + ".");
         return discriminate;
     }
 

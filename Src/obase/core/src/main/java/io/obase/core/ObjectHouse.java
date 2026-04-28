@@ -217,6 +217,12 @@ public class ObjectHouse implements IIntervener {
             if (!values.iterator().hasNext())
                 refValue = null;
         }
+        if (refValue != null && refValue.getClass().isArray()) {
+            // 获取数组长度 如果是0 则需要进行加载
+            int length = java.lang.reflect.Array.getLength(refValue);
+            if (length == 0)
+                refValue = null;
+        }
 
         if (refValue == null) {
             ObjectContext context = this.getHostContext();

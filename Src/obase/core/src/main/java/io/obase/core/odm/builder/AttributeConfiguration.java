@@ -9,6 +9,7 @@
 package io.obase.core.odm.builder;
 
 import io.obase.common.ActionWithTwoArg;
+import io.obase.common.ObjectReferencePack;
 import io.obase.core.common.ITextSerializer;
 import io.obase.core.common.Property;
 import io.obase.core.common.TextSerializer;
@@ -18,6 +19,8 @@ import io.obase.core.expression.LambdaTranslator;
 import io.obase.core.expression.MemberExpression;
 import io.obase.core.expression.SerializedFunction;
 import io.obase.core.odm.*;
+import io.obase.core.odm.serialization.SerializationDataTransferObjectWrapper;
+import io.obase.core.odm.serialization.SerializationObjectDataModel;
 
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -73,6 +76,17 @@ public class AttributeConfiguration<TStructural>
      * 这个精度指的是小数点后的长度
      */
     private byte precision;
+
+    /**
+     * 序列化模型
+     */
+    private SerializationObjectDataModel serializationModel;
+
+    /**
+     * 是否使用序列化模型
+     */
+    private boolean useSerializationModel;
+
     /**
      * 对属性值实施序列化和反序列化的程序
      */
@@ -128,6 +142,16 @@ public class AttributeConfiguration<TStructural>
      */
     @Override
     protected IValueGetter getValueGetter() {
+
+        //有模型的序列化
+        if (this.useSerializationModel) {
+            if (super.getValueGetter() == null)
+                throw new IllegalArgumentException("启用了序列化模型的属性前必须先设置取值器.");
+            if (this.serializer == null)
+                throw new IllegalArgumentException("启用了序列化模型的属性前必须先设置序列化器.");
+            return new SerializedModelValueGetter(super.getValueGetter(), this.serializer, this.serializationModel);
+        }
+
         //如果已启用序列化且传入的取值器不为SerializedValueGetter，使用传入的取值器构造SerializedValueGetter，并将其作为实际取值
         // 器。如果传入的取值器是SerializedValueGetter，直接使用该取值器。
         if (this.serializer != null && !(super.getValueGetter() instanceof SerializedValueGetter)) {
@@ -145,6 +169,19 @@ public class AttributeConfiguration<TStructural>
      */
     @Override
     protected IValueSetter getValueSetter() {
+
+        //有模型的序列化
+        if (this.useSerializationModel) {
+            if (super.getValueGetter() == null)
+                throw new IllegalArgumentException("启用了序列化模型的属性前必须先设置设值器.");
+            if (this.serializer == null)
+                throw new IllegalArgumentException("启用了序列化模型的属性前必须先设置序列化器.");
+            Property property = Utils.getProperty(this.getTypeConfiguration().getClrType(), this.getName());
+            boolean isMulti = Utils.getIsMultiple(property, new ObjectReferencePack<>()) || property.getPropertyType().isArray();
+            return new SerializedModelValueSetter(super.getValueSetter(), isMulti,
+                    this.serializationModel, this.serializer, SerializationDataTransferObjectWrapper.class);
+        }
+
         // 如果已启用序列化且传入的设值器不为SerializedValueSetter，使用传入的设值器构造SerializedValueSetter，并将其作为实际设值
         // 器。如果传入的设值器是SerializedValueSetter，直接使用该设值器。
         if (this.serializer != null && !(super.getValueSetter() instanceof SerializedValueSetter)) {
@@ -745,6 +782,18 @@ public class AttributeConfiguration<TStructural>
     }
 
     /**
+     * 设置是否使用预制的序列化方案基类进行序列化
+     * 如果设置为true 则根据进行配置的序列化模型进行序列化 否则 只将原始值进行序列化
+     *
+     * @param use 是否使用序列化模型进行序列化
+     * @return 当前属性配置
+     */
+    public AttributeConfiguration<TStructural> useSerializationModel(boolean use) {
+        this.useSerializationModel = use;
+        return this;
+    }
+
+    /**
      * 根据元素配置项包含的元数据信息创建元素实例
      * 本方法由派生类实现
      *
@@ -767,6 +816,8 @@ public class AttributeConfiguration<TStructural>
             attribute = new Attribute(this.dataType, this.getName());
         }
 
+        //先从objectModel取出序列化模型
+        this.serializationModel = model.getSerializationModel();
 
         if (Utils.getStringIsEmpty(this.targetField))
             this.targetField = this.getName();

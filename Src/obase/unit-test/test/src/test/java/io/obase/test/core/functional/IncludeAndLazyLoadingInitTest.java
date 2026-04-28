@@ -93,7 +93,7 @@ public class IncludeAndLazyLoadingInitTest {
         //使用延迟加载进行加载 获得一个空容器
         assertNotNull(queryTeacher);
         assertNotNull(queryTeacher.getPassPaperList());
-        assertEquals(0, queryTeacher.getPassPaperList().size());
+        assertEquals(0, queryTeacher.getPassPaperList().length);
 
         context = ContextUtils.createContext(dataSource);
         //使用Include进行加载 获得一个空容器
@@ -101,7 +101,7 @@ public class IncludeAndLazyLoadingInitTest {
 
         assertNotNull(queryTeacher);
         assertNotNull(queryTeacher.getPassPaperList());
-        assertEquals(0, queryTeacher.getPassPaperList().size());
+        assertEquals(0, queryTeacher.getPassPaperList().length);
 
         //删除
         context.remove(queryTeacher);

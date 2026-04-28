@@ -80,12 +80,12 @@ public class CompositePrimaryKeyTest {
         //验证教师和通行证 此处通行证是延迟加载的
         assertNotNull(qTeacher);
         assertNotNull(qTeacher.getPassPaperList());
-        assertEquals(2, qTeacher.getPassPaperList().size());
+        assertEquals(2, qTeacher.getPassPaperList().length);
 
 
         //修改通行证
-        qTeacher.getPassPaperList().get(0).setMemo("修改后的备注1");
-        qTeacher.getPassPaperList().get(1).setMemo("修改后的备注2");
+        qTeacher.getPassPaperList()[0].setMemo("修改后的备注1");
+        qTeacher.getPassPaperList()[1].setMemo("修改后的备注2");
         //保存
         context.saveChanges();
 
@@ -95,9 +95,9 @@ public class CompositePrimaryKeyTest {
         //验证
         assertNotNull(qTeacher);
         assertNotNull(qTeacher.getPassPaperList());
-        assertEquals(2, qTeacher.getPassPaperList().size());
-        assertEquals("修改后的备注1", qTeacher.getPassPaperList().get(0).getMemo());
-        assertEquals("修改后的备注2", qTeacher.getPassPaperList().get(1).getMemo());
+        assertEquals(2, qTeacher.getPassPaperList().length);
+        assertEquals("修改后的备注1", qTeacher.getPassPaperList()[0].getMemo());
+        assertEquals("修改后的备注2", qTeacher.getPassPaperList()[1].getMemo());
 
         //查询通行证
         context = ContextUtils.createContext(dataSource);
@@ -113,12 +113,12 @@ public class CompositePrimaryKeyTest {
         //验证
         assertNotNull(qTeacher);
         assertNotNull(qTeacher.getPassPaperList());
-        assertEquals(2, qTeacher.getPassPaperList().size());
+        assertEquals(2, qTeacher.getPassPaperList().length);
 
         //删除通行证和教师
         context.remove(qTeacher);
-        context.remove(qTeacher.getPassPaperList().get(0));
-        context.remove(qTeacher.getPassPaperList().get(1));
+        context.remove(qTeacher.getPassPaperList()[0]);
+        context.remove(qTeacher.getPassPaperList()[0]);
 
         context.saveChanges();
     }

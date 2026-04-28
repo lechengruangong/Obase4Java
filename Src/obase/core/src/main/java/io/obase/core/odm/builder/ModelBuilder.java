@@ -17,6 +17,9 @@ import io.obase.core.common.Utils;
 import io.obase.core.expression.MethodChecker;
 import io.obase.core.odm.*;
 import io.obase.core.odm.builder.implicitAssociationConfigor.AssociationConfiguratorBuilder;
+import io.obase.core.odm.builder.serialization.SerializationEntityConfiguration;
+import io.obase.core.odm.builder.serialization.SerializationEntityConfigurationGeneric;
+import io.obase.core.odm.serialization.SerializationEntity;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -86,6 +89,11 @@ public class ModelBuilder {
     private IProxyTypeGenerator proxyTypeGenerator;
 
     /**
+     * 序列化模型类型字典
+     */
+    private HashMap<Class<?>, SerializationEntityConfiguration> serializationTypes;
+
+    /**
      * 类型解析器
      */
     private ITypeAnalyzer typeAnalyzer;
@@ -130,6 +138,17 @@ public class ModelBuilder {
         if (this.typeConfigs == null)
             this.typeConfigs = new LinkedHashMap<>();
         return this.typeConfigs;
+    }
+
+    /**
+     * 序列化类型配置项字典
+     *
+     * @return 序列化类型配置项字典
+     */
+    private HashMap<Class<?>, SerializationEntityConfiguration> getSerializationTypes() {
+        if (this.serializationTypes == null)
+            this.serializationTypes = new LinkedHashMap<>();
+        return this.serializationTypes;
     }
 
     /**
@@ -210,6 +229,25 @@ public class ModelBuilder {
     }
 
     /**
+     * 启动一个新的序列化实体型配置项，如果要启动的序列化实体型配置项未创建则新建一个。
+     *
+     * @param entityClass 序列化实体型类型
+     * @param <TEntity>   序列化实体型类型
+     * @return 配置项
+     */
+    public <TEntity> SerializationEntityConfigurationGeneric<TEntity> serializationEntity(Class<TEntity> entityClass) {
+        //注册所有的getter和setter
+        MethodChecker.registerClassMethod(entityClass);
+        if (!this.getSerializationTypes().containsKey(entityClass))
+            this.getSerializationTypes().put(entityClass, new SerializationEntityConfigurationGeneric<>(entityClass, this));
+        //如果已配置的不是实体 就新建一个
+        if (this.getSerializationTypes().get(entityClass) == null) {
+            this.getSerializationTypes().put(entityClass, new SerializationEntityConfigurationGeneric<>(entityClass, this));
+        }
+        return (SerializationEntityConfigurationGeneric<TEntity>) this.getSerializationTypes().get(entityClass);
+    }
+
+    /**
      * 生成对象数据模型。
      * 第一步，遍历类型配置项构建类型实例（实体型、关联型、复杂类型）放入模型，（这个过程中会自动生成代理类型）；
      * 第二步，再次遍历类型配置项，通过反射从CLR类型收集元素元数据，然后遍历元素配置项，构建元素实例。
@@ -234,6 +272,25 @@ public class ModelBuilder {
             //忽略被忽略的类
             for (Class<?> ignored : this.ignoredTypes) {
                 this.typeConfigs.remove(ignored);
+            }
+
+            //根据注册的序列化模型配置 生成序列化模型
+            for (SerializationEntityConfiguration item : this.getSerializationTypes().values()) {
+                //创建模型
+                SerializationEntity serializationEntity = item.create();
+                //添加到序列化对象数据模型
+                this.objectDataModel.getSerializationModel().addType(serializationEntity);
+            }
+
+            //完整性检查
+            if (this.integrityCheck) {
+                Map<String, List<String>> errDictionary = new HashMap<>();
+                for (SerializationEntity item : this.objectDataModel.getSerializationModel().getTypes()) {
+                    item.integrityCheck(errDictionary);
+                }
+                //如果检查中出现错误信息 抛出特定异常
+                if (errDictionary.values().size() > 0)
+                    throw new IntegrityCheckFailException(errDictionary);
             }
 
             //生成管道
@@ -290,11 +347,12 @@ public class ModelBuilder {
                     //取出基类
                     ObjectType derivingFrom = (ObjectType) objectType.getDerivingFrom();
                     //检查基类是否配置了类型判别器
-                    if (this.typeConfigs.get(derivingFrom.getClrType()).getConcreteTypeDiscriminator() == null)
-                        throw new IllegalArgumentException(derivingFrom.getName() + "未配置判别器.");
-                    //检查基类的类型判别器名称是否与当前类的类型标记名称相符
-                    if (objectType.getConcreteTypeSign() != null && !Objects.equals(objectType.getConcreteTypeSign().getItem1(), this.typeConfigs.get(derivingFrom.getClrType()).getTypeAttributeName()))
-                        throw new IllegalArgumentException(objectType.getName() + "与基类类型" + derivingFrom.getName() + "的判别字段名称不符,分别为" + objectType.getConcreteTypeSign().getItem1() + "和" + this.typeConfigs.get(derivingFrom.getClrType()).getTypeAttributeName());
+                    if (this.typeConfigs.get(derivingFrom.getClrType()).getConcreteTypeDiscriminator() == null) {
+                        //没有 则使用内置的判别器
+                        HashMap<String, StructuralType> chainCodes = this.getDerivingConcreteTypeValue(derivingFrom);
+                        typeConfigs.get(derivingFrom.getClrType()).setConcreteTypeDiscriminator(new ConcreteTypeDiscriminator(chainCodes));
+                    }
+
                     //存下来 之后设置具体类型判别器
                     if (!deriving.containsKey(derivingFrom))
                         deriving.put(derivingFrom, typeConfigs.get(derivingFrom.getClrType()));
@@ -321,7 +379,7 @@ public class ModelBuilder {
                             //设置要构造的对象类型
                             objectType.getNewInstanceConstructor().setInstanceType(objectType);
                             //新对象构造器
-                            IInstanceConstructor newCtorObj = this.CreateNewInstanceConstructor(proxyType, objectType.getNewInstanceConstructor());
+                            IInstanceConstructor newCtorObj = this.createNewInstanceConstructor(proxyType, objectType.getNewInstanceConstructor());
                             //对象构造器
                             objectType.setNewInstanceConstructor(newCtorObj);
                         }
@@ -397,6 +455,27 @@ public class ModelBuilder {
             executor.execute(this.objectDataModel);
 
         return this.objectDataModel;
+    }
+
+    /**
+     * 获取某个结构化类型及其所有派生类的具体类型标记值与结构化类型的字典
+     *
+     * @param structuralType 根类型
+     * @return 具体类型标记值与结构化类型的字典
+     */
+    private HashMap<String, StructuralType> getDerivingConcreteTypeValue(StructuralType structuralType) {
+        //加入自己的区分标记
+        HashMap<String, StructuralType> result = new HashMap<>();
+        result.put(structuralType.getConcreteTypeSign().getItem2().toString(), structuralType);
+        for (StructuralType derivedType : structuralType.getDerivedTypes()) {
+            //加入自己继承类的区分标记值
+            HashMap<String, StructuralType> derivedResult = this.getDerivingConcreteTypeValue(derivedType);
+            for (String key : derivedResult.keySet()) {
+                if (!result.containsKey(key))
+                    result.put(key, derivedResult.get(key));
+            }
+        }
+        return result;
     }
 
     /**
@@ -544,7 +623,7 @@ public class ModelBuilder {
      * @param constructor 构造器
      * @return 新对象构造器
      */
-    private IInstanceConstructor CreateNewInstanceConstructor(Class<?> proxyType, IInstanceConstructor constructor) {
+    private IInstanceConstructor createNewInstanceConstructor(Class<?> proxyType, IInstanceConstructor constructor) {
         //参数
         Class<?>[] paraObjs = ((InstanceConstructor) constructor).getParameterTypes().toArray(new Class<?>[0]);
         try {
@@ -631,6 +710,28 @@ public class ModelBuilder {
      */
     public AssociationConfiguratorBuilder findImplicitAssociationConfigurationBuilder(String endsTag) {
         return this.associationConfiguratorBuilders.stream().filter(p -> p.generateEndsTag().equals(endsTag)).findFirst().orElse(null);
+    }
+
+    /**
+     * 从模型查找序列化实体型配置项。如果未找到返回false。
+     *
+     * @param type 类型
+     * @return 是否存在
+     */
+    public boolean existSerializationEntityConfiguration(Class<?> type) {
+        //查找类型直接存在的配置项
+        boolean result = this.getSerializationTypes().containsKey(type);
+        //没有直接存在的配置项 则查找是否有配置项的类型是type的基类或接口
+        if (!result) {
+            for (Class<?> sType : this.getSerializationTypes().keySet()) {
+                //如果type是配置项的类型的基类或接口 则认为找到了
+                if (type.isAssignableFrom(sType)) {
+                    result = true;
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
     /**

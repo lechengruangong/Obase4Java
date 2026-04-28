@@ -56,23 +56,6 @@ public class BinaryLogicExpression extends BinaryExpression {
             default:
                 throw new IllegalArgumentException("未知的表达式类型: " + this.getNodeType());
         }
-
-        //判断左操作数
-        if (this.getLeft() instanceof BinaryLogicExpression) {
-            BinaryLogicExpression leftBinaryLogicExpression = (BinaryLogicExpression) this.getLeft();
-            if (leftBinaryLogicExpression.getNodeType() == this.getNodeType()) {
-                return this.getLeft().toString(sourceType) + operatorStr + this.getRight().toString(sourceType);
-            }
-        }
-
-        //判断右操作数
-        if (this.getRight() instanceof BinaryLogicExpression) {
-            BinaryLogicExpression rightBinaryLogicExpression = (BinaryLogicExpression) this.getRight();
-            if (rightBinaryLogicExpression.getNodeType() == this.getNodeType()) {
-                return this.getLeft().toString(sourceType) + operatorStr + this.getRight().toString(sourceType);
-            }
-        }
-
         return "(" + this.getLeft().toString(sourceType) + ")" + operatorStr + "(" + this.getRight().toString(sourceType) + ")";
     }
 
@@ -112,20 +95,7 @@ public class BinaryLogicExpression extends BinaryExpression {
         ObjectReferencePack<List<DataParameter>> rightSqlParameter = resultParameter.get(1);
 
         //字符串
-        String resultStr;
-
-        //判断左操作数
-        if (this.getLeft() instanceof BinaryLogicExpression) {
-            BinaryLogicExpression leftBinaryLogicExpression = (BinaryLogicExpression) this.getLeft();
-            resultStr = this.getNoReResultString(sourceType, creator, operatorStr, leftSqlParameter, rightSqlParameter, leftBinaryLogicExpression);
-        }
-        //判断右操作数
-        else if (this.getRight() instanceof BinaryLogicExpression) {
-            BinaryLogicExpression rightBinaryLogicExpression = (BinaryLogicExpression) this.getRight();
-            resultStr = this.getNoReResultString(sourceType, creator, operatorStr, leftSqlParameter, rightSqlParameter, rightBinaryLogicExpression);
-        } else {
-            resultStr = this.getResultString(sourceType, creator, operatorStr, leftSqlParameter, rightSqlParameter);
-        }
+        String resultStr = this.getResultString(sourceType, creator, operatorStr, leftSqlParameter, rightSqlParameter);
 
         List<DataParameter> realSqlParameters = new ArrayList<>();
         realSqlParameters.addAll(leftSqlParameter.realValue);
@@ -140,57 +110,7 @@ public class BinaryLogicExpression extends BinaryExpression {
     }
 
     /**
-     * 获取没有结果的字符串
-     *
-     * @param sourceType                数据源类型
-     * @param creator                   参数构造器
-     * @param operatorStr               操作符
-     * @param leftSqlParameter          左操作数的参数集合
-     * @param rightSqlParameters        右操作数的参数集合
-     * @param leftBinaryLogicExpression 左操作数的二元逻辑操作
-     * @return 结果字符串
-     */
-    private String getNoReResultString(EDataSource sourceType, IParameterCreator creator, String operatorStr, ObjectReferencePack<List<DataParameter>> leftSqlParameter, ObjectReferencePack<List<DataParameter>> rightSqlParameters, BinaryLogicExpression leftBinaryLogicExpression) {
-        String resultStr;
-        if (leftBinaryLogicExpression.getNodeType() == this.getNodeType()) {
-            if (this.getLeft() instanceof ConstantExpression && ((ConstantExpression) this.getLeft()).getValue() instanceof Boolean) {
-                leftSqlParameter.realValue = new ArrayList<>();
-                resultStr = "1=1" + operatorStr + this.getRight().toString(sourceType, rightSqlParameters, creator);
-                if (this.getRight() instanceof FieldExpression) {
-                    FieldExpression fieldExpression = (FieldExpression) this.getRight();
-                    Expression exp = Expression.equal(fieldExpression, new ConstantExpression(true));
-                    resultStr = "1=1" + operatorStr + exp.toString(sourceType, rightSqlParameters, creator);
-                }
-            } else if (this.getRight() instanceof ConstantExpression && ((ConstantExpression) this.getRight()).getValue() instanceof Boolean) {
-                rightSqlParameters.realValue = new ArrayList<>();
-                resultStr = this.getLeft().toString(sourceType, leftSqlParameter, creator) + operatorStr + "1=1";
-                if (this.getLeft() instanceof FieldExpression) {
-                    FieldExpression fieldExpression = (FieldExpression) this.getLeft();
-                    Expression exp = Expression.equal(fieldExpression, new ConstantExpression(true));
-                    resultStr = exp.toString(sourceType, leftSqlParameter, creator) + operatorStr + "1=1";
-                }
-            } else {
-                resultStr = this.getLeft().toString(sourceType, leftSqlParameter, creator) + operatorStr + this.getRight().toString(sourceType, rightSqlParameters, creator);
-                if (this.getLeft() instanceof FieldExpression) {
-                    FieldExpression fieldExpression = (FieldExpression) this.getLeft();
-                    Expression exp = Expression.equal(fieldExpression, new ConstantExpression(true));
-                    resultStr = exp.toString(sourceType, leftSqlParameter, creator) + operatorStr + this.getRight().toString(sourceType, rightSqlParameters, creator);
-                }
-                if (this.getRight() instanceof FieldExpression) {
-                    FieldExpression fieldExpression = (FieldExpression) this.getRight();
-                    Expression exp = Expression.equal(fieldExpression, new ConstantExpression(true));
-                    resultStr = this.getLeft().toString(sourceType, leftSqlParameter, creator) + operatorStr + exp.toString(sourceType, rightSqlParameters, creator);
-                }
-            }
-        } else {
-            resultStr = this.getResultString(sourceType, creator, operatorStr, leftSqlParameter, rightSqlParameters);
-        }
-
-        return resultStr;
-    }
-
-    /**
-     * 获取有结果的字符串
+     * 获取结果字符串
      *
      * @param sourceType         数据源类型
      * @param creator            参数构造器
