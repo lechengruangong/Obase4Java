@@ -89,7 +89,7 @@ public class WildcardColumn extends SelectionColumn {
             case SqlServer:
                 return "[" + this.source.getSymbol() + "].*";
             case PostgreSql:
-                return "" + this.source.getSymbol() + ".*";
+                return "\"" + this.source.getSymbol() + "\".*";
             case Oracle:
                 return this.source.getSymbol() + ".*";
             case Oledb:

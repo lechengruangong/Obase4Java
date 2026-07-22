@@ -169,7 +169,7 @@ public class SimpleSource extends MonomerSource {
                     return "[" + this.name + "]  [" + this.getSymbol() + "]";
                 }
                 case PostgreSql: {
-                    return "\"" + this.name + "\"  " + this.getSymbol() + "";
+                    return "\"" + this.name + "\"  \"" + this.getSymbol() + "\"";
                 }
                 case Oracle: {
                     return this.name + "  " + this.getSymbol();
@@ -187,7 +187,7 @@ public class SimpleSource extends MonomerSource {
                 return "[" + this.name + "]";
             }
             case PostgreSql: {
-                return "" + this.name + "";
+                return "\"" + this.name + "\"";
             }
             case Oracle: {
                 return this.name;
