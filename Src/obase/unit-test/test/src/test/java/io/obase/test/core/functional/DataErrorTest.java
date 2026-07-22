@@ -12,8 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * 数据错误(关联引用是一对一 但数据是一对多)的关联测试
@@ -95,5 +94,11 @@ public class DataErrorTest {
         var count = context.createSet(DataErrorStudentInfo.class).count(p -> p.getStudentId() == 1);
         //仍然有两个
         assertEquals(2, count);
+        //使用无法转换的字符串进行查询
+        assertThrows(RuntimeException.class, () -> {
+            var newContext = ContextUtils.createContext(dataSource);
+            //查询学生
+            newContext.createSet(DataErrorStudent.class).include(DataErrorStudent::getStudentInfo).findFirst(p -> p.getStudentId() == Long.parseLong("aaa"));
+        }, "无法构造表达式解析器,请参考内部异常.");
     }
 }
