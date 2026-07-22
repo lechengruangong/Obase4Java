@@ -8,6 +8,7 @@
 */
 package io.obase.providers.sql.sqlobject;
 
+import io.obase.core.common.Utils;
 import io.obase.providers.sql.EDataSource;
 import io.obase.providers.sql.rop.SourceAliasRootSetter;
 
@@ -106,6 +107,13 @@ public class ExpressionColumn extends SelectionColumn {
      */
     @Override
     public String toString(EDataSource sourceType) {
+        //对于PostgreSql 别名需要加双引号 否则会被转换为小写
+        if (sourceType == EDataSource.PostgreSql && !Utils.getStringIsEmpty(this.alias)) {
+            if (this.alias.startsWith("OTB") || this.alias.startsWith("otb"))
+                //当使用OTB生成时 此处的字段不应使用限定符
+                return this.expression.toString(sourceType) + " " + this.alias + "";
+            return this.expression.toString(sourceType) + " \"" + this.alias + "\"";
+        }
         return this.expression.toString(sourceType) + " " + (this.alias == null ? "" : this.alias);
     }
 

@@ -127,7 +127,7 @@ public class Field {
             }
             case PostgreSql: {
                 if (this.getSource() != null && !Utils.getStringIsEmpty(this.getSource().getSymbol())) {
-                    if (this.name.contains("OTB")) {
+                    if (this.name.startsWith("OTB") || this.name.startsWith("otb")) {
                         //当使用OTB生成时 此处的字段不应使用限定符
                         return "\"" + this.getSource().getSymbol() + "\"" + "." + StringUtils.capitalize(this.name) + "";
                     } else {
