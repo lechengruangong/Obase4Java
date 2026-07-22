@@ -17,11 +17,12 @@ public class UpdatingPhantomException extends ConcurrentConflictException {
     /**
      * 创建ConcurrentConflictException实例
      *
-     * @param obj     发生并发冲突的对象
-     * @param objType 发生并发冲突的对象的类型
+     * @param obj       发生并发冲突的对象
+     * @param objType   发生并发冲突的对象的类型
+     * @param exception 内部异常
      */
-    public UpdatingPhantomException(Object obj, ObjectType objType) {
-        super(obj, objType);
+    public UpdatingPhantomException(Object obj, ObjectType objType, Exception exception) {
+        super(obj, objType, exception);
     }
 
     /**

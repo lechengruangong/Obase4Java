@@ -19,7 +19,7 @@ public class ThrowExceptionConflictHandlerFactory extends ConcurrentConflictHand
      */
     @Override
     public IRepeatCreationHandler createRepeatCreationHandler() {
-        return new ThrowExceptionConflictHandler(this.getModel(), this.getAttributeOriginalValueGetter());
+        return new ThrowExceptionConflictHandler(this.getModel(), this.getInnerException(), this.getAttributeOriginalValueGetter());
     }
 
     /**
@@ -29,7 +29,7 @@ public class ThrowExceptionConflictHandlerFactory extends ConcurrentConflictHand
      */
     @Override
     public IVersionConflictHandler createVersionConflictHandler() {
-        return new ThrowExceptionConflictHandler(this.getModel(), this.getAttributeOriginalValueGetter());
+        return new ThrowExceptionConflictHandler(this.getModel(), this.getInnerException(), this.getAttributeOriginalValueGetter());
     }
 
     /**
@@ -39,6 +39,6 @@ public class ThrowExceptionConflictHandlerFactory extends ConcurrentConflictHand
      */
     @Override
     public IUpdatingPhantomHandler createUpdatingPhantomHandler() {
-        return new ThrowExceptionConflictHandler(this.getModel(), this.getAttributeOriginalValueGetter());
+        return new ThrowExceptionConflictHandler(this.getModel(), this.getInnerException(), this.getAttributeOriginalValueGetter());
     }
 }

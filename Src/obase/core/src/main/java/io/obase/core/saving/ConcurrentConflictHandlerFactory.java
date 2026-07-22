@@ -40,6 +40,11 @@ public abstract class ConcurrentConflictHandlerFactory {
     private IStorageProvider storageProvider;
 
     /**
+     * 内部异常
+     */
+    private Exception innerException;
+
+    /**
      * 根据指定的并发冲突处理策略选取相应的冲突处理器工厂。
      * 如果指定的处理策略为“忽略”，返回null。
      *
@@ -139,6 +144,24 @@ public abstract class ConcurrentConflictHandlerFactory {
      */
     public void setStorageProvider(IStorageProvider storageProvider) {
         this.storageProvider = storageProvider;
+    }
+
+    /**
+     * 获取内部异常
+     *
+     * @return 内部异常
+     */
+    public Exception getInnerException() {
+        return this.innerException;
+    }
+
+    /**
+     * 设置内部异常
+     *
+     * @param innerException 内部异常
+     */
+    public void setInnerException(Exception innerException) {
+        this.innerException = innerException;
     }
 
     /**

@@ -949,6 +949,7 @@ public class SavingProvider implements ISavingPipeline, IDeletingPipeline, IDire
                         //给工厂设值
                         factory.setModel(this.model);
                         factory.setStorageProvider(provider);
+                        factory.setInnerException(ex);
 
                         //处理此次冲突
                         IRepeatCreationHandler handler = factory.createRepeatCreationHandler();
