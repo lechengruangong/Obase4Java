@@ -58,11 +58,16 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
     @Override
     public String toString(EDataSource sourceType) {
         LocalDateTime dateTime = this.getValue();
+
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-        if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00", format))) {
-            return this.field.toString(sourceType) + "='" + format.format(dateTime) + "'";
+        // 如果是SqlServer数据源，则需要判断日期时间是否在SqlServer的支持范围内，如果不在范围内，则返回null
+        if (sourceType == EDataSource.SqlServer) {
+            if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
+                return this.field.toString(sourceType) + "='" + format.format(dateTime) + "'";
+            }
+            return this.field.toString(sourceType) + "=null";
         }
-        return this.field.toString(sourceType) + "=null";
+        return this.field.toString(sourceType) + "='" + format.format(dateTime) + "'";
     }
 
     /**
@@ -88,10 +93,14 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
         LocalDateTime dateTime = this.getValue();
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         field.realValue = this.getFiledString(sourceType);
-        if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00", format))) {
-            return format.format(dateTime);
+        // 如果是SqlServer数据源，则需要判断日期时间是否在SqlServer的支持范围内，如果不在范围内，则返回null
+        if (sourceType == EDataSource.SqlServer) {
+            if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
+                return format.format(dateTime);
+            }
+            return "null";
         }
-        return "null";
+        return format.format(dateTime);
     }
 
     /**
@@ -119,12 +128,17 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
         LocalDateTime dateTime = this.getValue();
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         String valueStr;
-        if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00", format))) {
-            valueStr = format.format(dateTime);
-        } else {
-            valueStr = "null";
-        }
+        // 如果是SqlServer数据源，则需要判断日期时间是否在SqlServer的支持范围内，如果不在范围内，则返回null
+        if (sourceType == EDataSource.SqlServer) {
+            if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
+                valueStr = format.format(dateTime);
+            } else {
+                valueStr = "null";
+            }
 
+        } else {
+            valueStr = format.format(dateTime);
+        }
         String parameter = this.getParameters(parameters, sourceType, valueStr, creator);
 
         return this.field.toString(sourceType) + "=" + parameter + "";
@@ -159,12 +173,16 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
         DateTimeFormatter format = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
         LocalDateTime dateTime = this.getValue();
         String valueStr;
-        if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
-            valueStr = format.format(dateTime);
+        // 如果是SqlServer数据源，则需要判断日期时间是否在SqlServer的支持范围内，如果不在范围内，则返回null
+        if (sourceType == EDataSource.SqlServer) {
+            if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
+                valueStr = format.format(this.getValue());
+            } else {
+                valueStr = "null";
+            }
         } else {
-            valueStr = "null";
+            valueStr = format.format(dateTime);
         }
-
         return this.getParameters(parameters, sourceType, valueStr, creator);
     }
 

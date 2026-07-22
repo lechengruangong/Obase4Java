@@ -235,11 +235,28 @@ public abstract class SimpleCriteria<TValue> extends ExpressionCriteria {
         } else if (value instanceof LocalDateTime) {
             LocalDateTime dateTime = (LocalDateTime) value;
             DateTimeFormatter ft = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
-            matchValue = ft.format(dateTime);
+            if (source == EDataSource.SqlServer) {
+                if (dateTime.isAfter(LocalDateTime.of(1753, 1, 1, 0, 0, 0)) && dateTime.isBefore(LocalDateTime.of(9999, 12, 31, 0, 0, 0))) {
+                    matchValue = null;
+                } else {
+                    matchValue = ft.format(dateTime);
+                }
+            } else {
+                matchValue = ft.format(dateTime);
+            }
+
         } else if (value instanceof LocalDate) {
             LocalDate dateTime = (LocalDate) value;
             DateTimeFormatter ft = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-            matchValue = ft.format(dateTime);
+            if (source == EDataSource.SqlServer) {
+                if (dateTime.isAfter(LocalDate.of(1753, 1, 1)) && dateTime.isBefore(LocalDate.of(9999, 12, 31))) {
+                    matchValue = null;
+                } else {
+                    matchValue = ft.format(dateTime);
+                }
+            } else {
+                matchValue = ft.format(dateTime);
+            }
         } else if (value instanceof LocalTime) {
             LocalTime dateTime = (LocalTime) value;
             DateTimeFormatter ft = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");

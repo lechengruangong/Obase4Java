@@ -69,6 +69,10 @@ public class SimpleTypeEnumerableTest {
                 javaBean.setTime(LocalTime.now());
                 javaBean.setUuid(UUID.randomUUID());
 
+                if (i == 20) {
+                    javaBean.setDateTime(LocalDateTime.of(1752, 1, 1, 0, 0, 0));
+                }
+
                 context.createSet(JavaBean.class).attach(javaBean);
             }
 
@@ -571,6 +575,13 @@ public class SimpleTypeEnumerableTest {
 
         //有0个
         assertEquals(0, list.size());
+
+        //测试较小的LocalDateTime
+        var minDate = LocalDateTime.of(1752, 1, 1, 0, 0, 0);
+        list = context.createSet(JavaBean.class).filter(p -> p.getDateTime().equals(minDate)).toList();
+
+        //有1个
+        assertEquals(1, list.size());
 
         var local = 987D;
 

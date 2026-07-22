@@ -82,7 +82,7 @@ public class DataErrorTest {
     public void test(EDataSource dataSource) {
         var context = ContextUtils.createContext(dataSource);
         //加载一对一关联
-        DataErrorStudent student = context.createSet(DataErrorStudent.class).include(p -> p.getStudentInfo()).findFirst().orElse(null);
+        DataErrorStudent student = context.createSet(DataErrorStudent.class).include(DataErrorStudent::getStudentInfo).findFirst().orElse(null);
         //此时军不为空
         assertNotNull(student);
         assertNotNull(student.getStudentInfo());

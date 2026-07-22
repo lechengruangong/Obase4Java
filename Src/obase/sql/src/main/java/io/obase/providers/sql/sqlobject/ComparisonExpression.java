@@ -11,6 +11,8 @@ package io.obase.providers.sql.sqlobject;
 import io.obase.common.ObjectReferencePack;
 import io.obase.providers.sql.EDataSource;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,13 +104,36 @@ public class ComparisonExpression extends BinaryExpression {
         //比较表达式可能为空 为空时特殊翻译
         if (this.getLeft() instanceof ConstantExpression) {
             ConstantExpression leftConstantExpression = (ConstantExpression) this.getLeft();
+            //如果直接就是空 判定为空
             if (leftConstantExpression.getValue() == null)
                 isLeftNull = true;
+            //如果是SqlServer数据源，则需要判断日期时间是否在SqlServer的支持范围内，如果不在范围内，则返回null
+            if (sourceType == EDataSource.SqlServer && leftConstantExpression.getValue() instanceof LocalDateTime) {
+                LocalDateTime localDateTime = (LocalDateTime) leftConstantExpression.getValue();
+                isLeftNull = !localDateTime.isAfter(LocalDateTime.of(1753, 1, 1, 0, 0, 0)) || !localDateTime.isBefore(LocalDateTime.of(9999, 12, 31, 0, 0, 0));
+            }
+
+            if (sourceType == EDataSource.SqlServer && leftConstantExpression.getValue() instanceof LocalDate) {
+                LocalDate localDate = (LocalDate) leftConstantExpression.getValue();
+                isLeftNull = !localDate.isAfter(LocalDate.of(1753, 1, 1)) || !localDate.isBefore(LocalDate.of(9999, 12, 31));
+            }
         }
         if (this.getRight() instanceof ConstantExpression) {
             ConstantExpression rightConstantExpression = (ConstantExpression) this.getRight();
+            //如果直接就是空 判定为空
             if (rightConstantExpression.getValue() == null)
                 isRightNull = true;
+            //如果是SqlServer数据源，则需要判断日期时间是否在SqlServer的支持范围内，如果不在范围内，则返回null
+            if (sourceType == EDataSource.SqlServer) {
+                if (rightConstantExpression.getValue() instanceof LocalDateTime) {
+                    LocalDateTime localDateTime = (LocalDateTime) rightConstantExpression.getValue();
+                    isRightNull = !localDateTime.isAfter(LocalDateTime.of(1753, 1, 1, 0, 0, 0)) || !localDateTime.isBefore(LocalDateTime.of(9999, 12, 31, 0, 0, 0));
+                }
+            }
+            if (sourceType == EDataSource.SqlServer && rightConstantExpression.getValue() instanceof LocalDate) {
+                LocalDate localDate = (LocalDate) rightConstantExpression.getValue();
+                isRightNull = !localDate.isAfter(LocalDate.of(1753, 1, 1)) || !localDate.isBefore(LocalDate.of(9999, 12, 31));
+            }
         }
 
         //结果 左侧表达式参数
