@@ -535,7 +535,7 @@ public abstract class SqlExecutor implements ISqlExecutor {
         if (!this.isRepeatInsertionError(ex)) {
             throw new RuntimeException("发生SqlException" + ex.getMessage(), ex);
         }
-        RepeatInsertionException ex1 = new RepeatInsertionException(this.sourceType == EDataSource.PostgreSql);
+        RepeatInsertionException ex1 = new RepeatInsertionException(this.sourceType == EDataSource.PostgreSql, ex);
         if (this.sourceType == EDataSource.PostgreSql)
             ex1.setUnSupportMessage("PostgreSQL不支持在单一事务块中发生异常后再次执行其他命令.");
         throw ex1;

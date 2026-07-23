@@ -368,7 +368,7 @@ public class ChangeSql extends SqlBase {
                 resultBuilder = new StringBuilder("UPDATE [" + tSource.getSymbol() + "]");
                 break;
             case PostgreSql:
-                resultBuilder = new StringBuilder("UPDATE \"" + tSource.getSymbol() + "\"" + tSource.getSymbol());
+                resultBuilder = new StringBuilder("UPDATE \"" + tSource.getSymbol() + "\" \"" + tSource.getSymbol() + "\"");
                 break;
             //Oracle数据源
             case Oracle:
@@ -500,7 +500,7 @@ public class ChangeSql extends SqlBase {
                 /*From 查询源*/
                 resultBuilder.append(" FROM ").append(simpleSource.toNoSymbolString(sourceType));
                 if (sourceType == EDataSource.PostgreSql) {
-                    resultBuilder.append(" ").append(simpleSource.getName()).append(" ");
+                    resultBuilder.append(" \"").append(simpleSource.getName()).append("\" ");
                 }
             }
         } else {

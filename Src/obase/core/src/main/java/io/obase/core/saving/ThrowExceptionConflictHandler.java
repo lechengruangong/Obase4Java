@@ -20,6 +20,11 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
         IVersionConflictHandler, IUpdatingPhantomHandler {
 
     /**
+     * 由下层抛出的异常
+     */
+    private final Exception innerException;
+
+    /**
      * 用于获取属性原值的委托
      */
     private final IGetAttributeValue attributeOriginalValueGetter;
@@ -27,11 +32,14 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
     /**
      * 创建ConcurrentConflictHandler实例
      *
-     * @param model 对象数据模型
+     * @param model                        对象数据模型
+     * @param innerException               内部异常
+     * @param attributeOriginalValueGetter 用于获取属性原值的委托
      */
-    public ThrowExceptionConflictHandler(ObjectDataModel model, IGetAttributeValue attributeOriginalValueGetter) {
+    public ThrowExceptionConflictHandler(ObjectDataModel model, Exception innerException, IGetAttributeValue attributeOriginalValueGetter) {
         super(model);
         this.attributeOriginalValueGetter = attributeOriginalValueGetter;
+        this.innerException = innerException;
     }
 
     /**
@@ -51,7 +59,7 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
         switch (conflictType) {
 
             case RepeatCreation:
-                ex = new RepeatCreationException(obj, objType);
+                ex = new RepeatCreationException(obj, objType, this.innerException);
                 break;
             case VersionConflict:
 
@@ -87,10 +95,10 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
                     }
                 }
 
-                ex = new VersionConflictException(obj, objType, keys);
+                ex = new VersionConflictException(obj, objType, keys, this.innerException);
                 break;
             case UpdatingPhantom:
-                ex = new UpdatingPhantomException(obj, objType);
+                ex = new UpdatingPhantomException(obj, objType, this.innerException);
                 break;
         }
         throw ex;

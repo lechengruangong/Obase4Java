@@ -135,7 +135,7 @@ public class SqlStorageStructMappingProvider implements IStorageStructMappingPro
                 sql = "CREATE INDEX " + name + " ON [" + tableName + "](" + Arrays.stream(fields).map(p -> "[" + p + "]").collect(Collectors.joining(",")) + ")";
                 break;
             case Sqlite:
-                sql = "CREATE INDEX '" + name + "' ON " + tableName + "(" + Arrays.stream(fields).map(p -> "`" + p + "`").collect(Collectors.joining(",")) + ")";
+                sql = "CREATE INDEX '" + name + "' ON `" + tableName + "`(" + Arrays.stream(fields).map(p -> "`" + p + "`").collect(Collectors.joining(",")) + ")";
                 break;
             case MySql:
                 sql = "CREATE INDEX " + name + " ON `" + tableName + "`(" + Arrays.stream(fields).map(p -> "`" + p + "`").collect(Collectors.joining(",")) + ")";
@@ -254,7 +254,7 @@ public class SqlStorageStructMappingProvider implements IStorageStructMappingPro
                     sqlBuilder.deleteCharAt(sqlBuilder.length() - 1);
                 }
                 sqlBuilder.append(");");
-                sqliteBuilder.append("CREATE INDEX 'ogi_").append(name).append("_").append(String.join(",", keyFields)).append("' ON ").append(name).append(" (").append(String.join(",", keyFields)).append(")");
+                sqliteBuilder.append("CREATE INDEX 'ogi_").append(name).append("_").append(String.join(",", keyFields)).append("' ON `").append(name).append("` (").append(String.join(",", keyFields)).append(")");
             }
             break;
             case MySql: {

@@ -182,7 +182,7 @@ public class SelectSource extends MonomerSource {
             case PostgreSql:
             case Oracle: {
                 DataParameterSorter.sort(sqlParameters.realValue);
-                return "(" + this.getQuerySql().toSql(sourceType, sqlParameters, creator) + ") " + this.getSymbol() + "";
+                return "(" + this.getQuerySql().toSql(sourceType, sqlParameters, creator) + ") \"" + this.getSymbol() + "\"";
             }
             case MySql:
             case Sqlite: {

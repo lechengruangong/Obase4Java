@@ -30,9 +30,10 @@ public class VersionConflictException extends ConcurrentConflictException {
      * @param obj             发生冲突的对象
      * @param objType         发生冲突的对象的类型
      * @param initVersionKeys 发生冲突的各个对象（主对象和伴随映射对象）的初始版本标识
+     * @param exception       内部异常
      */
-    public VersionConflictException(Object obj, ObjectType objType, List<ObjectKey> initVersionKeys) {
-        super(obj, objType);
+    public VersionConflictException(Object obj, ObjectType objType, List<ObjectKey> initVersionKeys, Exception exception) {
+        super(obj, objType, exception);
         this.initVersionKeys = initVersionKeys;
     }
 

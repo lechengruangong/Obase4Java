@@ -352,7 +352,7 @@ public class ExistingConnectionSqlExecutor implements ISqlExecutor {
      */
     private void getRepeatInsertionException(Exception ex) {
         if (this.isRepeatInsertionError(ex)) {
-            RepeatInsertionException ex1 = new RepeatInsertionException(this.sourceType == EDataSource.PostgreSql);
+            RepeatInsertionException ex1 = new RepeatInsertionException(this.sourceType == EDataSource.PostgreSql, ex);
             if (this.sourceType == EDataSource.PostgreSql)
                 ex1.setUnSupportMessage("PostgreSQL不支持在单一事务块中发生异常后再次执行其他命令.");
             throw ex1;

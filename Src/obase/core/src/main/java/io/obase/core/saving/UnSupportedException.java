@@ -27,7 +27,7 @@ public class UnSupportedException extends ConcurrentConflictException {
      * @param objType 发生并发冲突的对象的类型
      */
     public UnSupportedException(Object obj, ObjectType objType, RepeatInsertionException repeatInsertionException) {
-        super(obj, objType);
+        super(obj, objType, repeatInsertionException);
         this.repeatInsertionException = repeatInsertionException;
     }
 

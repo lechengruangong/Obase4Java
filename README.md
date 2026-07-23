@@ -6,17 +6,18 @@
 
 本项目发布于Maven,共有以下构件包.
 
-| 包名                          | 地址                                                                                                                                                                                 | 简介                                            |
-|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| ----------------------------------------------- |
-| io.obase:core               | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/core/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/core)                               | Obase存储抽象层框架中间件（Java版).             |
-| io.obase:logic.deletion     | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/logical.deletion/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/logical.deletion)       | Obase存储抽象层框架中间件逻辑删除扩展.          |
-| io.obase:multi.tenant       | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/multi.tenant/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/multi.tenant)               | Obase存储抽象层框架中间件多租户扩展.            |
-| io.obase:odm.annotation     | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/odm.annotation/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/odm.annotation )          | Obase存储抽象层框架中间件标注建模扩展.          |
-| io.obase:providers.sql      | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sql/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sql )            | 适用于SQL数据库的Obase存储提供程序中间件.       |
-| io.obase:providers.mysql    | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.mysql/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.mysql)         | 适用于MySql数据库的Obase存储提供程序中间件.     |
-| io.oabse:providers.oracle   | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.oracle/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.oracle)       | 适用于Oracle数据库的Obase存储提供程序中间件.    |
-| io.obase:providers.sqlite   | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlite/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlite)       | 适用于Sqlite数据库的Obase存储提供程序中间件.    |
-| io.obase:providers.sqlserver | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlserver/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlserver) | 适用于SqlServer数据库的Obase存储提供程序中间件. |
+| 包名                             | 地址                                                                                                                                                                                   | 简介                               |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------|
+| io.obase:core                  | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/core/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/core)                                 | Obase存储抽象层框架中间件（Java版).          |
+| io.obase:logic.deletion        | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/logical.deletion/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/logical.deletion)         | Obase存储抽象层框架中间件逻辑删除扩展.           |
+| io.obase:multi.tenant          | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/multi.tenant/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/multi.tenant)                 | Obase存储抽象层框架中间件多租户扩展.            |
+| io.obase:odm.annotation        | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/odm.annotation/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/odm.annotation )            | Obase存储抽象层框架中间件标注建模扩展.           |
+| io.obase:providers.sql         | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sql/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sql )              | 适用于SQL数据库的Obase存储提供程序中间件.        |
+| io.obase:providers.mysql       | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.mysql/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.mysql)           | 适用于MySql数据库的Obase存储提供程序中间件.      |
+| io.obase:providers.oracle      | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.oracle/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.oracle)         | 适用于Oracle数据库的Obase存储提供程序中间件.     |
+| io.obase:providers.sqlite      | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlite/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlite)         | 适用于Sqlite数据库的Obase存储提供程序中间件.     |
+| io.obase:providers.sqlserver   | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlserver/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.sqlserver)   | 适用于SqlServer数据库的Obase存储提供程序中间件.  |
+| io.obase:providers.postgresql  | [![Maven central](https://maven-badges.sml.io/sonatype-central/io.obase/providers.postgresql/badge.svg)](https://maven-badges.sml.io/sonatype-central/io.obase/providers.postgresql) | 适用于PostgreSql数据库的Obase存储提供程序中间件. |
 
 # 如何使用
 

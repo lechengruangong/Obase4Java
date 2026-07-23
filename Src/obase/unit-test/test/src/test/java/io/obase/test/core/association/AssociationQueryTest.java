@@ -273,6 +273,13 @@ public class AssociationQueryTest {
 
         assertEquals(1, classes.size());
 
+        //根据显式关联型引用的关联端的属性排序
+        var classTeachers = context.createSet(ClassTeacher.class).include(p -> p.getClazz()).include(p -> p.getTeacher())
+                .filter(p -> p.getClazz().getName() != "123")
+                .sorted(p -> p.getClazz().getName()).skip(0).limit(1).toList();
+
+        assertEquals(1, classTeachers.size());
+
         //投影之后 使用学生名称 和 学生关联的班级关联的学校创建时间排序
         var oStud = context.createSet(Class.class).flatMap(p -> p.getStudents(), Student.class)
                 .sorted(p -> p.getName()).thenSorted(p -> p.getSchool().getCreateTime()).toList();

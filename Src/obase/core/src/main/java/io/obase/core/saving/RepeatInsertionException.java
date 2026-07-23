@@ -26,15 +26,8 @@ public class RepeatInsertionException extends RuntimeException {
     /**
      * 创建RepeatInsertionException实例
      */
-    public RepeatInsertionException() {
-        this(false);
-    }
-
-    /**
-     * 创建RepeatInsertionException实例
-     */
-    public RepeatInsertionException(boolean isUnSupported) {
-        super("插入了重复的记录");
+    public RepeatInsertionException(boolean isUnSupported, Exception exception) {
+        super("插入了重复的记录", exception);
         this.isUnSupported = isUnSupported;
     }
 

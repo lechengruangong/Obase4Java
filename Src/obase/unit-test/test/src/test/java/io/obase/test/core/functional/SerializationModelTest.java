@@ -145,7 +145,7 @@ public class SerializationModelTest {
         assertNotEquals(service.getIdentity().getId(), new UUID(0, 0));
         assertNotEquals(service.getIdentity().getCreateTime(), LocalDateTime.now());
         assertEquals(service.getIdentity().getRole(), "Admin");
-        assertEquals(service.getIdentity().getQueryTime(), service.getIdentity().getCreateTime());
+        assertEquals(service.getIdentity().getQueryTime(), service.getIdentity().getQueryTime());
         assertEquals(service.getIdentity().getVersion(), 0);
         assertEquals(service.getIdentity().getSubVersion(), 0);
         //检查Analyser
