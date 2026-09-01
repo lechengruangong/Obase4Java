@@ -405,19 +405,22 @@ public class SavingProvider implements ISavingPipeline, IDeletingPipeline, IDire
 
         //当前的环境事务
         TransactionScope transactionScope = null;
-
-        if (added.size() + modified.size() + deleted.size() > 1 || addedComps.size() > 0 || deletedComps.size() > 0) {
-            //开启事务
-            ObjectReferencePack<TransactionScope> pack = new ObjectReferencePack<>();
-            this.beginTransaction(pack);
-            transactionScope = pack.realValue;
-        } else {
-            //一个对象 开普通的本地事务
-            for (IStorageProvider transaction : this.storageProviders.values()) {
-                if (!isOutTrBegun)
+        //如果外部已经开启了事务 则不需要再开启事务 直接加入外部事务即可
+        //（若在此处再次开启事务,事务计数会失衡,导致外层事务提交后连接无法归还连接池）
+        if (!isOutTrBegun) {
+            if (added.size() + modified.size() + deleted.size() > 1 || addedComps.size() > 0 || deletedComps.size() > 0) {
+                //开启事务
+                ObjectReferencePack<TransactionScope> pack = new ObjectReferencePack<>();
+                this.beginTransaction(pack);
+                transactionScope = pack.realValue;
+            } else {
+                //一个对象 开普通的本地事务
+                for (IStorageProvider transaction : this.storageProviders.values()) {
                     transaction.beginTransaction(EIsolationLevel.TRANSACTION_READ_COMMITTED);
+                }
             }
         }
+
 
         try {
             //处理具体的操作
@@ -1293,9 +1296,11 @@ public class SavingProvider implements ISavingPipeline, IDeletingPipeline, IDire
 
         //是否在我开启事务前已经开启了事务
         isOutTrBegun.realValue = this.storageProviders.values().stream().anyMatch(IStorageProvider::getTransactionBegun);
-
-        //开启事务
-        this.beginTransaction(transactionScope);
+        //如果外部已经开启了事务 则不需要再开启事务 直接加入外部事务即可
+        //（若在此处再次开启事务,事务计数会失衡,导致外层事务提交后连接无法归还连接池）
+        if (!isOutTrBegun.realValue)
+            //开启事务
+            this.beginTransaction(transactionScope);
 
         return storageSymbols;
     }
