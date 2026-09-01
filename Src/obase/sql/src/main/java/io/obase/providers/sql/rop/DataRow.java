@@ -16,6 +16,7 @@ import io.obase.core.odm.ObjectKeyMember;
 import io.obase.core.odm.ReferringType;
 import io.obase.core.odm.objectSys.*;
 import io.obase.providers.sql.AliasGenerator;
+import io.obase.providers.sql.common.SqlAliasShortener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -95,10 +96,10 @@ public class DataRow {
             //别名
             String alias = tree.accept(this.aliasGenerator, keyField.get(i));
 
-            //列名
-            String columnName = (Utils.getStringIsEmpty(alias) ? keyField.get(i) : alias).toLowerCase();
+            //列名（与Sql发射侧一致 查表时优先尝试缩短后的列名）
+            String columnName = Utils.getStringIsEmpty(alias) ? keyField.get(i) : alias;
 
-            Object value = this.dataDict.get(columnName);
+            Object value = this.lookup(columnName);
             //是null 返回null
             if (value == null) return null;
 
@@ -131,8 +132,9 @@ public class DataRow {
 
         //没有别名
         if (Utils.getStringIsEmpty(columnName)) columnName = targetField;
-        columnName = columnName.toLowerCase();
-        return this.dataDict.get(columnName);
+
+        //与Sql发射侧一致 查表时优先尝试缩短后的列名
+        return this.lookup(columnName);
     }
 
     /**
@@ -145,6 +147,25 @@ public class DataRow {
         String colName = this.rowIndexDict.get(columnIndex);
         //按照索引号返回
         return this.dataDict.get(colName);
+    }
+
+    /**
+     * 按列名从数据行中获取域。
+     * 与Sql发射侧保持一致：先尝试以"_obase_gen_alias+哈希"缩短后的列名查找（对应Sql中起别名的列），
+     * 未命中再以原始列名查找（对应Sql中未起别名的列，数据库返回的是原始列名）。
+     *
+     * @param columnName 列名
+     * @return 域
+     */
+    private Object lookup(String columnName) {
+        if (Utils.getStringIsEmpty(columnName)) return this.dataDict.get(columnName);
+
+        //优先尝试缩短后的列名
+        String shortened = SqlAliasShortener.shorten(columnName).toLowerCase();
+        if (!shortened.equals(columnName.toLowerCase()) && this.dataDict.containsKey(shortened))
+            return this.dataDict.get(shortened);
+
+        return this.dataDict.get(columnName.toLowerCase());
     }
 
 
