@@ -3,7 +3,7 @@
 │　描   述：Sql别名替换器.
 │　作   者：Obase开发团队
 │　版权所有：武汉乐程软工科技有限公司
-│　创建时间：2026-9-1
+│　创建时间：2026-9-2 09:56:36
 └──────────────────────────────────────────────────────────────┘
 */
 package io.obase.providers.sql.common;
@@ -20,6 +20,9 @@ import java.util.Set;
  */
 public class SqlAliasReplacer {
 
+    /**
+     * 私有构造 防止外部初始化
+     */
     private SqlAliasReplacer() {
     }
 

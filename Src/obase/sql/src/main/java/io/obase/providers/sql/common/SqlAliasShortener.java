@@ -3,7 +3,7 @@
 │　描   述：Sql别名缩短器.
 │　作   者：Obase开发团队
 │　版权所有：武汉乐程软工科技有限公司
-│　创建时间：2026-9-1
+│　创建时间：2026-9-2 09:56:29
 └──────────────────────────────────────────────────────────────┘
 */
 package io.obase.providers.sql.common;
@@ -48,6 +48,9 @@ public class SqlAliasShortener {
      */
     private static final ConcurrentHashMap<String, String> MAPPING_CACHE = new ConcurrentHashMap<>();
 
+    /**
+     * 私有构造 防止外部初始化
+     */
     private SqlAliasShortener() {
     }
 

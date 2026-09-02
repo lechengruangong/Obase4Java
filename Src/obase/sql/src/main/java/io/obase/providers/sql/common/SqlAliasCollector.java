@@ -3,26 +3,13 @@
 │　描   述：Sql别名收集器.
 │　作   者：Obase开发团队
 │　版权所有：武汉乐程软工科技有限公司
-│　创建时间：2026-9-1
+│　创建时间：2026-9-2 09:56:43
 └──────────────────────────────────────────────────────────────┘
 */
 package io.obase.providers.sql.common;
 
 import io.obase.core.common.Utils;
-import io.obase.providers.sql.sqlobject.ChangeSql;
-import io.obase.providers.sql.sqlobject.ExpressionColumn;
-import io.obase.providers.sql.sqlobject.FieldSet;
-import io.obase.providers.sql.sqlobject.ISelectionSet;
-import io.obase.providers.sql.sqlobject.ISetOperand;
-import io.obase.providers.sql.sqlobject.ISource;
-import io.obase.providers.sql.sqlobject.JoinedSource;
-import io.obase.providers.sql.sqlobject.QuerySet;
-import io.obase.providers.sql.sqlobject.QuerySql;
-import io.obase.providers.sql.sqlobject.SelectSource;
-import io.obase.providers.sql.sqlobject.SelectionColumn;
-import io.obase.providers.sql.sqlobject.SetSource;
-import io.obase.providers.sql.sqlobject.SimpleSource;
-import io.obase.providers.sql.sqlobject.WildcardColumn;
+import io.obase.providers.sql.sqlobject.*;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,6 +21,9 @@ import java.util.Set;
  */
 public class SqlAliasCollector {
 
+    /**
+     * 私有构造 防止外部初始化
+     */
     private SqlAliasCollector() {
     }
 
