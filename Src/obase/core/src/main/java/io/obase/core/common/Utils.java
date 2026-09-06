@@ -640,7 +640,7 @@ public final class Utils {
                     Class<?> getterClass = unloaded.load(GlobalClassLoaderCache.getInstance().getClassLoader(), ClassLoadingStrategy.Default.INJECTION).getLoaded();
                     getter = (IValueGetter) getterClass.getConstructor().newInstance();
                     GlobalDelegateValueGetterCache.getInstance().setGetter(name, getter);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new RuntimeException("无法创建委托取值器" + name + ",请参考内部异常.", e);
                 }
             }
@@ -689,7 +689,7 @@ public final class Utils {
                     mode = EValueSettingMode.Assignment;
                     setter = new DelegateValueSetter<>((ActionWithTwoArg<?, ?>) clazzAction.getConstructor().newInstance(), mode, method.getParameterTypes()[0]);
                     GlobalDelegateValueSetterCache.getInstance().setSetter(name, setter);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     throw new RuntimeException("无法创建委托取值器" + name + ",请参考内部异常.", e);
                 }
             }

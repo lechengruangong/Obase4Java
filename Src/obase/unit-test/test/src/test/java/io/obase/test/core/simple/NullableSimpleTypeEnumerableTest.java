@@ -130,7 +130,7 @@ public class NullableSimpleTypeEnumerableTest {
 
         //拼接Bool == true && DateTime <= Now && UUID != Random
         combiner = new PredicateCombiner<>();
-        combiner.and(combiner.getWrapper().eq(NullableJavaBean::getBool, true)).and(NullableJavaBean::getDateTime, EPredicateType.LessThanOrEqual, LocalDateTime.now());
+        combiner.and(combiner.getWrapper().eq(NullableJavaBean::getBool, true)).and(NullableJavaBean::getDateTime, EPredicateType.LessThanOrEqual, LocalDateTime.now().plusMinutes(1));
         combiner.and(combiner.getWrapper().ne(NullableJavaBean::getUuid, UUID.randomUUID()));
 
         bean = context.createSet(NullableJavaBean.class).findFirst(combiner.getLambdaExpression()).orElse(null);

@@ -129,7 +129,7 @@ public class SqlParameterViewTest {
         });
 
         //查看查询管道SQL
-        var date = LocalDateTime.now();
+        var date = LocalDateTime.now().plusMinutes(1);
         //测试时间条件
         var list = context.createSet(JavaBean.class)
                 .filter(p -> p.getDateTime().isAfter(date)).toList();

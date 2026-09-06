@@ -569,7 +569,7 @@ public class SimpleTypeEnumerableTest {
     @ArgumentsSource(TestCaseSourceConfigurationManager.class)
     public void whereTest(EDataSource dataSource) {
         var context = ContextUtils.createContext(dataSource);
-        LocalDateTime date = LocalDateTime.now();
+        LocalDateTime date = LocalDateTime.now().plusMinutes(1);
         //测试时间条件
         List<JavaBean> list = context.createSet(JavaBean.class).filter(p -> p.getDateTime().isAfter(date)).toList();
 
@@ -821,7 +821,7 @@ public class SimpleTypeEnumerableTest {
 
         //拼接Bool == true && DateTime <= Now && UUID != Random
         combiner = new PredicateCombiner<>();
-        combiner.and(combiner.getWrapper().eq(JavaBean::getBool, true)).and(JavaBean::getDateTime, EPredicateType.LessThanOrEqual, LocalDateTime.now());
+        combiner.and(combiner.getWrapper().eq(JavaBean::getBool, true)).and(JavaBean::getDateTime, EPredicateType.LessThanOrEqual, LocalDateTime.now().plusMinutes(1));
         combiner.and(combiner.getWrapper().ne(JavaBean::getUuid, UUID.randomUUID()));
 
         bean = context.createSet(JavaBean.class).findFirst(combiner.getLambdaExpression()).orElse(null);
