@@ -75,7 +75,8 @@ public class UnaryExpression extends Expression {
             case UnaryPlus:
                 return "(+" + this.getOperand().toString(sourceType) + ")";
             case Not:
-                return "(!" + this.getOperand().toString(sourceType) + ")";
+                //操作数需额外加括号: MySQL中!优先级高于LIKE等运算符, 不加括号时(!col LIKE x)会被解析为(!col) LIKE x
+                return "(!(" + this.getOperand().toString(sourceType) + "))";
             case BitNot:
                 return "~(" + this.getOperand().toString(sourceType) + ")";
             default:
@@ -122,8 +123,12 @@ public class UnaryExpression extends Expression {
                             return "1<>1";
                         }
                     }
+
+                    //SqlServer/Sqlite/PostgreSql分支 复杂操作数(如LIKE)以not关键字整体取反
+                    return " not " + this.getOperand().toString(sourceType, sqlParameters, creator);
                 }
-                return "(!" + this.getOperand().toString(sourceType, sqlParameters, creator) + ")";
+                //MySQL/Oracle分支: !操作数需要整体加括号, 否则MySQL中!优先于LIKE会把(!col LIKE x)解析为(!col) LIKE x导致取反恒false
+                return "(!(" + this.getOperand().toString(sourceType, sqlParameters, creator) + "))";
             case BitNot:
                 DataParameterSorter.sort(sqlParameters.realValue);
                 return "~(" + this.getOperand().toString(sourceType, sqlParameters, creator) + ")";

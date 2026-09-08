@@ -185,6 +185,15 @@ public class SimpleTypeEnumerableTest {
 
         //有5个
         assertEquals(5, list.size());
+
+        //字符串属性Contains的正向查询(编号末尾数字为2的2号与12号的String属性包含"2号字" 其余不包含)
+        list = context.createSet(JavaBean.class).filter(p -> p.getString().contains("2号字")).toList();
+        //有2个
+        assertEquals(2, list.size());
+        //一元取反!形式 与== false语义一致(回归: MySQL中!优先级高于LIKE, 曾导致(!col LIKE x)被解析为(!col) LIKE x而恒false)
+        list = context.createSet(JavaBean.class).filter(p -> !p.getString().contains("2号字")).toList();
+        //其余18个不包含
+        assertEquals(18, list.size());
     }
 
     /**
