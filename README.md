@@ -29,7 +29,6 @@
 
 ### io.obase:core
 
-- org.ow2.asm:asm-9.4.0
 - net.bytebuddy:byte-buddy-1.14.2
 - org.jinq:analysis-2.0.3
 - org.apache.commons:commons-lang3-3.18.0
