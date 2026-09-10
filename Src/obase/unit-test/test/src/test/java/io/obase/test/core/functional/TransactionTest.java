@@ -2,6 +2,7 @@ package io.obase.test.core.functional;
 
 import io.obase.core.saving.RepeatCreationException;
 import io.obase.providers.sql.EDataSource;
+import io.obase.providers.sql.connectionpool.ObaseConnectionPool;
 import io.obase.test.ConfigSetUp;
 import io.obase.test.ContextUtils;
 import io.obase.test.configuration.TestCaseSourceConfigurationManager;
@@ -20,7 +21,9 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -147,101 +150,37 @@ public class TransactionTest {
     }
 
     /**
-     * 手动事务测试
+     * 检查指定数据源的连接池 断言其中所有连接均已归还
+     * 从连接池统计信息中解析出"Pool: 可用数/总数" 若可用数小于总数 说明有连接未归还 存在连接泄漏
      *
-     * @param dataSource 数据源
+     * @param dataSource 数据源类型
      */
-    @ParameterizedTest
-    @ArgumentsSource(TestCaseSourceConfigurationManager.class)
-    public void manualTransactionTest(EDataSource dataSource) {
-        //手动事务 指的是调用Obase的手动事务方法自己控制事务
-        //Obase的手动事务方法遵循JDBC的try-Begin-Commit-Catch-RollBack-Finally-Release模式
+    private static void AssertConnectionPoolReturned(EDataSource dataSource) {
+        var poolName = dataSource + " ConnectionPool";
+        var statistics = ObaseConnectionPool.getInstance().getStatistics();
+        //找到当前数据源对应的连接池统计行 形如:"MySql ConnectionPool / Pool: 4/5, Get wait: 0, GetAsync wait: 0"
 
-        var context = ContextUtils.createContext(dataSource);
+        var split = statistics.split("\\R");
+        var current = Arrays.stream(split).filter(p -> p.startsWith(poolName)).findFirst().orElse(null);
+        assertNotNull(current, "未找到连接池" + poolName + "的统计信息");
+        //解析"Pool: 可用数/总数"
+        var totalPattern = Pattern.compile("totalConnections:(\\d+)");
+        var idlePattern = Pattern.compile("idleConnections:(\\d+)");
+        var total = extract(totalPattern, current);
+        int idle = extract(idlePattern, current);
+        assertEquals(total, idle, "连接池【" + poolName + "】存在未归还的连接(可用" + idle + "条/共" + total + "条),请检查是否存在连接泄漏.");
+    }
 
-        //此时 有10个对象 都查出来
-        var list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
-        //10个
-        assertNotNull(list);
-        assertEquals(10, list.size());
-
-        try {
-            //手动开启事务
-            context.beginTransaction();
-
-            //在这个事务里还可查询其他对象
-            var emptyList = context.createSet(NullableJavaBean.class).filter(p -> p.getIntNumber() > 20).toList();
-            //没有满足条件的
-            assertNotNull(emptyList);
-            assertEquals(0, emptyList.size());
-
-            //修改前三个的LongNumber
-            list.get(0).setLongNumber(11L);
-            list.get(1).setLongNumber(12L);
-            list.get(2).setLongNumber(13L);
-            //保存之前的修改
-            context.saveChanges();
-            //调用模拟的外部方法 此处传入的是偶数 不会抛异常
-            this.outerMethod(2);
-
-            //提交修改
-            context.commit();
-        } catch (Exception ignored) {
-            //发生异常 回滚
-            context.rollbackTransaction();
-        } finally {
-            //最后释放资源
-            context.release();
-        }
-
-        context = ContextUtils.createContext(dataSource);
-        list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
-        //10个
-        assertNotNull(list);
-        assertEquals(10, list.size());
-        //前三个被修改
-        assertEquals(11, list.get(0).getLongNumber());
-        assertEquals(12, list.get(1).getLongNumber());
-        assertEquals(13, list.get(2).getLongNumber());
-
-        try {
-            //手动开启事务
-            context.beginTransaction();
-
-            //在这个事务里还可查询其他对象
-            var emptyList = context.createSet(NullableJavaBean.class).filter(p -> p.getIntNumber() > 20).toList();
-            //没有满足条件的
-            assertNotNull(emptyList);
-            assertEquals(0, emptyList.size());
-
-            //修改前三个的LongNumber
-            list.get(0).setLongNumber(14L);
-            list.get(1).setLongNumber(15L);
-            list.get(2).setLongNumber(16L);
-            //保存之前的修改
-            context.saveChanges();
-            //调用模拟的外部方法 此处传入的是奇数 会抛异常
-            this.outerMethod(1);
-
-            //提交修改
-            context.commit();
-        } catch (Exception ignored) {
-            //发生异常 回滚
-            context.rollbackTransaction();
-        } finally {
-            //最后释放资源
-            context.release();
-        }
-
-        context = ContextUtils.createContext(dataSource);
-        list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
-        //10个
-        assertNotNull(list);
-        assertEquals(10, list.size());
-        //前三个没有被修改
-        assertEquals(11, list.get(0).getLongNumber());
-        assertEquals(12, list.get(1).getLongNumber());
-        assertEquals(13, list.get(2).getLongNumber());
+    /**
+     * 提取方法
+     *
+     * @param p    正则
+     * @param line 文本
+     * @return 数量
+     */
+    private static int extract(Pattern p, String line) {
+        var m = p.matcher(line);
+        return m.find() ? Integer.parseInt(m.group(1)) : -1;  // -1 表示未匹配到
     }
 
     /**
@@ -528,5 +467,170 @@ public class TransactionTest {
         } catch (SQLException e) {
             throw new RuntimeException("创建连接失败.", e);
         }
+    }
+
+    /**
+     * 手动事务测试
+     *
+     * @param dataSource 数据源
+     */
+    @ParameterizedTest
+    @ArgumentsSource(TestCaseSourceConfigurationManager.class)
+    public void manualTransactionTest(EDataSource dataSource) {
+        //手动事务 指的是调用Obase的手动事务方法自己控制事务
+        //Obase的手动事务方法遵循JDBC的try-Begin-Commit-Catch-RollBack-Finally-Release模式
+
+        var context = ContextUtils.createContext(dataSource);
+
+        //此时 有10个对象 都查出来
+        var list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
+        //10个
+        assertNotNull(list);
+        assertEquals(10, list.size());
+
+        try {
+            //手动开启事务
+            context.beginTransaction();
+
+            //在这个事务里还可查询其他对象
+            var emptyList = context.createSet(NullableJavaBean.class).filter(p -> p.getIntNumber() > 20).toList();
+            //没有满足条件的
+            assertNotNull(emptyList);
+            assertEquals(0, emptyList.size());
+
+            //修改前三个的LongNumber
+            list.get(0).setLongNumber(11L);
+            list.get(1).setLongNumber(12L);
+            list.get(2).setLongNumber(13L);
+            //保存之前的修改
+            context.saveChanges();
+            //调用模拟的外部方法 此处传入的是偶数 不会抛异常
+            this.outerMethod(2);
+
+            //提交修改
+            context.commit();
+        } catch (Exception ignored) {
+            //发生异常 回滚
+            context.rollbackTransaction();
+        } finally {
+            //最后释放资源
+            context.release();
+        }
+
+        context = ContextUtils.createContext(dataSource);
+        list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
+        //10个
+        assertNotNull(list);
+        assertEquals(10, list.size());
+        //前三个被修改
+        assertEquals(11, list.get(0).getLongNumber());
+        assertEquals(12, list.get(1).getLongNumber());
+        assertEquals(13, list.get(2).getLongNumber());
+
+        //此时再检查连接池的信息 手动事务与就地修改方法结束后所有连接都应归还
+        AssertConnectionPoolReturned(dataSource);
+
+        try {
+            //手动开启事务
+            context.beginTransaction();
+
+            //在这个事务里还可查询其他对象
+            var emptyList = context.createSet(NullableJavaBean.class).filter(p -> p.getIntNumber() > 20).toList();
+            //没有满足条件的
+            assertNotNull(emptyList);
+            assertEquals(0, emptyList.size());
+
+            //修改前三个的LongNumber
+            list.get(0).setLongNumber(14L);
+            list.get(1).setLongNumber(15L);
+            list.get(2).setLongNumber(16L);
+            //保存之前的修改
+            context.saveChanges();
+            //调用模拟的外部方法 此处传入的是奇数 会抛异常
+            this.outerMethod(1);
+
+            //提交修改
+            context.commit();
+        } catch (Exception ignored) {
+            //发生异常 回滚
+            context.rollbackTransaction();
+        } finally {
+            //最后释放资源
+            context.release();
+        }
+
+        context = ContextUtils.createContext(dataSource);
+        list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
+        //10个
+        assertNotNull(list);
+        assertEquals(10, list.size());
+        //前三个没有被修改
+        assertEquals(11, list.get(0).getLongNumber());
+        assertEquals(12, list.get(1).getLongNumber());
+        assertEquals(13, list.get(2).getLongNumber());
+
+        //此时再检查连接池的信息 手动事务与就地修改方法结束后所有连接都应归还
+        AssertConnectionPoolReturned(dataSource);
+    }
+
+    /**
+     * 手动事务与就地修改方法联合使用测试
+     *
+     * @param dataSource 数据源
+     */
+    @ParameterizedTest
+    @ArgumentsSource(TestCaseSourceConfigurationManager.class)
+    public void manualTransactionTestWithDirectlyChange(EDataSource dataSource) {
+        //手动事务 指的是调用Obase的手动事务方法自己控制事务
+        //Obase的手动事务方法遵循JDBC的try-Begin-Commit-Catch-RollBack-Finally-Release模式
+
+        var context = ContextUtils.createContext(dataSource);
+
+        //此时 有10个对象 都查出来
+        var list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
+        //10个
+        assertNotNull(list);
+        assertEquals(10, list.size());
+
+        try {
+            //手动开启事务
+            context.beginTransaction();
+
+            //在这个事务里使用就地修改方法
+            var emptyDelete = context.createSet(NullableJavaBean.class).delete(p -> p.getIntNumber() > 20, NullableJavaBean.class);
+            //没有满足条件的
+            assertEquals(0, emptyDelete);
+
+            //修改前三个的LongNumber
+            list.get(0).setLongNumber(11L);
+            list.get(1).setLongNumber(12L);
+            list.get(2).setLongNumber(13L);
+            //保存之前的修改
+            context.saveChanges();
+            //调用模拟的外部方法 此处传入的是偶数 不会抛异常
+            this.outerMethod(2);
+
+            //提交修改
+            context.commit();
+        } catch (Exception ignored) {
+            //发生异常 回滚
+            context.rollbackTransaction();
+        } finally {
+            //最后释放资源
+            context.release();
+        }
+
+        context = ContextUtils.createContext(dataSource);
+        list = context.createSet(NullableJavaBean.class).sorted(NullableJavaBean::getIntNumber).toList();
+        //10个
+        assertNotNull(list);
+        assertEquals(10, list.size());
+        //前三个被修改
+        assertEquals(11, list.get(0).getLongNumber());
+        assertEquals(12, list.get(1).getLongNumber());
+        assertEquals(13, list.get(2).getLongNumber());
+
+        //此时再检查连接池的信息 手动事务与就地修改方法结束后所有连接都应归还
+        AssertConnectionPoolReturned(dataSource);
     }
 }

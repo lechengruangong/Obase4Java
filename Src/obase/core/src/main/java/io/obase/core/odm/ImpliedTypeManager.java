@@ -19,7 +19,6 @@ import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.MethodCall;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -421,7 +420,7 @@ public class ImpliedTypeManager {
 
         try (DynamicType.Unloaded<?> unloaded = builder.make()) {
             return unloaded.load(GlobalClassLoaderCache.getInstance().getClassLoader(), ClassLoadingStrategy.Default.INJECTION).getLoaded();
-        } catch (IOException e) {
+        } catch (Exception e) {
             throw new RuntimeException("无法构造代理类型,请参考内部异常.", e);
         }
     }

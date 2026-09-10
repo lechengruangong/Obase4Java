@@ -71,6 +71,15 @@ public class JoinedSource implements ISource {
     }
 
     /**
+     * 获取连接运算包含的源列表。
+     *
+     * @return 源列表
+     */
+    public List<ISource> getSources() {
+        return this.sources;
+    }
+
+    /**
      * 设置连接方式，即左连接、内连接或右连接
      *
      * @param joinType 连接方式

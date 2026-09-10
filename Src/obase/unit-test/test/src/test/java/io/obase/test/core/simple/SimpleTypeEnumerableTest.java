@@ -185,6 +185,15 @@ public class SimpleTypeEnumerableTest {
 
         //有5个
         assertEquals(5, list.size());
+
+        //字符串属性Contains的正向查询(编号末尾数字为2的2号与12号的String属性包含"2号字" 其余不包含)
+        list = context.createSet(JavaBean.class).filter(p -> p.getString().contains("2号字")).toList();
+        //有2个
+        assertEquals(2, list.size());
+        //一元取反!形式 与== false语义一致(回归: MySQL中!优先级高于LIKE, 曾导致(!col LIKE x)被解析为(!col) LIKE x而恒false)
+        list = context.createSet(JavaBean.class).filter(p -> !p.getString().contains("2号字")).toList();
+        //其余18个不包含
+        assertEquals(18, list.size());
     }
 
     /**
@@ -569,7 +578,7 @@ public class SimpleTypeEnumerableTest {
     @ArgumentsSource(TestCaseSourceConfigurationManager.class)
     public void whereTest(EDataSource dataSource) {
         var context = ContextUtils.createContext(dataSource);
-        LocalDateTime date = LocalDateTime.now();
+        LocalDateTime date = LocalDateTime.now().plusMinutes(1);
         //测试时间条件
         List<JavaBean> list = context.createSet(JavaBean.class).filter(p -> p.getDateTime().isAfter(date)).toList();
 
@@ -821,7 +830,7 @@ public class SimpleTypeEnumerableTest {
 
         //拼接Bool == true && DateTime <= Now && UUID != Random
         combiner = new PredicateCombiner<>();
-        combiner.and(combiner.getWrapper().eq(JavaBean::getBool, true)).and(JavaBean::getDateTime, EPredicateType.LessThanOrEqual, LocalDateTime.now());
+        combiner.and(combiner.getWrapper().eq(JavaBean::getBool, true)).and(JavaBean::getDateTime, EPredicateType.LessThanOrEqual, LocalDateTime.now().plusMinutes(1));
         combiner.and(combiner.getWrapper().ne(JavaBean::getUuid, UUID.randomUUID()));
 
         bean = context.createSet(JavaBean.class).findFirst(combiner.getLambdaExpression()).orElse(null);

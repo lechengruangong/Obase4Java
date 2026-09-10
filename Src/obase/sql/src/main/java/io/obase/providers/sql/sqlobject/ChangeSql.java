@@ -10,6 +10,8 @@ package io.obase.providers.sql.sqlobject;
 
 import io.obase.common.ObjectReferencePack;
 import io.obase.providers.sql.EDataSource;
+import io.obase.providers.sql.common.SqlAliasCollector;
+import io.obase.providers.sql.common.SqlAliasReplacer;
 import io.obase.providers.sql.common.SqlUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -227,14 +229,116 @@ public class ChangeSql extends SqlBase {
     }
 
     /**
-     * 针对指定的数据源类型，根据查询Sql语句的对象表示法生成Sql语句
+     * 针对指定的数据源类型，根据修改Sql语句的对象表示法生成Sql语句。
+     * 生成后按别名映射字典将规则别名统一替换为短别名，以避免数据库因别名过长而截断。
      *
      * @param sourceType 数据源类型
      * @return Sql语句
      */
     @Override
     public String toSql(EDataSource sourceType) {
-        return null;
+        String sql = renderSql(sourceType);
+        return SqlAliasReplacer.replace(sql, SqlAliasCollector.collect(this));
+    }
+
+    /**
+     * 生成Sql语句（未进行别名缩短）。
+     *
+     * @param sourceType 数据源类型
+     * @return Sql语句
+     */
+    private String renderSql(EDataSource sourceType) {
+        StringBuilder resultBuilder;
+        List<String> columns = new ArrayList<>();
+        List<String> values = new ArrayList<>();
+
+        switch (this.changeType) {
+            case Insert: {
+                resultBuilder = new StringBuilder("insert into " + this.getSource().toString(sourceType) + " ");
+                for (IFieldSetter u : this.fieldSetters.values()) {
+                    ObjectReferencePack<String> column = new ObjectReferencePack<>();
+                    values.add(u.toString(column, sourceType));
+                    columns.add(column.realValue);
+                }
+
+                resultBuilder.append("(").append(String.join(",", columns)).append(")");
+                resultBuilder.append(" values(").append(String.join(",", values)).append(")");
+                break;
+            }
+            case Update: {
+                //Sqlite不支持JoinSource
+                if (this.getSource() instanceof JoinedSource && sourceType == EDataSource.Sqlite)
+                    throw new IllegalArgumentException(sourceType + "不支持更新连接查询源");
+
+                //目标源
+                MonomerSource targetSource = this.getTargetSource();
+                if (targetSource == null) targetSource = (MonomerSource) this.getSource();
+
+                //字段
+                for (IFieldSetter u : this.fieldSetters.values()) {
+                    String column = sourceType == EDataSource.Sqlite
+                            ? u.toString(sourceType)
+                            : targetSource.getSymbol() + "." + u.toString(sourceType);
+                    columns.add(column);
+                }
+
+                resultBuilder = new StringBuilder("update ");
+                //对于更新语句 SqlServer 和 MySql的语句组成方式有差异
+                switch (sourceType) {
+                    case SqlServer: {
+                        //SqlServer形如 update source set source.value = '' from Source
+                        resultBuilder.append(targetSource.getSymbol()).append(" set ").append(String.join(",", columns))
+                                .append("  from ").append(this.getSource().toString(sourceType));
+                        break;
+                    }
+                    case Oracle:
+                    case MySql:
+                    case PostgreSql:
+                    case Sqlite: {
+                        //MySql形如 update Source set source.value = ''
+                        resultBuilder.append(this.getSource().toString(sourceType)).append(" set ").append(String.join(",", columns));
+                        break;
+                    }
+                    default:
+                        throw new IllegalArgumentException("不支持的数据源: " + sourceType);
+                }
+
+                if (this.getCriteria() != null)
+                    resultBuilder.append(" where ").append(this.getCriteria().toString(sourceType));
+                break;
+            }
+            case Delete: {
+                //Sqlite不支持JoinSource
+                if (this.getSource() instanceof JoinedSource &&
+                        (sourceType == EDataSource.Sqlite || sourceType == EDataSource.PostgreSql))
+                    throw new IllegalArgumentException(sourceType + "不支持删除连接查询源");
+
+                resultBuilder = new StringBuilder("delete ");
+
+                //补丁 用于处理直接删除等直接修改部分
+                MonomerSource targetSource = this.getTargetSource();
+                if (targetSource == null) targetSource = (MonomerSource) this.getSource();
+                String source = targetSource.getSymbol();
+                //简单源使用本名
+                if (targetSource instanceof SimpleSource) {
+                    SimpleSource simpleSource = (SimpleSource) targetSource;
+                    source = simpleSource.getName();
+                    //连接源使用目标别名
+                    if (this.getSource() instanceof JoinedSource) source = simpleSource.getSymbol();
+                }
+
+                //Sqlite无源名称
+                if (sourceType != EDataSource.Sqlite) resultBuilder.append(source);
+                resultBuilder.append(" from ").append(this.getSource().toString(sourceType));
+                if (this.getCriteria() != null)
+                    resultBuilder.append(" where ").append(this.getCriteria().toString(sourceType));
+                break;
+            }
+            default:
+                throw new IllegalArgumentException("未知的修改Sql类型: " + this.changeType);
+        }
+
+        return resultBuilder.toString();
     }
 
     /**
@@ -520,7 +624,8 @@ public class ChangeSql extends SqlBase {
     }
 
     /**
-     * 使用参数化的方式 和 指定的数据源 将Sql对象表示为Sql字符串
+     * 使用参数化的方式 和 指定的数据源 将Sql对象表示为Sql字符串。
+     * 生成后按别名映射字典将规则别名统一替换为短别名，以避免数据库因别名过长而截断。
      *
      * @param sourceType    数据源类型
      * @param sqlParameters 参数列表
@@ -529,6 +634,19 @@ public class ChangeSql extends SqlBase {
      */
     @Override
     public String toSql(EDataSource sourceType, ObjectReferencePack<List<DataParameter>> sqlParameters, IParameterCreator creator) {
+        String sql = renderSql(sourceType, sqlParameters, creator);
+        return SqlAliasReplacer.replace(sql, SqlAliasCollector.collect(this));
+    }
+
+    /**
+     * 使用参数化的方式 和 指定的数据源 将Sql对象表示为Sql字符串（未进行别名缩短）。
+     *
+     * @param sourceType    数据源类型
+     * @param sqlParameters 参数列表
+     * @param creator       参数构造器
+     * @return Sql语句
+     */
+    private String renderSql(EDataSource sourceType, ObjectReferencePack<List<DataParameter>> sqlParameters, IParameterCreator creator) {
         //注意out值不要赋空
         StringBuilder resultBuilder;
         switch (this.changeType) {

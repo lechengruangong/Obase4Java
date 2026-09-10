@@ -26,11 +26,6 @@
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- asm库 版本号于父项目指定  -->
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-        </dependency>
         <!-- byte-buddy 版本号于父项目指定  -->
         <dependency>
             <groupId>net.bytebuddy</groupId>

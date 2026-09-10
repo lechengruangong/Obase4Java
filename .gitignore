@@ -1,4 +1,5 @@
 /.idea
+.flattened-pom.xml
 /Src/*/*/target
 /Src/*/*/*/target
 /*.iml
