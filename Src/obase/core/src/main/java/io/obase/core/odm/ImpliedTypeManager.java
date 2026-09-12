@@ -37,10 +37,6 @@ public class ImpliedTypeManager {
      */
     private static final String nameSpace = "io.obase.proxy.module";
     /**
-     * 单例对象
-     */
-    private static volatile ImpliedTypeManager manager;
-    /**
      * 接受管理的隐含类型。
      * 值为TypeHolder，保证同一个标识的隐含类型只会被定义一次，且定义（IL发射）过程不持有任何锁。
      */
@@ -62,12 +58,18 @@ public class ImpliedTypeManager {
      * @return 单例
      */
     public static ImpliedTypeManager getCurrent() {
-        if (manager == null) {
-            synchronized (ImpliedTypeManager.class) {
-                manager = new ImpliedTypeManager();
-            }
-        }
-        return manager;
+        return InstanceHolder.INSTANCE;
+    }
+
+    /**
+     * 隐含类型管理器单例持有者
+     */
+    private static final class InstanceHolder {
+
+        /**
+         * 单例
+         */
+        private static final ImpliedTypeManager INSTANCE = new ImpliedTypeManager();
     }
 
     /**
