@@ -1323,7 +1323,7 @@ public class CoreModelRegister {
         //Identity的构造函数需要配置
         Constructor<Identity> identityConstructor;
         try {
-            identityConstructor = Identity.class.getDeclaredConstructor(UUID.class, LocalDateTime.class, String.class, LocalDateTime.class, String.class);
+            identityConstructor = Identity.class.getDeclaredConstructor(UUID.class, LocalDateTime.class, String.class, LocalDateTime.class, long.class);
         } catch (NoSuchMethodException e) {
             throw new RuntimeException("无法获取Identity的构造字段", e);
         }
@@ -1343,8 +1343,8 @@ public class CoreModelRegister {
                 //配置第四个参数 不需要存储 直接传入当前时间 注意这个委托的参数会传空
                 .hasParameter((Identity p) -> LocalDateTime.now(), LocalDateTime.class, false)
                 //配置第五个参数 需要存储 在存储时进行了转换 那么就需要再转换回来
-                .hasParameter((Identity p) -> new JsonSerializer().serialize(p.getName()), String.class, true,
-                        json -> json == null ? null : new JsonSerializer().deserialize(json.toString(), String.class));
+                .hasParameter((Identity p) -> new JsonSerializer().serialize(p.getSeq()), String.class, true,
+                        json -> json == null ? null : new JsonSerializer().deserialize(json.toString(), Long.class));
 
         //Identity没有引用 无需配置
         //忽略版本和次版本
