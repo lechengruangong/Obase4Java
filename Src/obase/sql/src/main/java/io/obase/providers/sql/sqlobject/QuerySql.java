@@ -415,7 +415,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
         String isNullStr;
         switch (sourceType) {
             case SqlServer: {
-                isNullStr = "isnull";
+                isNullStr = "ISNULL";
                 break;
             }
             case PostgreSql: {
@@ -426,7 +426,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
             case MySql:
             case Oracle:
             case Sqlite: {
-                isNullStr = "ifnull";
+                isNullStr = "IFNULL";
                 break;
             }
             default:
@@ -438,42 +438,42 @@ public class QuerySql extends SqlBase implements ISetOperand {
             case None:
                 break;
             case Average:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Avg(cast(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " as decimal(10,2))),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(AVG(CAST(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " AS decimal(10,2))),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append(" where").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append(" WHERE").append(this.getCriteria().toString(sourceType)).append(" ");
                 return sqlStrBuilder.toString();
             case Count:
-                sqlStrBuilder = new StringBuilder("select count(1) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT COUNT(1) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append(" where").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append(" WHERE").append(this.getCriteria().toString(sourceType)).append(" ");
                 return sqlStrBuilder.toString();
             case Max:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Max(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(MAX(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append(" where").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append(" WHERE").append(this.getCriteria().toString(sourceType)).append(" ");
                 return sqlStrBuilder.toString();
             case Min:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Min(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(MIN(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append(" where").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append(" WHERE").append(this.getCriteria().toString(sourceType)).append(" ");
                 return sqlStrBuilder.toString();
             case Sum:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Sum(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(SUM(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append(" where").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append(" WHERE").append(this.getCriteria().toString(sourceType)).append(" ");
                 return sqlStrBuilder.toString();
 
             default:
                 throw new IllegalArgumentException("未知的聚合类型: " + this.getAggregation());
         }
 
-        sqlStrBuilder = new StringBuilder("select " + (this.getDistinct() ? "Distinct " : ""));
+        sqlStrBuilder = new StringBuilder("SELECT " + (this.getDistinct() ? "DISTINCT " : ""));
 
         switch (sourceType) {
             case SqlServer: {
                 StringBuilder orderStringBuilder = new StringBuilder();
                 //加入Take
-                if (this.takeNumber > 0) sqlStrBuilder.append(" top ").append(this.takeNumber).append(" ");
+                if (this.takeNumber > 0) sqlStrBuilder.append(" TOP ").append(this.takeNumber).append(" ");
                 //Select部分
                 if (this.getSelectionSet() != null && this.getSelectionSet().getColumns().size() > 0)
                     sqlStrBuilder.append(this.getSelectionSet().toString(sourceType));
@@ -481,10 +481,10 @@ public class QuerySql extends SqlBase implements ISetOperand {
                     sqlStrBuilder.append("*");
 
                 //From部分
-                sqlStrBuilder.append(" from ").append(this.getSource().toString(sourceType)).append(" ");
+                sqlStrBuilder.append(" FROM ").append(this.getSource().toString(sourceType)).append(" ");
                 //Where部分
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append(" where ").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType)).append(" ");
                 //Group部分
                 if (this.getGroupBy() != null)
                     sqlStrBuilder.append(this.getGroupBy().toString(sourceType)).append("  ");
@@ -492,13 +492,13 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getHaving() != null) sqlStrBuilder.append(this.getHaving().toString(sourceType)).append("  ");
                 //Order部分
                 if (this.getOrders() != null && this.getOrders().size() > 0) {
-                    orderStringBuilder.append(" order by ");
+                    orderStringBuilder.append(" ORDER BY ");
                     List<Order> orders = SqlUtils.distinctOrders(this.getOrders());
                     for (int i = 0; i < orders.size(); i++) {
                         Order order = orders.get(i);
                         orderStringBuilder.append(i != orders.size() - 1
-                                ? " " + order.getExpression().toString(sourceType) + "  " + order.getDirection() + ","
-                                : " " + order.getExpression().toString(sourceType) + " " + order.getDirection());
+                                ? " " + order.getExpression().toString(sourceType) + "  " + order.getDirection().toString().toUpperCase() + ","
+                                : " " + order.getExpression().toString(sourceType) + " " + order.getDirection().toString().toUpperCase());
                     }
                 }
 
@@ -506,9 +506,9 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getSkipNumber() <= 0) {
                     sqlStrBuilder.append(orderStringBuilder.append(" "));
                 } else {
-                    sqlStrBuilder = new StringBuilder("select " + (this.getDistinct() ? "Distinct " : ""));
+                    sqlStrBuilder = new StringBuilder("SELECT " + (this.getDistinct() ? "DISTINCT " : ""));
                     //加入Take
-                    if (this.takeNumber > 0) sqlStrBuilder.append(" top ").append(this.takeNumber).append(" ");
+                    if (this.takeNumber > 0) sqlStrBuilder.append(" TOP ").append(this.takeNumber).append(" ");
                     sqlStrBuilder.append(" t.* ");
                     String selectStr = this.getSelectionSet() != null && this.getSelectionSet().getColumns().size() > 0
                             ? this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(","))
@@ -516,12 +516,12 @@ public class QuerySql extends SqlBase implements ISetOperand {
                     String orderStr = this.getOrders() == null || this.getOrders().size() == 0
                             ? "1"
                             : this.getOrders().stream().map(s ->
-                            " " + s.getField().toString(sourceType) + " " + s.getDirection() + " ").collect(Collectors.joining(","));
-                    sqlStrBuilder.append(" from (select ").append(selectStr).append(",ROW_NUMBER() over(order by ").append(orderStr).append(" ) as rownum from ").append(this.getSource().toString(sourceType)).append(" ");
+                            " " + s.getField().toString(sourceType) + " " + s.getDirection().toString().toUpperCase() + " ").collect(Collectors.joining(","));
+                    sqlStrBuilder.append(" FROM (SELECT ").append(selectStr).append(",ROW_NUMBER() OVER(ORDER BY ").append(orderStr).append(" ) AS rownum FROM ").append(this.getSource().toString(sourceType)).append(" ");
                     if (this.getCriteria() != null)
-                        sqlStrBuilder.append(" where ").append(this.getCriteria().toString(sourceType)).append(" ");
-                    sqlStrBuilder.append(" ) t where t.rownum > ").append(this.getSkipNumber());
-                    if (this.orders != null && this.orders.size() > 0) sqlStrBuilder.append(" order by t.rownum asc");
+                        sqlStrBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append(" ) t WHERE t.rownum > ").append(this.getSkipNumber());
+                    if (this.orders != null && this.orders.size() > 0) sqlStrBuilder.append(" ORDER BY t.rownum ASC");
                 }
 
                 break;
@@ -537,10 +537,10 @@ public class QuerySql extends SqlBase implements ISetOperand {
                     sqlStrBuilder.append("*");
 
                 //From部分
-                sqlStrBuilder.append("from ").append(this.getSource().toString(sourceType)).append("  ");
+                sqlStrBuilder.append("FROM ").append(this.getSource().toString(sourceType)).append("  ");
                 //Where部分
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append("where ").append(this.getCriteria().toString(sourceType)).append("  ");
+                    sqlStrBuilder.append("WHERE ").append(this.getCriteria().toString(sourceType)).append("  ");
                 //Group部分
                 if (this.getGroupBy() != null)
                     sqlStrBuilder.append(this.getGroupBy().toString(sourceType)).append("  ");
@@ -548,13 +548,13 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getHaving() != null) sqlStrBuilder.append(this.getHaving().toString(sourceType)).append("  ");
                 //Order部分
                 if (this.getOrders() != null && this.getOrders().size() > 0) {
-                    orderStringBuilder.append(" order  by ");
+                    orderStringBuilder.append(" ORDER  BY ");
                     List<Order> orders = SqlUtils.distinctOrders(this.getOrders());
                     for (int i = 0; i < orders.size(); i++) {
                         Order order = orders.get(i);
                         orderStringBuilder.append(i != orders.size() - 1
-                                ? " " + order.getExpression().toString(sourceType) + "  " + order.getDirection() + ","
-                                : " " + order.getExpression().toString(sourceType) + "  " + order.getDirection());
+                                ? " " + order.getExpression().toString(sourceType) + "  " + order.getDirection().toString().toUpperCase() + ","
+                                : " " + order.getExpression().toString(sourceType) + "  " + order.getDirection().toString().toUpperCase());
                     }
                 }
 
@@ -562,9 +562,9 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 //Limit Skip和Take部分
                 if (this.takeNumber > 0) {
                     if (this.skipNumber >= 0)
-                        sqlStrBuilder.append(" limit ").append(this.skipNumber).append(",").append(this.takeNumber);
+                        sqlStrBuilder.append(" LIMIT ").append(this.skipNumber).append(",").append(this.takeNumber);
                 } else {
-                    if (this.skipNumber > 0) sqlStrBuilder.append(" limit ").append(this.skipNumber);
+                    if (this.skipNumber > 0) sqlStrBuilder.append(" LIMIT ").append(this.skipNumber);
                 }
 
                 break;
@@ -578,10 +578,10 @@ public class QuerySql extends SqlBase implements ISetOperand {
                     sqlStrBuilder.append("*");
 
                 //From部分
-                sqlStrBuilder.append("from ").append(this.getSource().toString(sourceType)).append(" ");
+                sqlStrBuilder.append("FROM ").append(this.getSource().toString(sourceType)).append(" ");
                 //Where部分
                 if (this.getCriteria() != null)
-                    sqlStrBuilder.append("where ").append(this.getCriteria().toString(sourceType)).append(" ");
+                    sqlStrBuilder.append("WHERE ").append(this.getCriteria().toString(sourceType)).append(" ");
                 //Group部分
                 if (this.getGroupBy() != null)
                     sqlStrBuilder.append(this.getGroupBy().toString(sourceType)).append("  ");
@@ -589,13 +589,13 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getHaving() != null) sqlStrBuilder.append(this.getHaving().toString(sourceType)).append("  ");
                 //Order部分
                 if (this.getOrders() != null && this.getOrders().size() > 0) {
-                    orderStringBuilder.append(" order by  ");
+                    orderStringBuilder.append(" ORDER BY  ");
                     List<Order> orders = SqlUtils.distinctOrders(this.getOrders());
                     for (int i = 0; i < orders.size(); i++) {
                         Order order = orders.get(i);
                         orderStringBuilder.append(i != orders.size() - 1
-                                ? " " + order.getExpression().toString(sourceType) + "   " + order.getDirection() + ","
-                                : " " + order.getExpression().toString(sourceType) + "  " + order.getDirection());
+                                ? " " + order.getExpression().toString(sourceType) + "   " + order.getDirection().toString().toUpperCase() + ","
+                                : " " + order.getExpression().toString(sourceType) + "  " + order.getDirection().toString().toUpperCase());
                     }
                 }
 
@@ -603,7 +603,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 //Limit Skip和Take部分
                 if (this.takeNumber > 0) {
                     if (this.skipNumber >= 0)
-                        sqlStrBuilder.append(" limit ").append(this.takeNumber).append(" OFFSET ").append(this.skipNumber);
+                        sqlStrBuilder.append(" LIMIT ").append(this.takeNumber).append(" OFFSET ").append(this.skipNumber);
                 } else {
                     if (this.skipNumber > 0) sqlStrBuilder.append(" OFFSET ").append(this.skipNumber);
                 }
@@ -655,7 +655,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
         String isNullStr;
         switch (sourceType) {
             case SqlServer: {
-                isNullStr = "isnull";
+                isNullStr = "ISNULL";
                 break;
             }
             case PostgreSql: {
@@ -666,7 +666,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
             case MySql:
             case Oracle:
             case Sqlite: {
-                isNullStr = "ifnull";
+                isNullStr = "IFNULL";
                 break;
             }
             default:
@@ -680,7 +680,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
             case None:
                 break;
             case Average:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Avg(cast(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " as decimal(10,2))),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(AVG(CAST(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " AS decimal(10,2))),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
                     sqlStrBuilder.append("  WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append("   ");
@@ -688,7 +688,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 }
                 return sqlStrBuilder.toString();
             case Count:
-                sqlStrBuilder = new StringBuilder("select count(1) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT COUNT(1) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
                     sqlStrBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append("  ");
@@ -696,7 +696,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 }
                 return sqlStrBuilder.toString();
             case Max:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Max(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(MAX(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
                     sqlStrBuilder.append(" WHERE  ").append(this.getCriteria().toString(sourceType, paras, creator)).append(" ");
@@ -704,7 +704,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 }
                 return sqlStrBuilder.toString();
             case Min:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Min(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(MIN(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
                     sqlStrBuilder.append("  WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append(" ");
@@ -712,7 +712,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 }
                 return sqlStrBuilder.toString();
             case Sum:
-                sqlStrBuilder = new StringBuilder("select " + isNullStr + "(Sum(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) from " + this.getSource().toString(sourceType) + " ");
+                sqlStrBuilder = new StringBuilder("SELECT " + isNullStr + "(SUM(" + this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " ),0) FROM " + this.getSource().toString(sourceType) + " ");
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
                     sqlStrBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType, paras, creator)).append("   ");
@@ -724,13 +724,13 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 throw new IllegalArgumentException("未知的聚合类型: " + this.getAggregation());
         }
 
-        sqlStrBuilder = new StringBuilder("select " + (this.getDistinct() ? "Distinct " : ""));
+        sqlStrBuilder = new StringBuilder("SELECT " + (this.getDistinct() ? "DISTINCT " : ""));
 
         switch (sourceType) {
             case SqlServer: {
                 StringBuilder orderStringBuilder = new StringBuilder();
                 //加入Take
-                if (this.takeNumber > 0) sqlStrBuilder.append("  top ").append(this.takeNumber).append(" ");
+                if (this.takeNumber > 0) sqlStrBuilder.append("  TOP ").append(this.takeNumber).append(" ");
                 //Select部分
                 if (this.getSelectionSet() == null || this.getSelectionSet().getColumns().size() == 0)
                     sqlStrBuilder.append("*");
@@ -739,7 +739,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
 
                 //From部分
                 ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                sqlStrBuilder.append("  from ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
+                sqlStrBuilder.append("  FROM ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
                 sqlParameters.realValue.addAll(paras.realValue);
                 //Where部分
                 if (this.getCriteria() != null) {
@@ -754,13 +754,13 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getHaving() != null) sqlStrBuilder.append(this.getHaving().toString(sourceType)).append("   ");
                 //Order部分
                 if (this.getOrders() != null && this.getOrders().size() > 0) {
-                    orderStringBuilder.append(" order  by ");
+                    orderStringBuilder.append(" ORDER  BY ");
                     List<Order> orders = SqlUtils.distinctOrders(this.getOrders());
                     for (int i = 0; i < orders.size(); i++) {
                         Order order = orders.get(i);
                         orderStringBuilder.append(i != orders.size() - 1
-                                ? "  " + order.getExpression().toString(sourceType) + " " + order.getDirection() + ","
-                                : " " + order.getExpression().toString(sourceType) + " " + order.getDirection());
+                                ? "  " + order.getExpression().toString(sourceType) + " " + order.getDirection().toString().toUpperCase() + ","
+                                : " " + order.getExpression().toString(sourceType) + " " + order.getDirection().toString().toUpperCase());
                     }
                 }
 
@@ -768,9 +768,9 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getSkipNumber() <= 0) {
                     sqlStrBuilder.append(orderStringBuilder.append(" "));
                 } else {
-                    sqlStrBuilder = new StringBuilder("select  " + (this.getDistinct() ? "Distinct " : ""));
+                    sqlStrBuilder = new StringBuilder("SELECT  " + (this.getDistinct() ? "DISTINCT " : ""));
                     //加入Take
-                    if (this.takeNumber > 0) sqlStrBuilder.append("  top ").append(this.takeNumber).append(" ");
+                    if (this.takeNumber > 0) sqlStrBuilder.append("  TOP ").append(this.takeNumber).append(" ");
                     sqlStrBuilder.append(" t.* ");
                     String selectStr = this.getSelectionSet() != null && this.getSelectionSet().getColumns().size() > 0
                             ? this.getSelectionSet().getColumns().stream().map(p -> p.toString(sourceType)).collect(Collectors.joining(","))
@@ -778,15 +778,15 @@ public class QuerySql extends SqlBase implements ISetOperand {
                     String orderStr = this.getOrders() == null || this.getOrders().size() == 0
                             ? "1"
                             : this.getOrders().stream().map(s ->
-                            " " + s.getField().toString(sourceType) + "  " + s.getDirection() + " ").collect(Collectors.joining(","));
-                    sqlStrBuilder.append(" from (select ").append(selectStr).append(",ROW_NUMBER() over (order by ").append(orderStr).append(" ) as rownum from ").append(this.getSource().toString(sourceType)).append(" ");
+                            " " + s.getField().toString(sourceType) + "  " + s.getDirection().toString().toUpperCase() + " ").collect(Collectors.joining(","));
+                    sqlStrBuilder.append(" FROM (SELECT ").append(selectStr).append(",ROW_NUMBER() OVER (ORDER BY ").append(orderStr).append(" ) AS rownum FROM ").append(this.getSource().toString(sourceType)).append(" ");
                     if (this.getCriteria() != null) {
                         ObjectReferencePack<List<DataParameter>> cparas = new ObjectReferencePack<>();
-                        sqlStrBuilder.append(" where").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
+                        sqlStrBuilder.append(" WHERE").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
                         sqlParameters.realValue.addAll(cparas.realValue);
                     }
-                    sqlStrBuilder.append(" ) t where t.rownum > ").append(this.getSkipNumber());
-                    if (this.orders != null && this.orders.size() > 0) sqlStrBuilder.append(" order by t.rownum asc");
+                    sqlStrBuilder.append(" ) t WHERE t.rownum > ").append(this.getSkipNumber());
+                    if (this.orders != null && this.orders.size() > 0) sqlStrBuilder.append(" ORDER BY t.rownum ASC");
                 }
 
                 break;
@@ -801,12 +801,12 @@ public class QuerySql extends SqlBase implements ISetOperand {
 
                 //From部分
                 ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                sqlStrBuilder.append(",ROWNUM paging_rownumber from ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
+                sqlStrBuilder.append(",ROWNUM paging_rownumber FROM ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
                 sqlParameters.realValue.addAll(paras.realValue);
                 //Where部分
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> cparas = new ObjectReferencePack<>();
-                    sqlStrBuilder.append(" where   ").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
+                    sqlStrBuilder.append(" WHERE   ").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
                     sqlParameters.realValue.addAll(cparas.realValue);
                 }
                 //Group部分
@@ -815,21 +815,21 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getHaving() != null) sqlStrBuilder.append(this.getHaving().toString(sourceType)).append("  ");
                 //Order部分
                 if (this.getOrders() != null && this.getOrders().size() > 0) {
-                    orderStringBuilder.append("  order by ");
+                    orderStringBuilder.append("  ORDER BY ");
                     List<Order> orders = SqlUtils.distinctOrders(this.getOrders());
                     for (int i = 0; i < orders.size(); i++) {
                         Order order = orders.get(i);
                         orderStringBuilder.append(i != orders.size() - 1
-                                ? " " + order.getExpression().toString(sourceType) + " " + order.getDirection() + ","
-                                : " " + order.getExpression().toString(sourceType) + "  " + order.getDirection());
+                                ? " " + order.getExpression().toString(sourceType) + " " + order.getDirection().toString().toUpperCase() + ","
+                                : " " + order.getExpression().toString(sourceType) + "  " + order.getDirection().toString().toUpperCase());
                     }
                 }
 
                 sqlStrBuilder.append(orderStringBuilder.append(" "));
                 //Limit Skip和Take部分
                 if (this.takeNumber > 0) {
-                    sqlStrBuilder.append(this.getCriteria() == null ? " Where " : " and ").append(" rownum <= ").append(this.skipNumber + this.takeNumber);
-                    sqlStrBuilder = new StringBuilder("select * from (" + sqlStrBuilder + ") TP where TP.paging_rownumber > " + this.skipNumber);
+                    sqlStrBuilder.append(this.getCriteria() == null ? " WHERE " : " AND ").append(" ROWNUM <= ").append(this.skipNumber + this.takeNumber);
+                    sqlStrBuilder = new StringBuilder("SELECT * FROM (" + sqlStrBuilder + ") TP WHERE TP.paging_rownumber > " + this.skipNumber);
                 }
 
                 break;
@@ -846,12 +846,12 @@ public class QuerySql extends SqlBase implements ISetOperand {
 
                 //From部分
                 ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                sqlStrBuilder.append("  from ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
+                sqlStrBuilder.append("  FROM ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
                 sqlParameters.realValue.addAll(paras.realValue);
                 //Where部分
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> cparas = new ObjectReferencePack<>();
-                    sqlStrBuilder.append(" where ").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
+                    sqlStrBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
                     sqlParameters.realValue.addAll(cparas.realValue);
                 }
                 //Group部分
@@ -861,13 +861,13 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getHaving() != null) sqlStrBuilder.append(this.getHaving().toString(sourceType)).append(" ");
                 //Order部分
                 if (this.getOrders() != null && this.getOrders().size() > 0) {
-                    orderStringBuilder.append(" order  by ");
+                    orderStringBuilder.append(" ORDER  BY ");
                     List<Order> orders = SqlUtils.distinctOrders(this.getOrders());
                     for (int i = 0; i < orders.size(); i++) {
                         Order order = orders.get(i);
                         orderStringBuilder.append(i != orders.size() - 1
-                                ? " " + order.getExpression().toString(sourceType) + "  " + order.getDirection() + ","
-                                : "  " + order.getExpression().toString(sourceType) + " " + order.getDirection());
+                                ? " " + order.getExpression().toString(sourceType) + "  " + order.getDirection().toString().toUpperCase() + ","
+                                : "  " + order.getExpression().toString(sourceType) + " " + order.getDirection().toString().toUpperCase());
                     }
                 }
 
@@ -875,9 +875,9 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 //Limit Skip和Take部分
                 if (this.takeNumber > 0) {
                     if (this.skipNumber >= 0)
-                        sqlStrBuilder.append("  limit ").append(this.skipNumber).append(",").append(this.takeNumber);
+                        sqlStrBuilder.append("  LIMIT ").append(this.skipNumber).append(",").append(this.takeNumber);
                 } else {
-                    if (this.skipNumber > 0) sqlStrBuilder.append(" limit ").append(this.skipNumber);
+                    if (this.skipNumber > 0) sqlStrBuilder.append(" LIMIT ").append(this.skipNumber);
                 }
 
                 break;
@@ -892,12 +892,12 @@ public class QuerySql extends SqlBase implements ISetOperand {
 
                 //From部分
                 ObjectReferencePack<List<DataParameter>> paras = new ObjectReferencePack<>();
-                sqlStrBuilder.append(" from ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
+                sqlStrBuilder.append(" FROM ").append(this.getSource().toString(sourceType, paras, creator)).append(" ");
                 sqlParameters.realValue.addAll(paras.realValue);
                 //Where部分
                 if (this.getCriteria() != null) {
                     ObjectReferencePack<List<DataParameter>> cparas = new ObjectReferencePack<>();
-                    sqlStrBuilder.append("where ").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
+                    sqlStrBuilder.append("WHERE ").append(this.getCriteria().toString(sourceType, cparas, creator)).append(" ");
                     sqlParameters.realValue.addAll(cparas.realValue);
                 }
                 //Group部分
@@ -906,13 +906,13 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 if (this.getHaving() != null) sqlStrBuilder.append(this.getHaving().toString(sourceType)).append(" ");
                 //Order部分
                 if (this.getOrders() != null && this.getOrders().size() > 0) {
-                    orderStringBuilder.append(" order by ");
+                    orderStringBuilder.append(" ORDER BY ");
                     List<Order> orders = SqlUtils.distinctOrders(this.getOrders());
                     for (int i = 0; i < orders.size(); i++) {
                         Order order = orders.get(i);
                         orderStringBuilder.append(i != orders.size() - 1
-                                ? " " + order.getExpression().toString(sourceType) + " " + order.getDirection() + ","
-                                : " " + order.getExpression().toString(sourceType) + " " + order.getDirection());
+                                ? " " + order.getExpression().toString(sourceType) + " " + order.getDirection().toString().toUpperCase() + ","
+                                : " " + order.getExpression().toString(sourceType) + " " + order.getDirection().toString().toUpperCase());
                     }
                 }
 
@@ -920,7 +920,7 @@ public class QuerySql extends SqlBase implements ISetOperand {
                 //Limit Skip和Take部分
                 if (this.takeNumber > 0) {
                     if (this.skipNumber >= 0)
-                        sqlStrBuilder.append(" limit  ").append(this.takeNumber).append(" OFFSET ").append(this.skipNumber);
+                        sqlStrBuilder.append(" LIMIT  ").append(this.takeNumber).append(" OFFSET ").append(this.skipNumber);
                 } else {
                     if (this.skipNumber > 0) sqlStrBuilder.append(" OFFSET ").append(this.skipNumber);
                 }
