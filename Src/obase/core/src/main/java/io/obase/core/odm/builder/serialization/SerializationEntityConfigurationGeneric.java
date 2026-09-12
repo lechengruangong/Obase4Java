@@ -110,8 +110,10 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
         //进行配置
         SerializationAttributeConfiguration<T> attribute = this.attribute(name, property.getPropertyType());
         //取值器和设值器
-        attribute.hasValueGetter(this.makeValueGetter(property));
-        attribute.hasValueSetter(this.makeValueSetter(property));
+        if (attribute.getValueGetter() == null)
+            attribute.hasValueGetter(this.makeValueGetter(property));
+        if (attribute.getValueSetter() == null)
+            attribute.hasValueSetter(this.makeValueSetter(property));
         return attribute;
     }
 
@@ -185,8 +187,10 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
         //进行配置
         SerializationReferenceConfiguration<T> reference = this.reference(name, isMultiple);
         //取值器和设值器
-        reference.hasValueGetter(this.makeValueGetter(property));
-        reference.hasValueSetter(this.makeValueSetter(property));
+        if (reference.getValueGetter() == null)
+            reference.hasValueGetter(this.makeValueGetter(property));
+        if (reference.getValueSetter() == null)
+            reference.hasValueSetter(this.makeValueSetter(property));
         return reference;
     }
 
@@ -289,11 +293,11 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
                 continue;
             //取出真实类型
             ObjectReferencePack<Class<?>> realType = new ObjectReferencePack<>();
-            Utils.getIsMultiple(complexProperty, realType);
+            boolean isMultiple = Utils.getIsMultiple(complexProperty, realType);
             //如果此类型已经被注册过了 则表示这个属性是引用类型 需要配置一个引用元素
             if (this.builder.existSerializationEntityConfiguration(realType.realValue)) {
                 //创建配置
-                SerializationReferenceConfiguration<T> referenceConfiguration = this.reference(complexProperty.getName());
+                SerializationReferenceConfiguration<T> referenceConfiguration = this.reference(complexProperty.getName(), isMultiple);
                 //配置取值器和设值器
                 if (referenceConfiguration.getValueGetter() == null)
                     referenceConfiguration.hasValueGetter(this.makeValueGetter(complexProperty));
