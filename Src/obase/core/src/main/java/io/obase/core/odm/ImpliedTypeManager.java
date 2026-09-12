@@ -23,9 +23,8 @@ import java.io.Serializable;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.StampedLock;
 
 /**
  * 隐含类型管理器，负责创建、维护隐含类型，并提供对这些类型的访问入口。
@@ -42,17 +41,14 @@ public class ImpliedTypeManager {
      */
     private static volatile ImpliedTypeManager manager;
     /**
-     * 邮戳锁
+     * 接受管理的隐含类型。
+     * 值为TypeHolder，保证同一个标识的隐含类型只会被定义一次，且定义（IL发射）过程不持有任何锁。
      */
-    private final StampedLock stampedLock = new StampedLock();
-    /**
-     * 接受管理的隐含类型
-     */
-    private final Map<IdentityArray, Class<?>> impliedTypes = new HashMap<>();
+    private final ConcurrentHashMap<IdentityArray, TypeHolder> impliedTypes = new ConcurrentHashMap<>();
     /**
      * 命名计数器，用于在命名过程中累加计数，避免命名重复。
      */
-    private int namingCounter;
+    private final AtomicInteger namingCounter = new AtomicInteger();
 
     /**
      * 创建ImpliedTypeManager实例
@@ -75,16 +71,15 @@ public class ImpliedTypeManager {
     }
 
     /**
-     * 获取隐含类型
+     * 获取隐含类型。如果该标识的隐含类型尚未定义完成则返回null。
      *
      * @param identity 要获取类型的标识
      * @return 隐含类型
      */
     public Class<?> getType(IdentityArray identity) {
-        if (this.impliedTypes.containsKey(identity)) {
-            return this.impliedTypes.get(identity);
-        }
-        return null;
+        //尝试从已定义的隐含类型中获取 尚未定义完成时返回null
+        TypeHolder holder = this.impliedTypes.get(identity);
+        return holder == null ? null : holder.getIfCreated();
     }
 
     /**
@@ -296,18 +291,111 @@ public class ImpliedTypeManager {
             return existType;
 
         //命名
-        String name = baseType.getSimpleName() + "_Obase_ImpliedType_" + this.namingCounter++;
+        String name = baseType.getSimpleName() + "_Obase_ImpliedType_" + this.namingCounter.incrementAndGet();
 
-        long stamp = this.stampedLock.writeLock();
-        //再次查找
-        existType = this.getType(identity);
-        if (existType != null)
-            return existType;
-        //定义一个新类型
-        Class<?> type = this.defineType(name, interfaces, baseType, fields, defineMembers, constructor);
-        this.impliedTypes.put(identity, type);
-        this.stampedLock.unlockWrite(stamp);
-        return type;
+        //同一个标识并发申请时，只有一个TypeHolder会被执行，未中选的不会被触发，因此类型只会被定义一次
+        TypeHolder holder = this.impliedTypes.computeIfAbsent(identity,
+                key -> new TypeHolder(name, baseType, interfaces, fields, defineMembers, constructor));
+
+        //触发或等待定义完成，定义过程（IL发射）不持有任何锁，异常也不会造成锁泄漏
+        return holder.get();
+    }
+
+    /**
+     * 隐含类型的延迟定义持有器。
+     * 保证同一个标识的隐含类型只被定义一次，定义过程不持有任何锁。
+     */
+    private final class TypeHolder {
+
+        /**
+         * 类型名称
+         */
+        private final String name;
+
+        /**
+         * 基类型
+         */
+        private final Class<?> baseType;
+
+        /**
+         * 实现的接口
+         */
+        private final Class<?>[] interfaces;
+
+        /**
+         * 要定义的字段
+         */
+        private final FieldDescriptor[] fields;
+
+        /**
+         * 定义类型成员的委托
+         */
+        private final FunctionWithOneArg<DynamicType.Builder<?>, DynamicType.Builder<?>> defineMembers;
+
+        /**
+         * 构造函数
+         */
+        private final Constructor<?> constructor;
+
+        /**
+         * 定义完成的类型
+         */
+        private Class<?> type;
+
+        /**
+         * 定义是否已完成
+         */
+        private boolean created;
+
+        /**
+         * 定义失败时的异常，与延迟初始化的语义一致，失败会被缓存并抛给所有调用者
+         */
+        private Throwable failure;
+
+        TypeHolder(String name, Class<?> baseType, Class<?>[] interfaces, FieldDescriptor[] fields,
+                   FunctionWithOneArg<DynamicType.Builder<?>, DynamicType.Builder<?>> defineMembers, Constructor<?> constructor) {
+            this.name = name;
+            this.baseType = baseType;
+            this.interfaces = interfaces;
+            this.fields = fields;
+            this.defineMembers = defineMembers;
+            this.constructor = constructor;
+        }
+
+        /**
+         * 触发或等待类型定义完成
+         *
+         * @return 隐含类型
+         */
+        synchronized Class<?> get() {
+            if (this.failure != null) {
+                if (this.failure instanceof RuntimeException) throw (RuntimeException) this.failure;
+                if (this.failure instanceof Error) throw (Error) this.failure;
+                throw new IllegalStateException(this.failure);
+            }
+
+            if (!this.created) {
+                try {
+                    this.type = ImpliedTypeManager.this.defineType(this.name, this.interfaces, this.baseType,
+                            this.fields, this.defineMembers, this.constructor);
+                    this.created = true;
+                } catch (RuntimeException | Error e) {
+                    this.failure = e;
+                    throw e;
+                }
+            }
+
+            return this.type;
+        }
+
+        /**
+         * 获取已定义的类型，尚未定义完成时返回null
+         *
+         * @return 隐含类型
+         */
+        synchronized Class<?> getIfCreated() {
+            return this.created ? this.type : null;
+        }
     }
 
     /**

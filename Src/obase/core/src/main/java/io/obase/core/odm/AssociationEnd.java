@@ -13,17 +13,11 @@ import io.obase.common.ObjectReferencePack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.locks.StampedLock;
 
 /**
  * 表示关联引用
  */
 public class AssociationEnd extends ReferenceElement {
-
-    /**
-     * 邮戳锁
-     */
-    private final StampedLock stampedLock = new StampedLock();
 
     /**
      * 关联端的实体型
@@ -159,25 +153,14 @@ public class AssociationEnd extends ReferenceElement {
      */
     @Override
     public ObjectNavigation getNavigation() {
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.navigation == null) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    if (this.getHostType() instanceof AssociationType) {
-                        AssociationType associationType = (AssociationType) this.getHostType();
-                        this.navigation = new ObjectNavigation(associationType, null, this.getName());
-                    }
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
+        synchronized (this) {
+            if (this.navigation == null) {
+                if (this.getHostType() instanceof AssociationType) {
+                    AssociationType associationType = (AssociationType) this.getHostType();
+                    this.navigation = new ObjectNavigation(associationType, null, this.getName());
                 }
             }
             return this.navigation;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 
@@ -276,6 +259,20 @@ public class AssociationEnd extends ReferenceElement {
      * @return 外键
      */
     public Attribute[] getForeignKey(ObjectReferencePack<ObjectType> definingType, boolean defineMissing) {
+        //本方法会写foreignKey与definingTypeOfForeignKey两个寄存器，因此需要在本实例的锁内执行
+        synchronized (this) {
+            return this.getForeignKeyCore(definingType, defineMissing);
+        }
+    }
+
+    /**
+     * 获取关联端所属关联型在该端上的外键（不加锁的核心实现，调用方须已持有本实例的锁）。
+     *
+     * @param definingType  返回定义外键的类型
+     * @param defineMissing 指示当外键属性缺失时是否定义该属性
+     * @return 外键
+     */
+    private Attribute[] getForeignKeyCore(ObjectReferencePack<ObjectType> definingType, boolean defineMissing) {
         if (this.foreignKey != null && this.foreignKey.length > 0 && this.definingTypeOfForeignKey != null) {
             definingType.realValue = this.definingTypeOfForeignKey;
             return this.foreignKey;
@@ -348,22 +345,13 @@ public class AssociationEnd extends ReferenceElement {
      * @return 外键
      */
     public Attribute[] getForeignKey(boolean defineMissing) {
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.foreignKey == null || this.foreignKey.length == 0) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    this.foreignKey = this.getForeignKey(new ObjectReferencePack<>(), defineMissing);
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
-                }
+        synchronized (this) {
+            //检查寄存器foreignKey
+            if (this.foreignKey == null || this.foreignKey.length == 0) {
+                //没有 需要定义
+                this.foreignKey = this.getForeignKeyCore(new ObjectReferencePack<>(), defineMissing);
             }
             return this.foreignKey;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 
@@ -385,27 +373,29 @@ public class AssociationEnd extends ReferenceElement {
      * @return 外键是否已定义
      */
     public boolean foreignKeyExist() {
-        if (this.foreignKey != null && this.foreignKey.length > 0 && this.definingTypeOfForeignKey != null)
-            return true;
-        this.definingTypeOfForeignKey = (ObjectType) this.getHostType();
-        if (this.getHostType() instanceof AssociationType) {
-            AssociationType associationType = (AssociationType) this.getHostType();
-            //隐式非独立
-            if (!associationType.getVisible() && !associationType.getIndependent()) {
-                this.definingTypeOfForeignKey = associationType.getCompanionEnd().getEntityType();
+        synchronized (this) {
+            //检查寄存器foreignKey
+            if (this.foreignKey != null && this.foreignKey.length > 0 && this.definingTypeOfForeignKey != null)
+                return true;
+            this.definingTypeOfForeignKey = (ObjectType) this.getHostType();
+            if (this.getHostType() instanceof AssociationType) {
+                AssociationType associationType = (AssociationType) this.getHostType();
+                //隐式非独立
+                if (!associationType.getVisible() && !associationType.getIndependent()) {
+                    this.definingTypeOfForeignKey = associationType.getCompanionEnd().getEntityType();
+                }
+                List<Attribute> tempResult = new ArrayList<>();
+                for (AssociationEndMapping mapping : this.mappings) {
+                    Attribute attribute = this.definingTypeOfForeignKey.findAttributeByTargetField(mapping.getTargetField());
+                    if (attribute != null)
+                        tempResult.add(attribute);
+                    else
+                        return false;
+                }
+                this.foreignKey = tempResult.toArray(new Attribute[0]);
             }
-            List<Attribute> tempResult = new ArrayList<>();
-            for (AssociationEndMapping mapping : this.mappings) {
-                Attribute attribute = this.definingTypeOfForeignKey.findAttributeByTargetField(mapping.getTargetField());
-                if (attribute != null)
-                    tempResult.add(attribute);
-                else
-                    return false;
-            }
-            tempResult.toArray(this.foreignKey);
-
+            return this.foreignKey != null && this.foreignKey.length > 0;
         }
-        return this.foreignKey != null && this.foreignKey.length > 0;
     }
 
     /**

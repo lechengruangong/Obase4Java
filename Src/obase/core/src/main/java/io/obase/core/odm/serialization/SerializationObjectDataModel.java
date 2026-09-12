@@ -9,9 +9,8 @@
 package io.obase.core.odm.serialization;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.concurrent.locks.StampedLock;
 
 /**
  * 序列化对象数据模型
@@ -19,14 +18,15 @@ import java.util.concurrent.locks.StampedLock;
 public class SerializationObjectDataModel {
 
     /**
-     * 邮戳锁
+     * 保护structuralTypes的锁对象
      */
-    private final StampedLock stampedLock = new StampedLock();
+    private final Object structuralTypesSyncRoot = new Object();
 
     /**
      * clr类型与模型字典
+     * 使用LinkedHashMap加锁保护，既保证线程安全，又保持类型的插入顺序
      */
-    private final HashMap<Class<?>, SerializationEntity> structuralTypes = new HashMap<>();
+    private final LinkedHashMap<Class<?>, SerializationEntity> structuralTypes = new LinkedHashMap<>();
 
     /**
      * 获取模型类型集合
@@ -34,7 +34,9 @@ public class SerializationObjectDataModel {
      * @return 模型类型集合
      */
     public List<SerializationEntity> getTypes() {
-        return new ArrayList<>(this.structuralTypes.values());
+        synchronized (this.structuralTypesSyncRoot) {
+            return new ArrayList<>(this.structuralTypes.values());
+        }
     }
 
     /**
@@ -43,10 +45,11 @@ public class SerializationObjectDataModel {
      * @param modelType 要添加到模型中的类型
      */
     public void addType(SerializationEntity modelType) {
-        long stamp = this.stampedLock.writeLock();
-        //覆盖原有的类型
-        this.structuralTypes.put(modelType.getClrType(), modelType);
-        this.stampedLock.unlockWrite(stamp);
+        if (modelType == null) throw new IllegalArgumentException("modelType不能为null");
+        synchronized (this.structuralTypesSyncRoot) {
+            //覆盖原有的类型
+            this.structuralTypes.put(modelType.getClrType(), modelType);
+        }
     }
 
     /**
@@ -56,6 +59,10 @@ public class SerializationObjectDataModel {
      * @return 模型类型 不存在则返回空
      */
     public SerializationEntity getTypeOrNull(Class<?> type) {
-        return this.structuralTypes.getOrDefault(type, null);
+        synchronized (this.structuralTypesSyncRoot) {
+            if (type != null)
+                return this.structuralTypes.getOrDefault(type, null);
+        }
+        return null;
     }
 }

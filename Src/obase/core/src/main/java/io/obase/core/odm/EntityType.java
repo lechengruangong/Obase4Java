@@ -15,18 +15,12 @@ import io.obase.core.common.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
 /**
  * 表示实体型
  */
 public class EntityType extends ObjectType {
-
-    /**
-     * 邮戳锁
-     */
-    private final StampedLock stampedLock = new StampedLock();
 
     /**
      * 默认的存储排序规则
@@ -103,14 +97,14 @@ public class EntityType extends ObjectType {
      * @param keyIsSelfIncreased 一个值，该值指示标识是否自增
      */
     public void setKeyIsSelfIncreased(boolean keyIsSelfIncreased) {
-        long stamp = this.stampedLock.writeLock();
-        this.keyIsSelfIncreased = keyIsSelfIncreased;
-        this.getKeyAttributes().forEach(s -> {
-            Attribute attr = this.getAttribute(s);
-            if (attr != null)
-                attr.setDbGenerateValue(keyIsSelfIncreased);
-        });
-        this.stampedLock.unlockWrite(stamp);
+        synchronized (this) {
+            this.keyIsSelfIncreased = keyIsSelfIncreased;
+            this.getKeyAttributes().forEach(s -> {
+                Attribute attr = this.getAttribute(s);
+                if (attr != null)
+                    attr.setDbGenerateValue(keyIsSelfIncreased);
+            });
+        }
     }
 
     /**
@@ -119,8 +113,6 @@ public class EntityType extends ObjectType {
      * @return 标识属性组
      */
     public List<String> getKeyAttributes() {
-        if (this.keyAttributes == null)
-            this.keyAttributes = new ArrayList<>();
         return this.keyAttributes;
     }
 
@@ -130,14 +122,14 @@ public class EntityType extends ObjectType {
      * @param keyAttributes 标识属性组
      */
     public void setKeyAttributes(List<String> keyAttributes) {
-        long stamp = this.stampedLock.writeLock();
-        this.keyAttributes = keyAttributes;
-        this.getKeyAttributes().forEach(s -> {
-            Attribute attr = this.getAttribute(s);
-            if (attr != null)
-                attr.setDbGenerateValue(this.keyIsSelfIncreased);
-        });
-        this.stampedLock.unlockWrite(stamp);
+        synchronized (this) {
+            this.keyAttributes = keyAttributes != null ? keyAttributes : new ArrayList<>();
+            this.getKeyAttributes().forEach(s -> {
+                Attribute attr = this.getAttribute(s);
+                if (attr != null)
+                    attr.setDbGenerateValue(this.keyIsSelfIncreased);
+            });
+        }
     }
 
     /**
@@ -147,26 +139,14 @@ public class EntityType extends ObjectType {
      */
     @Override
     public List<String> getKeyFields() {
-
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.keyFields == null) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    this.keyFields = new ArrayList<>();
-                    for (String key : this.getKeyAttributes()) {
-                        this.keyFields.add(this.getAttribute(key).getTargetField());
-                    }
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
+        synchronized (this) {
+            if (this.keyFields == null) {
+                this.keyFields = new ArrayList<>();
+                for (String key : this.getKeyAttributes()) {
+                    this.keyFields.add(this.getAttribute(key).getTargetField());
                 }
             }
             return this.keyFields;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 
@@ -177,7 +157,9 @@ public class EntityType extends ObjectType {
      */
     @Override
     public void setKeyFields(List<String> keyFields) {
-        this.keyFields = keyFields;
+        synchronized (this) {
+            this.keyFields = keyFields;
+        }
     }
 
     /**
@@ -188,27 +170,16 @@ public class EntityType extends ObjectType {
      */
     @Override
     protected List<OrderRule> getDefaultStoringOrder() {
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.defaultStoringOrder == null || this.defaultStoringOrder.size() == 0) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    this.defaultStoringOrder = new ArrayList<>();
-                    this.getKeyAttributes().forEach(s -> {
-                        OrderRule orderRule = new OrderRule();
-                        orderRule.setOrderBy(this.getAttribute(s));
-                        this.defaultStoringOrder.add(orderRule);
-                    });
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
-                }
+        synchronized (this) {
+            if (this.defaultStoringOrder == null || this.defaultStoringOrder.size() == 0) {
+                this.defaultStoringOrder = new ArrayList<>();
+                this.getKeyAttributes().forEach(s -> {
+                    OrderRule orderRule = new OrderRule();
+                    orderRule.setOrderBy(this.getAttribute(s));
+                    this.defaultStoringOrder.add(orderRule);
+                });
             }
             return this.defaultStoringOrder;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 

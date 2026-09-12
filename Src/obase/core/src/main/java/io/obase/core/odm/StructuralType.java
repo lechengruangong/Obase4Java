@@ -19,13 +19,18 @@ import java.util.concurrent.locks.StampedLock;
 
 /**
  * 为实体类、关联型和复杂类型提供基础实现。
+ * 说明
+ * 类型元素集合使用字典加锁保护，读取方通过有序快照（enumerateElements/tryGetElement）访问，既保证线程安全，又保持元素的插入顺序
+ * （元素顺序会影响查询列顺序等下游逻辑，不能使用无序的字典）；
+ * 属性树只生长一次，生长过程在锁内完成，避免异常时锁无法释放。
  */
 public abstract class StructuralType extends TypeBase {
 
     /**
      * 键为元素名值为元素（属性、引用元素（关联端、关联引用））
+     * 使用LinkedHashMap保持元素的插入顺序
      */
-    protected final Map<String, TypeElement> elements = new HashMap<>();
+    protected final Map<String, TypeElement> elements = new LinkedHashMap<>();
     /**
      * 邮戳锁对象
      */
@@ -52,6 +57,7 @@ public abstract class StructuralType extends TypeBase {
     protected IInstanceConstructor constructor;
     /**
      * 以类型各属性为根节点生长而成的属性树
+     * 使用LinkedHashMap保持属性的插入顺序
      */
     private Map<String, AttributeTree> attributeTrees;
     /**
@@ -156,16 +162,54 @@ public abstract class StructuralType extends TypeBase {
     public List<TypeElement> getElements() {
         //获取继承链
         List<StructuralType> derivingList = Utils.getDerivingChain(this);
-        //用字典存储元素 同名的子级覆盖
-        Map<String, TypeElement> result = new HashMap<>();
+        //用字典存储元素 同名的子级覆盖（使用LinkedHashMap保持元素的插入顺序）
+        Map<String, TypeElement> result = new LinkedHashMap<>();
         //处理继承链上的每个类型
         for (StructuralType derivingType : derivingList) {
-            //加入当前类型的元素
-            for (TypeElement element : derivingType.elements.values()) {
+            //加入当前类型的元素（使用有序快照，保持元素插入顺序）
+            for (TypeElement element : derivingType.enumerateElements()) {
                 result.put(element.getName(), element);
             }
         }
         return new ArrayList<>(result.values());
+    }
+
+    /**
+     * 获取本类型元素的有序快照（按元素的插入顺序）。
+     * 说明
+     * 本类的元素集合由锁保护，读取方（含派生类）应通过本方法或tryGetElement获取元素，
+     * 以免在遍历过程中与其他线程写入元素发生冲突。
+     *
+     * @return 按插入顺序排列的元素快照
+     */
+    protected List<TypeElement> enumerateElements() {
+        long stamp = this.stampedLock.readLock();
+        try {
+            return new ArrayList<>(this.elements.values());
+        } finally {
+            this.stampedLock.unlockRead(stamp);
+        }
+    }
+
+    /**
+     * 按名称获取本类型元素的快照。
+     *
+     * @param name    元素名称
+     * @param element 返回元素
+     * @return 如果存在该名称的元素返回true，否则返回false
+     */
+    protected boolean tryGetElement(String name, ObjectReferencePack<TypeElement> element) {
+        long stamp = this.stampedLock.readLock();
+        try {
+            if (this.elements.containsKey(name)) {
+                element.realValue = this.elements.get(name);
+                return true;
+            }
+            element.realValue = null;
+            return false;
+        } finally {
+            this.stampedLock.unlockRead(stamp);
+        }
     }
 
     /**
@@ -288,10 +332,15 @@ public abstract class StructuralType extends TypeBase {
      * @param element 要添加的元素
      */
     public void addElement(TypeElement element) {
-        long stamp = this.stampedLock.writeLock();
+        if (element == null) throw new NullPointerException("要添加的元素不可为空.");
+        //元素集合由锁保护，写入时加锁
         element.setHostType(this);
-        this.elements.put(element.getName(), element);
-        this.stampedLock.unlockWrite(stamp);
+        long stamp = this.stampedLock.writeLock();
+        try {
+            this.elements.put(element.getName(), element);
+        } finally {
+            this.stampedLock.unlockWrite(stamp);
+        }
     }
 
     /**
@@ -329,35 +378,36 @@ public abstract class StructuralType extends TypeBase {
      * @return 各属性为根生成的属性树
      */
     public Iterable<AttributeTree> enumerateAttributeTree() {
-
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.attributeTrees == null) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    //属性
-                    List<Attribute> attrs = this.getAttributes();
-                    //生长器
-                    AttributeTreeGrower grower = new AttributeTreeGrower();
-
-                    this.attributeTrees = new HashMap<>();
-
-                    for (Attribute attribute : attrs) {
-                        AttributeTree attrTree = new AttributeTree(attribute);
-                        attrTree.accept(grower);
-                        this.attributeTrees.put(attribute.getName(), attrTree);
-                    }
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
-                }
+        //属性树只生长一次，读取方无需重复生长
+        synchronized (this) {
+            if (this.attributeTrees == null) {
+                this.attributeTrees = this.growAttributeTrees();
             }
             return this.attributeTrees.values();
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
+    }
+
+    /**
+     * 以当前类型的各属性为根生长属性树。
+     * 说明
+     * 生长过程只在属性树为空时执行一次，结果缓存于attributeTrees。
+     *
+     * @return 各属性为根生成的属性树
+     */
+    private Map<String, AttributeTree> growAttributeTrees() {
+        //属性
+        List<Attribute> attrs = this.getAttributes();
+        //生长器
+        AttributeTreeGrower grower = new AttributeTreeGrower();
+        //结果
+        Map<String, AttributeTree> result = new LinkedHashMap<>();
+        for (Attribute attribute : attrs) {
+            AttributeTree attrTree = new AttributeTree(attribute);
+            attrTree.accept(grower);
+            result.put(attribute.getName(), attrTree);
+        }
+
+        return result;
     }
 
     /**

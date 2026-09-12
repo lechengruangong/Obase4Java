@@ -12,25 +12,28 @@ import io.obase.core.odm.serialization.SerializationObjectDataModel;
 import io.obase.core.odm.typeviews.TypeView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.StampedLock;
 
 /**
  * 表示对象数据模型
+ * <p>
+ * 模型在建造完成后会被多个线程共享（全局模型缓存），并且在视图查询过程中仍会向模型添加类型，
+ * 因此本类的容器均使用并发容器或写时复制的快照，读侧无需加锁。
  */
 public class ObjectDataModel {
 
     /**
-     * 邮戳锁
+     * 邮戳锁，用于保护types快照的写入
      */
     private final StampedLock stampedLock = new StampedLock();
 
     /**
      * clr类型与代理类型字典
      */
-    private final Map<Class<?>, Class<?>> proxyReal = new HashMap<>();
+    private final Map<Class<?>, Class<?>> proxyReal = new ConcurrentHashMap<>();
 
     /**
      * 序列化对象数据模型
@@ -40,7 +43,7 @@ public class ObjectDataModel {
     /**
      * clr类型与模型字典
      */
-    private final Map<Class<?>, StructuralType> structuralTypes = new HashMap<>();
+    private final Map<Class<?>, StructuralType> structuralTypes = new ConcurrentHashMap<>();
 
     /**
      * 模型存储标记
@@ -49,8 +52,9 @@ public class ObjectDataModel {
 
     /**
      * 模型中的所有类型
+     * 写时复制：写入时整体替换，读取方拿到的始终是一个不会再变的快照
      */
-    private List<StructuralType> types;
+    private volatile List<StructuralType> types = new ArrayList<>();
 
     /**
      * clr类型与模型字典
@@ -76,8 +80,6 @@ public class ObjectDataModel {
      * @return 模型中的所有类型
      */
     public List<StructuralType> getTypes() {
-        if (this.types == null)
-            this.types = new ArrayList<>();
         return this.types;
     }
 
@@ -193,15 +195,28 @@ public class ObjectDataModel {
      * @param modelType 要添加到模型中的类型（实体型、关联型、复杂类型）
      */
     public void addType(StructuralType modelType) {
-        long stamp = this.stampedLock.writeLock();
-        this.structuralTypes.put(modelType.clrType, modelType);
-        if (!this.getTypes().contains(modelType))
-            this.getTypes().add(modelType);
-        if (modelType.getProxyType() != null)
-            this.proxyReal.put(modelType.getProxyType(), modelType.getClrType());
-        //指定结构类型所属的模型
+        if (modelType == null) throw new IllegalArgumentException("modelType不能为null");
+        //先指定结构类型所属的模型，再向容器发布，保证任何读到该类型的线程都能看到已关联的模型
         modelType.setModel(this);
-        this.stampedLock.unlockWrite(stamp);
+        //覆盖原有的类型
+        Class<?> clrType = modelType.clrType;
+        if (clrType != null)
+            this.structuralTypes.put(clrType, modelType);
+        //写时复制的方式发布类型快照，读取types的一方无需加锁
+        long stamp = this.stampedLock.writeLock();
+        try {
+            if (!this.types.contains(modelType)) {
+                List<StructuralType> snapshot = new ArrayList<>(this.types);
+                snapshot.add(modelType);
+                this.types = snapshot;
+            }
+        } finally {
+            this.stampedLock.unlockWrite(stamp);
+        }
+        //如果有代理类型，则将代理类型与实际类型映射
+        Class<?> proxyType = modelType.getProxyType();
+        if (proxyType != null)
+            this.proxyReal.put(proxyType, clrType);
     }
 
     /**
@@ -276,10 +291,12 @@ public class ObjectDataModel {
      * @param proxyType 代理类型
      */
     void createProxyMapping(Class<?> type, Class<?> proxyType) {
-        long stamp = this.stampedLock.writeLock();
-        //要移除的代理类型
-        this.proxyReal.keySet().stream().filter(p -> p == type).findFirst().ifPresent(this.proxyReal::remove);
+        if (proxyType == null) return;
+        //移除该实际类型原有的代理类型映射
+        for (Map.Entry<Class<?>, Class<?>> pair : this.proxyReal.entrySet())
+            if (pair.getValue() == type)
+                this.proxyReal.remove(pair.getKey());
+        //添加新的代理类型映射（重复登记同一个代理类型不会引发异常）
         this.proxyReal.put(proxyType, type);
-        this.stampedLock.unlockWrite(stamp);
     }
 }
