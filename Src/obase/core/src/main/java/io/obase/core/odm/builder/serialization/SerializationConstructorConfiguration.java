@@ -68,9 +68,23 @@ public class SerializationConstructorConfiguration<TStructural> {
      * @return 自身
      */
     public SerializationConstructorConfiguration<TStructural> hasParameter(Field field, Class<?> valueType, boolean needStorage) {
+        return this.hasParameter(field, valueType, needStorage, null);
+    }
+
+    /**
+     * 配置构造函数的参数
+     *
+     * @param field        取值字段
+     * @param valueType    取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
+     * @param needStorage  是否需要存储 如果是true 则取值器会在序列化时被调用 取得的值进行存储 此时传入的取值器的参数为当前要序列化的对象 如果是false 则取值器会在反序列化被调用 取得的值用于构造函数 此时传入的取值器的参数为null
+     * @param valueConvert 值转换委托 如果需要将取值器取得的值转换为其他类型 则需要使用此参数在存储前进行转换
+     * @return 自身
+     */
+    public SerializationConstructorConfiguration<TStructural> hasParameter(Field field, Class<?> valueType, boolean needStorage,
+                                                                          FunctionWithOneArg<Object, Object> valueConvert) {
         //构造一个字段取值器
         FieldValueGetter filedGetter = new FieldValueGetter(field);
-        return this.hasParameter(filedGetter, valueType, needStorage);
+        return this.hasParameter(filedGetter, valueType, needStorage, valueConvert);
     }
 
     /**
@@ -82,9 +96,23 @@ public class SerializationConstructorConfiguration<TStructural> {
      * @return 自身
      */
     public <TProperty> SerializationConstructorConfiguration<TStructural> hasParameter(FunctionWithOneArg<TStructural, TProperty> getValue, Class<?> valueType, boolean needStorage) {
+        return this.hasParameter(getValue, valueType, needStorage, null);
+    }
+
+    /**
+     * 配置构造函数的参数
+     *
+     * @param getValue     取值委托
+     * @param valueType    取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
+     * @param needStorage  是否需要存储 如果是true 则取值器会在序列化时被调用 取得的值进行存储 此时传入的取值器的参数为当前要序列化的对象 如果是false 则取值器会在反序列化被调用 取得的值用于构造函数 此时传入的取值器的参数为null
+     * @param valueConvert 值转换委托 如果需要将取值器取得的值转换为其他类型 则需要使用此参数在存储前进行转换
+     * @return 自身
+     */
+    public <TProperty> SerializationConstructorConfiguration<TStructural> hasParameter(FunctionWithOneArg<TStructural, TProperty> getValue, Class<?> valueType,
+                                                                                       boolean needStorage, FunctionWithOneArg<Object, Object> valueConvert) {
         //创建一个委托取值器
         DelegateValueGetter<TStructural, TProperty> valueGetter = new DelegateValueGetter<>(getValue);
-        return this.hasParameter(valueGetter, valueType, needStorage);
+        return this.hasParameter(valueGetter, valueType, needStorage, valueConvert);
     }
 
     /**
@@ -96,6 +124,20 @@ public class SerializationConstructorConfiguration<TStructural> {
      * @return 自身
      */
     public SerializationConstructorConfiguration<TStructural> hasParameter(IValueGetter valueGetter, Class<?> valueType, boolean needStorage) {
+        return this.hasParameter(valueGetter, valueType, needStorage, null);
+    }
+
+    /**
+     * 配置构造函数的参数
+     *
+     * @param valueGetter  取值器
+     * @param valueType    取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
+     * @param needStorage  是否需要存储 如果是true 则取值器会在序列化时被调用 取得的值进行存储 此时传入的取值器的参数为当前要序列化的对象 如果是false 则取值器会在反序列化被调用 取得的值用于构造函数 此时传入的取值器的参数为null
+     * @param valueConvert 值转换委托 如果需要将取值器取得的值转换为其他类型 则需要使用此参数在存储前进行转换
+     * @return 自身
+     */
+    public SerializationConstructorConfiguration<TStructural> hasParameter(IValueGetter valueGetter, Class<?> valueType, boolean needStorage,
+                                                                          FunctionWithOneArg<Object, Object> valueConvert) {
         //如果是需要存储的 检查值类型是否是Obase基础类型
         if (!PrimitiveType.isObasePrimitive(valueType) && needStorage)
             throw new IllegalArgumentException("需要存储的构造函数参数值类型必须是Obase基础类型。");
@@ -108,7 +150,7 @@ public class SerializationConstructorConfiguration<TStructural> {
             throw new IllegalArgumentException("构造函数的第" + this.currentParameterIndex + "个参数的类型与配置的值类型不匹配。");
         //添加参数配置
         this.parameters.put(name,
-                new SerializationConstructorParameterConfiguration(name, needStorage, valueGetter, valueType));
+                new SerializationConstructorParameterConfiguration(name, needStorage, valueGetter, valueType, valueConvert));
         this.currentParameterIndex++;
         return this;
     }

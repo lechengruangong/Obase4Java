@@ -19,6 +19,11 @@ public class Identity {
     private UUID id;
 
     /**
+     * 名称
+     */
+    private String name;
+
+    /**
      * 查询时间
      */
     private LocalDateTime queryTime;
@@ -50,6 +55,7 @@ public class Identity {
         this.createTime = createTime;
         this.role = role;
         this.queryTime = LocalDateTime.now();
+        this.name = id.toString().replace("-", "");
     }
 
     /**
@@ -59,12 +65,14 @@ public class Identity {
      * @param createTime 创建时间
      * @param role       角色
      * @param queryTime  查询时间
+     * @param name       名称
      */
-    protected Identity(UUID id, LocalDateTime createTime, String role, LocalDateTime queryTime) {
+    protected Identity(UUID id, LocalDateTime createTime, String role, LocalDateTime queryTime, String name) {
         this.id = id;
         this.createTime = createTime;
         this.role = role;
         this.queryTime = queryTime;
+        this.name = name;
     }
 
     /**
@@ -101,6 +109,24 @@ public class Identity {
      */
     void setId(UUID id) {
         this.id = id;
+    }
+
+    /**
+     * 名称
+     *
+     * @return 名称
+     */
+    public String getName() {
+        return this.name;
+    }
+
+    /**
+     * 名称
+     *
+     * @param name 名称
+     */
+    public void setName(String name) {
+        this.name = name;
     }
 
     /**

@@ -148,6 +148,7 @@ public class SerializationModelTest {
         assertEquals(service.getIdentity().getQueryTime(), service.getIdentity().getQueryTime());
         assertEquals(service.getIdentity().getVersion(), 0);
         assertEquals(service.getIdentity().getSubVersion(), 0);
+        assertEquals(service.getIdentity().getName(), service.getIdentity().getId().toString().replace("-", ""));
         //检查Analyser
         assertNotNull(service.getAnalyser());
         assertEquals(service.getAnalyser().getName(), "AnalyserA");
