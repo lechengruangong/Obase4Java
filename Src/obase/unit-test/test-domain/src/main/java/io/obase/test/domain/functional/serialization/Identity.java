@@ -19,6 +19,11 @@ public class Identity {
     private UUID id;
 
     /**
+     * 次序
+     */
+    private long seq;
+
+    /**
      * 查询时间
      */
     private LocalDateTime queryTime;
@@ -50,6 +55,7 @@ public class Identity {
         this.createTime = createTime;
         this.role = role;
         this.queryTime = LocalDateTime.now();
+        this.seq = createTime.getDayOfYear();
     }
 
     /**
@@ -59,12 +65,14 @@ public class Identity {
      * @param createTime 创建时间
      * @param role       角色
      * @param queryTime  查询时间
+     * @param seq        次序
      */
-    protected Identity(UUID id, LocalDateTime createTime, String role, LocalDateTime queryTime) {
+    protected Identity(UUID id, LocalDateTime createTime, String role, LocalDateTime queryTime, long seq) {
         this.id = id;
         this.createTime = createTime;
         this.role = role;
         this.queryTime = queryTime;
+        this.seq = seq;
     }
 
     /**
@@ -101,6 +109,24 @@ public class Identity {
      */
     void setId(UUID id) {
         this.id = id;
+    }
+
+    /**
+     * 次序
+     *
+     * @return 次序
+     */
+    public long getSeq() {
+        return this.seq;
+    }
+
+    /**
+     * 次序
+     *
+     * @param seq 次序
+     */
+    public void setSeq(long seq) {
+        this.seq = seq;
     }
 
     /**

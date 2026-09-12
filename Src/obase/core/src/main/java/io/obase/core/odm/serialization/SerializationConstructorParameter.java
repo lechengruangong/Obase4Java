@@ -8,6 +8,8 @@
 */
 package io.obase.core.odm.serialization;
 
+import io.obase.common.FunctionWithOneArg;
+
 /**
  * 序列化实体的构造函数参数
  */
@@ -25,16 +27,35 @@ public class SerializationConstructorParameter extends SerializationElement {
     private final boolean needStorage;
 
     /**
+     * 值转换委托
+     */
+    private final FunctionWithOneArg<Object, Object> valueConvert;
+
+    /**
      * 初始化序列化实体的类型元素
      *
-     * @param valueType   类型元素的值类型
      * @param index       对应的构造参数索引
      * @param needStorage 是否需要存储
+     * @param valueType   类型元素的值类型
      */
     public SerializationConstructorParameter(String index, boolean needStorage, Class<?> valueType) {
+        this(index, needStorage, valueType, null);
+    }
+
+    /**
+     * 初始化序列化实体的类型元素
+     *
+     * @param index        对应的构造参数索引
+     * @param needStorage  是否需要存储
+     * @param valueType    类型元素的值类型
+     * @param valueConvert 值转换委托 如果需要将取值器取得的值转换为其他类型 则需要使用此参数在存储前进行转换
+     */
+    public SerializationConstructorParameter(String index, boolean needStorage, Class<?> valueType,
+                                             FunctionWithOneArg<Object, Object> valueConvert) {
         super(valueType);
         this.index = index;
         this.needStorage = needStorage;
+        this.valueConvert = valueConvert;
     }
 
     /**
@@ -44,6 +65,15 @@ public class SerializationConstructorParameter extends SerializationElement {
      */
     public String getIndex() {
         return this.index;
+    }
+
+    /**
+     * 获取值转换委托
+     *
+     * @return 值转换委托
+     */
+    public FunctionWithOneArg<Object, Object> getValueConvert() {
+        return this.valueConvert;
     }
 
     /**

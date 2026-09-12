@@ -254,7 +254,7 @@ public class ChangeSql extends SqlBase {
 
         switch (this.changeType) {
             case Insert: {
-                resultBuilder = new StringBuilder("insert into " + this.getSource().toString(sourceType) + " ");
+                resultBuilder = new StringBuilder("INSERT INTO " + this.getSource().toString(sourceType) + " ");
                 for (IFieldSetter u : this.fieldSetters.values()) {
                     ObjectReferencePack<String> column = new ObjectReferencePack<>();
                     values.add(u.toString(column, sourceType));
@@ -262,7 +262,7 @@ public class ChangeSql extends SqlBase {
                 }
 
                 resultBuilder.append("(").append(String.join(",", columns)).append(")");
-                resultBuilder.append(" values(").append(String.join(",", values)).append(")");
+                resultBuilder.append(" VALUES(").append(String.join(",", values)).append(")");
                 break;
             }
             case Update: {
@@ -282,13 +282,13 @@ public class ChangeSql extends SqlBase {
                     columns.add(column);
                 }
 
-                resultBuilder = new StringBuilder("update ");
+                resultBuilder = new StringBuilder("UPDATE ");
                 //对于更新语句 SqlServer 和 MySql的语句组成方式有差异
                 switch (sourceType) {
                     case SqlServer: {
                         //SqlServer形如 update source set source.value = '' from Source
-                        resultBuilder.append(targetSource.getSymbol()).append(" set ").append(String.join(",", columns))
-                                .append("  from ").append(this.getSource().toString(sourceType));
+                        resultBuilder.append(targetSource.getSymbol()).append(" SET ").append(String.join(",", columns))
+                                .append("  FROM ").append(this.getSource().toString(sourceType));
                         break;
                     }
                     case Oracle:
@@ -296,7 +296,7 @@ public class ChangeSql extends SqlBase {
                     case PostgreSql:
                     case Sqlite: {
                         //MySql形如 update Source set source.value = ''
-                        resultBuilder.append(this.getSource().toString(sourceType)).append(" set ").append(String.join(",", columns));
+                        resultBuilder.append(this.getSource().toString(sourceType)).append(" SET ").append(String.join(",", columns));
                         break;
                     }
                     default:
@@ -304,7 +304,7 @@ public class ChangeSql extends SqlBase {
                 }
 
                 if (this.getCriteria() != null)
-                    resultBuilder.append(" where ").append(this.getCriteria().toString(sourceType));
+                    resultBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType));
                 break;
             }
             case Delete: {
@@ -313,7 +313,7 @@ public class ChangeSql extends SqlBase {
                         (sourceType == EDataSource.Sqlite || sourceType == EDataSource.PostgreSql))
                     throw new IllegalArgumentException(sourceType + "不支持删除连接查询源");
 
-                resultBuilder = new StringBuilder("delete ");
+                resultBuilder = new StringBuilder("DELETE ");
 
                 //补丁 用于处理直接删除等直接修改部分
                 MonomerSource targetSource = this.getTargetSource();
@@ -329,9 +329,9 @@ public class ChangeSql extends SqlBase {
 
                 //Sqlite无源名称
                 if (sourceType != EDataSource.Sqlite) resultBuilder.append(source);
-                resultBuilder.append(" from ").append(this.getSource().toString(sourceType));
+                resultBuilder.append(" FROM ").append(this.getSource().toString(sourceType));
                 if (this.getCriteria() != null)
-                    resultBuilder.append(" where ").append(this.getCriteria().toString(sourceType));
+                    resultBuilder.append(" WHERE ").append(this.getCriteria().toString(sourceType));
                 break;
             }
             default:
@@ -609,7 +609,7 @@ public class ChangeSql extends SqlBase {
             }
         } else {
             /*From 查询源*/
-            resultBuilder.append(" From ").append(source.toString(sourceType));
+            resultBuilder.append(" FROM ").append(source.toString(sourceType));
         }
 
 

@@ -1104,45 +1104,62 @@ public final class Utils {
     }
 
     /**
-     * 判断两个类型是不是相等 或者是包装类型相等
+     * 判断两个类型是否相等或者可以相互赋值。
+     * 判断时会统一原始类型与包装类型，即Integer与int、int与Integer、Integer与Integer都统一为Integer进行比较；
+     * 统一后存在继承或者接口实现关系时，认为可以相互赋值。
+     *
+     * @param type1 第一个类型
+     * @param type2 第二个类型
+     * @return 是否相等或者可以相互赋值
+     */
+    public static boolean isNullableWrapperEqualOrEqual(Class<?> type1, Class<?> type2) {
+        if (type1 == null) throw new IllegalArgumentException("type1不能为null");
+        if (type2 == null) throw new IllegalArgumentException("type2不能为null");
+
+        //两个类型完全相同 直接认为相等
+        if (type1 == type2) return true;
+
+        //统一原始类型与包装类型 例如int统一为Integer
+        Class<?> unifiedType1 = unifyType(type1);
+        Class<?> unifiedType2 = unifyType(type2);
+
+        //统一后相同 例如int与Integer、Integer与Integer
+        if (unifiedType1 == unifiedType2) return true;
+
+        //统一后存在继承或者接口实现关系时 可以相互赋值
+        return unifiedType1.isAssignableFrom(unifiedType2)
+                || unifiedType2.isAssignableFrom(unifiedType1);
+    }
+
+    /**
+     * 统一原始类型与其包装类型。
+     * 原始类型统一为其包装类型，其余类型原样返回。
+     *
+     * @param type 要统一的类型
+     * @return 统一后的类型
+     */
+    private static Class<?> unifyType(Class<?> type) {
+        //原始类型统一为其包装类型 这样才能保留与其它引用类型之间的继承或者接口实现关系 引用类型无需处理
+        if (type == int.class) return Integer.class;
+        if (type == long.class) return Long.class;
+        if (type == byte.class) return Byte.class;
+        if (type == short.class) return Short.class;
+        if (type == float.class) return Float.class;
+        if (type == double.class) return Double.class;
+        if (type == char.class) return Character.class;
+        if (type == boolean.class) return Boolean.class;
+        return type;
+    }
+
+    /**
+     * 判断两个类型是否不匹配，即既不是同一类型，也不是对应的包装类型/原始类型，且不存在继承或者接口实现关系。
+     * 序列化与反序列化的类型检查使用此方法。
      *
      * @param type1 类型1
      * @param type2 类型2
-     * @return 是否相等
+     * @return 是否不匹配
      */
     public static boolean isWrapperOrPrimitive(Class<?> type1, Class<?> type2) {
-        if (type1 == int.class || type1 == Integer.class) {
-            return type2 != int.class && type2 != Integer.class;
-        }
-
-        if (type1 == long.class || type1 == Long.class) {
-            return type2 != long.class && type2 != Long.class;
-        }
-
-        if (type1 == byte.class || type1 == Byte.class) {
-            return type2 != byte.class && type2 != Byte.class;
-        }
-
-        if (type1 == short.class || type1 == Short.class) {
-            return type2 != short.class && type2 != Short.class;
-        }
-
-        if (type1 == float.class || type1 == Float.class) {
-            return type2 != float.class && type2 != Float.class;
-        }
-
-        if (type1 == double.class || type1 == Double.class) {
-            return type2 != double.class && type2 != Double.class;
-        }
-
-        if (type1 == char.class || type1 == Character.class) {
-            return type2 != char.class && type2 != Character.class;
-        }
-
-        if (type1 == boolean.class || type1 == Boolean.class) {
-            return type2 != boolean.class && type2 != Boolean.class;
-        }
-
-        return true;
+        return !isNullableWrapperEqualOrEqual(type1, type2);
     }
 }

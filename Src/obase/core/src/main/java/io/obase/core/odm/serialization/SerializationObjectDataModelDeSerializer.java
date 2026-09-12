@@ -90,8 +90,13 @@ public class SerializationObjectDataModelDeSerializer {
                         //否则使用取值器获取 注意此时固定传参为null
                         value = parameter.getValue(null);
                     }
-                    //统一进行一次类型检查 如果不为null且类型不匹配 则抛出异常
-                    if (value != null && value.getClass() != parameter.getValueType() && Utils.isWrapperOrPrimitive(value.getClass(), parameter.getValueType()))
+                    //如果配置了值转换器 则进行值转换
+                    if (value != null && parameter.getValueConvert() != null)
+                        value = parameter.getValueConvert().invoke(value);
+
+                    //统一进行一次类型检查 没有转换器 且 不为null且类型不匹配 则抛出异常
+                    //有转换器的情况不做类型检查 由转换器自行处理
+                    if (value != null && value.getClass() != parameter.getValueType() && Utils.isWrapperOrPrimitive(value.getClass(), parameter.getValueType()) && parameter.getValueConvert() == null)
                         throw new IllegalArgumentException("反序列化" + type.getClrType() + "的构造函数参数" + parameter.getIndex() + "时出错,配置的值类型为" + parameter.getValueType() + ",实际取到的为" + value.getClass() + ".");
                     parameterValues.add(value);
                 }
