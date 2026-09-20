@@ -100,16 +100,18 @@ public class QuerySet implements ISetOperand {
         switch (this.operator) {
 
             case Concat:
-                result = this.left.toSql(sourceType) + " UNION ALL  " + this.right.toSql(sourceType);
+                result = this.left.toSql(sourceType) + " UNION ALL " + this.right.toSql(sourceType);
                 break;
             case Interact:
-                result = this.left.toSql(sourceType) + " EXCEPT ALL " + this.right.toSql(sourceType);
+                if (sourceType == EDataSource.MySql) throw new IllegalArgumentException("MySql不支持Interact运算.");
+                result = this.left.toSql(sourceType) + " INTERSECT " + this.right.toSql(sourceType);
                 break;
             case Except:
-                result = this.left.toSql(sourceType) + " INTERSECT ALL " + this.right.toSql(sourceType);
+                if (sourceType == EDataSource.MySql) throw new IllegalArgumentException("MySql不支持Except运算.");
+                result = this.left.toSql(sourceType) + " EXCEPT " + this.right.toSql(sourceType);
                 break;
             case Union:
-                result = this.left.toSql(sourceType) + " UNION ALL " + this.right.toSql(sourceType);
+                result = this.left.toSql(sourceType) + " UNION " + this.right.toSql(sourceType);
                 break;
         }
 
@@ -136,16 +138,18 @@ public class QuerySet implements ISetOperand {
         switch (this.operator) {
 
             case Concat:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " UNION ALL  " + this.right.toSql(sourceType, parameterRight, creator);
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " UNION ALL " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
             case Interact:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " EXCEPT ALL " + this.right.toSql(sourceType, parameterRight, creator);
+                if (sourceType == EDataSource.MySql) throw new IllegalArgumentException("MySql不支持Interact运算.");
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " INTERSECT " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
             case Except:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " INTERSECT ALL " + this.right.toSql(sourceType, parameterRight, creator);
+                if (sourceType == EDataSource.MySql) throw new IllegalArgumentException("MySql不支持Except运算.");
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " EXCEPT " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
             case Union:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " UNION ALL " + this.right.toSql(sourceType, parameterRight, creator);
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " UNION " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
         }
 

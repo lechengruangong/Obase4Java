@@ -433,7 +433,10 @@ public class ExpressionTranslator extends ExpressionVisitor {
             }
 
             TypeBase argType = argExp == null ? null : this.model.getTypeOrNull(argExp.getType());
-            if (expression.getMethod().getName().equals("length") && argType instanceof StructuralType) {
+            String methodName = expression.getMethod().getName();
+            //分组内对实体型计数 与dotNet版 expression.Method.Name == "Count" 的判定对应
+            if ((methodName.equalsIgnoreCase("count") || methodName.equalsIgnoreCase("countLong")
+                    || methodName.equalsIgnoreCase("countDouble")) && argType instanceof StructuralType) {
                 ObjectReferencePack<AssociationTreeNode> assoTail = new ObjectReferencePack<>();
                 ObjectReferencePack<AttributeTreeNode> attrTail = new ObjectReferencePack<>();
                 //提取关联树
