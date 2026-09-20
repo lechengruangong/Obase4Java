@@ -597,7 +597,7 @@ public class RopContext {
             case SqlServer: {
                 if (this.resultSql.getOrders().size() == 0) this.resultSql.bubbleOrder();
                 if (this.resultSql.getOrders().size() > 0) {
-                    FunctionExpression index = Expression.function("row_number");
+                    FunctionExpression index = Expression.function("ROW_NUMBER");
                     OverClause over = new OverClause(this.resultSql.getOrders().toArray(new Order[0]));
                     index.setOver(over);
                     String alias = "obase$index";

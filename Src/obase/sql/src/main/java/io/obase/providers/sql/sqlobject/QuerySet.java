@@ -100,16 +100,16 @@ public class QuerySet implements ISetOperand {
         switch (this.operator) {
 
             case Concat:
-                result = this.left.toSql(sourceType) + " union all  " + this.right.toSql(sourceType);
+                result = this.left.toSql(sourceType) + " UNION ALL  " + this.right.toSql(sourceType);
                 break;
             case Interact:
-                result = this.left.toSql(sourceType) + " except all " + this.right.toSql(sourceType);
+                result = this.left.toSql(sourceType) + " EXCEPT ALL " + this.right.toSql(sourceType);
                 break;
             case Except:
-                result = this.left.toSql(sourceType) + " intersect all " + this.right.toSql(sourceType);
+                result = this.left.toSql(sourceType) + " INTERSECT ALL " + this.right.toSql(sourceType);
                 break;
             case Union:
-                result = this.left.toSql(sourceType) + " union all " + this.right.toSql(sourceType);
+                result = this.left.toSql(sourceType) + " UNION ALL " + this.right.toSql(sourceType);
                 break;
         }
 
@@ -136,16 +136,16 @@ public class QuerySet implements ISetOperand {
         switch (this.operator) {
 
             case Concat:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " union all  " + this.right.toSql(sourceType, parameterRight, creator);
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " UNION ALL  " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
             case Interact:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " except all " + this.right.toSql(sourceType, parameterRight, creator);
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " EXCEPT ALL " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
             case Except:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " intersect all " + this.right.toSql(sourceType, parameterRight, creator);
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " INTERSECT ALL " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
             case Union:
-                result = this.left.toSql(sourceType, parameterLeft, creator) + " union all " + this.right.toSql(sourceType, parameterRight, creator);
+                result = this.left.toSql(sourceType, parameterLeft, creator) + " UNION ALL " + this.right.toSql(sourceType, parameterRight, creator);
                 break;
         }
 

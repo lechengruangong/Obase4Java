@@ -112,7 +112,7 @@ public class ExpressionTranslator extends ExpressionVisitor {
 
             this.visit(this.subTreeEvaluator.evaluate(hostObj));
             io.obase.providers.sql.sqlobject.Expression arg = this.expression;
-            this.expression = io.obase.providers.sql.sqlobject.Expression.function("len", arg);
+            this.expression = io.obase.providers.sql.sqlobject.Expression.function("LEN", arg);
         }
 
         return memberExpression;
@@ -463,7 +463,7 @@ public class ExpressionTranslator extends ExpressionVisitor {
                 List<io.obase.providers.sql.sqlobject.Expression> realExps = new ArrayList<>(Arrays.asList(filedExps));
                 realExps.add(io.obase.providers.sql.sqlobject.Expression.constant(true));
                 //组成方法调用表达式
-                return io.obase.providers.sql.sqlobject.Expression.function(expression.getMethod().getName().toLowerCase().contains("avg") ? "Avg" : expression.getMethod().getName(), realExps.toArray(new io.obase.providers.sql.sqlobject.Expression[0]));
+                return io.obase.providers.sql.sqlobject.Expression.function("COUNT", realExps.toArray(new io.obase.providers.sql.sqlobject.Expression[0]));
             }
 
             this.visit(argExp);
@@ -544,6 +544,7 @@ public class ExpressionTranslator extends ExpressionVisitor {
 
     /**
      * 将方法名称转换为Sql的方法名
+     * 聚合函数名统一使用大写 与其它Sql生成路径保持一致
      *
      * @param name 名称
      * @return Sql的方法名
@@ -552,18 +553,18 @@ public class ExpressionTranslator extends ExpressionVisitor {
         switch (name.toLowerCase()) {
             case "countlong":
             case "countdouble":
-                return "Count";
+                return "COUNT";
             case "sumlong":
             case "sumdouble":
-                return "Sum";
+                return "SUM";
             case "minlong":
             case "mindouble":
-                return "Min";
+                return "MIN";
             case "maxlong":
             case "maxdouble":
-                return "Max";
+                return "MAX";
             case "avgdouble":
-                return "Avg";
+                return "AVG";
             default:
                 throw new IllegalArgumentException("无法解析的Sql函数");
         }

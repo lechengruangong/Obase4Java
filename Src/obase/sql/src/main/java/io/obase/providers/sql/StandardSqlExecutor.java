@@ -122,8 +122,8 @@ public class StandardSqlExecutor extends SqlExecutor {
     @Override
     protected PreparedStatement createCommand(String sql) {
         try {
-            if ((sql.endsWith(";select @@identity;") || sql.endsWith(";select last_insert_rowid();"))) {
-                sql = sql.replace(";select @@identity;", "").replace(";select last_insert_rowid();", "");
+            if ((sql.endsWith(";SELECT @@IDENTITY;") || sql.endsWith(";SELECT last_insert_rowid();"))) {
+                sql = sql.replace(";SELECT @@IDENTITY;", "").replace(";SELECT last_insert_rowid();", "");
                 return this.conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             }
             return this.conn.prepareStatement(sql);

@@ -209,7 +209,7 @@ public class ExistingConnectionSqlExecutor implements ISqlExecutor {
                 if (this.sourceType == EDataSource.Sqlite) {
                     //执行语句
                     int result = this.sqlCommand.executeUpdate();
-                    set = this.connection.prepareStatement("Select last_insert_rowid();").executeQuery();
+                    set = this.connection.prepareStatement("SELECT last_insert_rowid();").executeQuery();
                     if (set.next()) {
                         res = set.getObject(1);
                     }
@@ -367,8 +367,8 @@ public class ExistingConnectionSqlExecutor implements ISqlExecutor {
      */
     private void interiorCreateCommand(String sql) {
         try {
-            if ((sql.endsWith(";select @@identity;") || sql.endsWith(";select last_insert_rowid();"))) {
-                sql = sql.replace(";select @@identity;", "").replace(";select last_insert_rowid();", "");
+            if ((sql.endsWith(";SELECT @@IDENTITY;") || sql.endsWith(";SELECT last_insert_rowid();"))) {
+                sql = sql.replace(";SELECT @@IDENTITY;", "").replace(";SELECT last_insert_rowid();", "");
                 this.sqlCommand = this.connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             }
             this.sqlCommand = this.connection.prepareStatement(sql);

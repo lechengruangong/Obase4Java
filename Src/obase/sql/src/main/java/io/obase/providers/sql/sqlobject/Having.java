@@ -45,6 +45,6 @@ public class Having {
      * @return 字符串表示形式
      */
     public String toString(EDataSource sourceType) {
-        return " having " + this.expression.toString(sourceType);
+        return " HAVING " + this.expression.toString(sourceType);
     }
 }

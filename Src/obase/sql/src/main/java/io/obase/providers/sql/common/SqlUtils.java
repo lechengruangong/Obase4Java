@@ -441,7 +441,8 @@ public class SqlUtils {
         HashSet<String> orderSet = new HashSet<>();
         List<Order> list = new ArrayList<>();
         for (Order order : orders) {
-            String orderStr = order.toString(EDataSource.SqlServer).replace("Desc", "").replace("Asc", "");
+            //按排序表达式去重 与排序方向的枚举名解耦
+            String orderStr = order.getExpression().toString(EDataSource.SqlServer);
             //使用HashSet去重
             if (orderSet.add(orderStr))
                 list.add(order);

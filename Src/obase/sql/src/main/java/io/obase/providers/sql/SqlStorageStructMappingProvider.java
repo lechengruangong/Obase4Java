@@ -452,10 +452,10 @@ public class SqlStorageStructMappingProvider implements IStorageStructMappingPro
                     sql = "SHOW INDEX FROM `" + tableName + "` WHERE column_name = '" + field + "'";
                     break;
                 case PostgreSql:
-                    sql = "Select indexdef FROM pg_indexes Where  tablename = '" + tableName + "'";
+                    sql = "SELECT indexdef FROM pg_indexes WHERE tablename = '" + tableName + "'";
                     break;
                 case Sqlite:
-                    sql = "select * From sqlite_master where type = 'index' and tbl_name like '" + tableName + "' and sql like '%" + field + "%'";
+                    sql = "SELECT * FROM sqlite_master WHERE type = 'index' AND tbl_name LIKE '" + tableName + "' AND sql LIKE '%" + field + "%'";
                     break;
                 default:
                     throw new IllegalArgumentException("未知的数据源类型" + this.executor.getSourceType());

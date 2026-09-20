@@ -190,13 +190,31 @@ public abstract class FieldSetter<TValue> implements IFieldSetter {
      */
     protected String getParameters(ObjectReferencePack<DataParameter> parameters, EDataSource sourceType, Object valueStr,
                                    IParameterCreator creator) {
+        //按值字符串的文本判定是否为空值 与dotNet版的默认行为一致
+        return this.getParameters(parameters, sourceType, valueStr,
+                valueStr == null || valueStr.toString().trim().equalsIgnoreCase("null"), creator);
+    }
+
+    /**
+     * 根据不同的数据源返回参数和参数名字符串
+     * 由调用方显式指明是否为空值，避免字符串值本身为"NULL"时被误判为空值
+     *
+     * @param parameters 参数化参数集合
+     * @param sourceType 数据源类型
+     * @param valueStr   值字符串表示
+     * @param isNull     是否为空值
+     * @param creator    参数化参数建造器
+     * @return 参数指代
+     */
+    protected String getParameters(ObjectReferencePack<DataParameter> parameters, EDataSource sourceType, Object valueStr,
+                                   boolean isNull, IParameterCreator creator) {
         //参数名
         String parameter = "?";
 
         parameters.realValue = creator.create();
         parameters.realValue.Index = 1;
         //非空 加入参数
-        parameters.realValue.Value = !valueStr.toString().trim().equalsIgnoreCase("null") ? valueStr : null;
+        parameters.realValue.Value = isNull ? null : valueStr;
 
         return parameter;
     }

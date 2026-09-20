@@ -50,7 +50,7 @@ public class SkipExecutor extends RopExecutor {
                 if (ropContext.getResultSql().getOrders().size() == 0) {
                     ropContext.getResultSql().bubbleOrder();
                 }
-                FunctionExpression index = Expression.function("row_number");
+                FunctionExpression index = Expression.function("ROW_NUMBER");
                 OverClause over = new OverClause(ropContext.getResultSql().getOrders().toArray(new Order[0]));
                 index.setOver(over);
                 String alias = ropContext.getResultModelType().getName() + "_rownumber";

@@ -51,7 +51,7 @@ public class GroupBy {
      * @return 字符串表示形式
      */
     public String toString(EDataSource sourceType) {
-        StringBuilder builder = new StringBuilder(" group by ");
+        StringBuilder builder = new StringBuilder(" GROUP BY ");
 
         for (int i = 0; i < this.expressions.size(); i++) {
             if (i != this.expressions.size() - 1) {

@@ -337,8 +337,8 @@ public class SqlMappingWorkflow implements IMappingWorkflow {
 
             //自增获取
             String getNewIdentityStr = this.sqlExecutor.getSourceType() == EDataSource.SqlServer || this.sqlExecutor.getSourceType() == EDataSource.Sqlite
-                    ? ";select last_insert_rowid();"
-                    : ";select @@identity;";
+                    ? ";SELECT last_insert_rowid();"
+                    : ";SELECT @@IDENTITY;";
 
             //执行Sql
             StopWatch watch = new StopWatch();

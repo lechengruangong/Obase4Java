@@ -87,7 +87,7 @@ public class FieldCriteria extends SimpleCriteria<Field> {
 
         switch (this.getOperator()) {
             case Equal:
-                returnValue = matchValue != null ? result + " = " + matchValue : result + " is null";
+                returnValue = matchValue != null ? result + " = " + matchValue : result + " IS NULL";
                 break;
             case GreaterThan:
                 returnValue = result + " > " + matchValue;
@@ -102,16 +102,16 @@ public class FieldCriteria extends SimpleCriteria<Field> {
                 returnValue = result + " <= " + matchValue;
                 break;
             case In:
-                returnValue = result + " in (" + matchValue + ")";
+                returnValue = result + " IN (" + matchValue + ")";
                 break;
             case Like:
-                returnValue = result + "like '%" + matchValue.replaceAll("[" + "%" + "]+$", "").replaceAll("^[" + "%" + "]+", "") + "%'";
+                returnValue = result + " LIKE '%" + matchValue.replaceAll("[" + "%" + "]+$", "").replaceAll("^[" + "%" + "]+", "") + "%'";
                 break;
             case NotIn:
-                returnValue = result + " not in (" + matchValue + ")";
+                returnValue = result + " NOT IN (" + matchValue + ")";
                 break;
             case Unequal:
-                returnValue = matchValue != null ? result + " <> " + matchValue : result + " is not null";
+                returnValue = matchValue != null ? result + " <> " + matchValue : result + " IS NOT NULL";
                 break;
         }
 

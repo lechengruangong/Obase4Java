@@ -65,7 +65,7 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
             if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
                 return this.field.toString(sourceType) + "='" + format.format(dateTime) + "'";
             }
-            return this.field.toString(sourceType) + "=null";
+            return this.field.toString(sourceType) + " = NULL ";
         }
         return this.field.toString(sourceType) + "='" + format.format(dateTime) + "'";
     }
@@ -98,7 +98,7 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
             if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
                 return format.format(dateTime);
             }
-            return "null";
+            return "NULL";
         }
         return format.format(dateTime);
     }
@@ -133,7 +133,7 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
             if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
                 valueStr = format.format(dateTime);
             } else {
-                valueStr = "null";
+                valueStr = "NULL";
             }
 
         } else {
@@ -178,7 +178,7 @@ public class DateTimeFieldSetter extends FieldSetter<LocalDateTime> {
             if (dateTime.isAfter(LocalDateTime.parse("1753-01-01 00:00:00.000", format)) && dateTime.isBefore(LocalDateTime.parse("9999-12-31 00:00:00.000", format))) {
                 valueStr = format.format(this.getValue());
             } else {
-                valueStr = "null";
+                valueStr = "NULL";
             }
         } else {
             valueStr = format.format(dateTime);

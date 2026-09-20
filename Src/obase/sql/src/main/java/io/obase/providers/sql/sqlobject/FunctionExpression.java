@@ -110,7 +110,7 @@ public class FunctionExpression extends Expression {
         String isNullStr;
         switch (sourceType) {
             case SqlServer: {
-                isNullStr = "isnull";
+                isNullStr = "ISNULL";
                 break;
             }
             case PostgreSql: {
@@ -121,7 +121,7 @@ public class FunctionExpression extends Expression {
             case MySql:
             case Oracle:
             case Sqlite: {
-                isNullStr = "ifnull";
+                isNullStr = "IFNULL";
                 break;
             }
             default:
@@ -212,11 +212,11 @@ public class FunctionExpression extends Expression {
                 }
                 break;
             }
-            case "AVERAGE": {
+            case "AVG": {
                 if (Arrays.stream(this.arguments).allMatch(Objects::isNull)) {
-                    result = isNullStr + "(AVG(CAST(1 as decimal(10,2))),0)";
+                    result = isNullStr + "(AVG(CAST(1 AS decimal(10,2))),0)";
                 } else {
-                    result = isNullStr + "(AVG(CAST(" + Arrays.stream(this.getArguments()).map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + "as decimal(10,2))),0)";
+                    result = isNullStr + "(AVG(CAST(" + Arrays.stream(this.getArguments()).map(p -> p.toString(sourceType)).collect(Collectors.joining(",")) + " AS decimal(10,2))),0)";
                 }
                 break;
             }

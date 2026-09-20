@@ -113,7 +113,7 @@ public class UnaryExpression extends Expression {
 
                     if (this.getOperand() instanceof FieldExpression) {
                         Expression exp = Expression.equal(this.getOperand(), new ConstantExpression(true));
-                        return " not " + exp.toString(sourceType, sqlParameters, creator);
+                        return " NOT " + exp.toString(sourceType, sqlParameters, creator);
                     }
 
                     if (this.getOperand() instanceof ConstantExpression) {
@@ -124,8 +124,8 @@ public class UnaryExpression extends Expression {
                         }
                     }
 
-                    //SqlServer/Sqlite/PostgreSql分支 复杂操作数(如LIKE)以not关键字整体取反
-                    return " not " + this.getOperand().toString(sourceType, sqlParameters, creator);
+                    //SqlServer/Sqlite/PostgreSql分支 复杂操作数(如LIKE)以NOT关键字整体取反
+                    return " NOT " + this.getOperand().toString(sourceType, sqlParameters, creator);
                 }
                 //MySQL/Oracle分支: !操作数需要整体加括号, 否则MySQL中!优先于LIKE会把(!col LIKE x)解析为(!col) LIKE x导致取反恒false
                 return "(!(" + this.getOperand().toString(sourceType, sqlParameters, creator) + "))";

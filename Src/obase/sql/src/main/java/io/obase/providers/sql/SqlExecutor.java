@@ -237,7 +237,7 @@ public abstract class SqlExecutor implements ISqlExecutor {
                 if (this.sourceType == EDataSource.Sqlite) {
                     //执行语句
                     int result = this.sqlCommand.executeUpdate();
-                    set = this.conn.prepareStatement("Select last_insert_rowid();").executeQuery();
+                    set = this.conn.prepareStatement("SELECT last_insert_rowid();").executeQuery();
                     if (set.next()) {
                         res = set.getObject(1);
                     }
