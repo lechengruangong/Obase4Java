@@ -372,7 +372,8 @@ public abstract class ObjectType extends ReferringType implements IMappable {
         //如果有检查失败消息
         if (message.size() > 0) {
             //就与现有的问题合并
-            String name = this.clrType != null ? this.clrType.getSimpleName() : this.name;
+            //与dotNet版保持一致 使用类型的全称作为键 无类型信息时使用类型名称
+            String name = this.clrType != null ? this.clrType.getName() : this.name;
             if (errDictionary.containsKey(name))
                 errDictionary.get(name).addAll(message);
             else
