@@ -226,14 +226,14 @@ public class EntityType extends ObjectType {
         }
         //再次检查 没有就抛异常
         if (this.keyAttributes == null || this.keyAttributes.size() == 0)
-            message.add("实体" + this.getName() + "的键属性未设置");
+            message.add("实体" + this.getName() + "未配置主键,请为实体指定主键属性.");
 
         //检查键
         List<Attribute> keyAttrs = this.getAttributes().stream().filter(p -> this.getKeyAttributes().contains(p.getName())).collect(Collectors.toList());
 
         //自增 但是是联合主键
         if (this.keyIsSelfIncreased && keyAttrs.size() > 1)
-            message.add("实体" + this.getName() + "的键属性是联合主键,不能是自增的");
+            message.add("实体" + this.getName() + "的主键是联合主键,不能配置为自增.");
 
         //检查主键
         for (Attribute keyAttr : keyAttrs) {
@@ -245,7 +245,7 @@ public class EntityType extends ObjectType {
             if (this.keyIsSelfIncreased && keyAttr.getDataType() != int.class && keyAttr.getDataType() != long.class &&
                     keyAttr.getDataType() != short.class && keyAttr.getDataType() != Integer.class && keyAttr.getDataType() != Long.class &&
                     keyAttr.getDataType() != Short.class)
-                message.add("实体" + this.getName() + "的键属性" + keyAttr.getName() + "是自增的但不是short,int,long类型.");
+                message.add("实体" + this.getName() + "的键属性" + keyAttr.getName() + "配置为自增,但类型" + keyAttr.getDataType() + "不是short,int,long之一.");
 
             if (keyAttr.getValueGetter() == null)
                 message.add("实体" + this.getName() + "的键属性" + keyAttr.getName() + "没有取值器.");
@@ -255,7 +255,7 @@ public class EntityType extends ObjectType {
         for (AssociationReference reference : this.getAssociationReferences()) {
             //检查左端
             if (Utils.getStringIsEmpty(reference.getLeftEnd()))
-                message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "的端未能自动配置,请手动配置此关联引用.");
+                message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "的左端未能自动推断,请手动配置此关联引用的左端.");
 
             if (reference.getAssociationType().getAssociationEnds().stream().noneMatch(p -> p.getName().equalsIgnoreCase(reference.getLeftEnd())))
                 message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "的左端" + reference.getLeftEnd() + "无法与关联端的名字相匹配,请检查关联端的名称和左端名称是否一致.");
@@ -284,7 +284,7 @@ public class EntityType extends ObjectType {
                 //而且也不是自关联 那么此关联引用的关联型映射表就不能与当前实体相同
                 if (!ends.stream().allMatch(p -> p.getEntityType().getClrType().equals(ends.get(0).getEntityType().getClrType()))
                         && this.getTargetTable().equalsIgnoreCase(reference.getAssociationType().getTargetTable()))
-                    message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "是一对多的,其关联型" + reference.getAssociationType().getTargetTable() + "关联表不能是自身的映射表" + this.getTargetTable() + ".");
+                    message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "是多重引用,其关联型的映射表不能与实体型自身的映射表" + this.getTargetTable() + "相同.");
             }
         }
 

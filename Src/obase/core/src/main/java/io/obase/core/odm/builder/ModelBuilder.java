@@ -125,8 +125,10 @@ public class ModelBuilder {
         this.complementConfigurationPipelineBuilder = new ComplementConfigurationPipelineBuilder();
         this.complementConfigurationPipelineBuilder.use(DefaultComplementConfigurator::new);
         //保存上下文类型 和 类加载器
-        this.contextType = context.getClass();
-        this.hasClassLoader(this.contextType.getClassLoader());
+        //上下文可以为空 以便在没有上下文的情况下直接建造模型(如ODM验证器)
+        this.contextType = context == null ? null : context.getClass();
+        if (this.contextType != null)
+            this.hasClassLoader(this.contextType.getClassLoader());
     }
 
     /**
@@ -289,8 +291,9 @@ public class ModelBuilder {
                     item.integrityCheck(errDictionary);
                 }
                 //如果检查中出现错误信息 抛出特定异常
+                //序列化对象数据模型(SODM)的错误信息添加对应的前缀 便于区分
                 if (errDictionary.values().size() > 0)
-                    throw new IntegrityCheckFailException(errDictionary);
+                    throw new IntegrityCheckFailException(errDictionary, IntegrityCheckFailException.SODM_MESSAGE_PREFIX);
             }
 
             //生成管道
@@ -418,8 +421,9 @@ public class ModelBuilder {
                 Map<String, List<String>> errDictionary = new HashMap<>();
                 for (StructuralType structuralType : this.objectDataModel.getTypes())
                     structuralType.integrityCheck(errDictionary);
+                //对象数据模型(ODM)的错误信息添加对应的前缀 便于区分
                 if (errDictionary.values().size() > 0)
-                    throw new IntegrityCheckFailException(errDictionary);
+                    throw new IntegrityCheckFailException(errDictionary, IntegrityCheckFailException.ODM_MESSAGE_PREFIX);
             }
         }
 

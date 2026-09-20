@@ -135,7 +135,7 @@ public class SerializationEntity {
         //检查属性
         for (SerializationAttribute attribute : this.getAttributes()) {
             if (Utils.getStringIsEmpty(attribute.getName()))
-                message.add("序列化实体的属性名称不能为空.");
+                message.add("序列化实体" + this.getName() + "中存在名称为空的属性.");
             if (attribute.getValueGetter() == null)
                 message.add(this.getName() + "的属性" + attribute.getName() + "没有取值器.");
             if (attribute.getValueSetter() == null)
@@ -144,16 +144,16 @@ public class SerializationEntity {
 
         //检查构造器
         if (this.getConstructor() == null) {
-            message.add(this.getName() + "没有构造器.");
+            message.add(this.getName() + "没有配置构造器.");
         } else {
             if (this.getConstructor().getRealParameterCount() != this.getConstructorParameters().size())
-                message.add(this.getName() + "的构造器应有" + this.getConstructor().getRealParameterCount() + "参数,实际上仅配置了" + this.getConstructorParameters().size() + "个.");
+                message.add(this.getName() + "的构造器应有" + this.getConstructor().getRealParameterCount() + "个参数,实际只配置了" + this.getConstructorParameters().size() + "个.");
         }
 
         //检查引用
         for (SerializationReference reference : this.getReferences()) {
             if (Utils.getStringIsEmpty(reference.getName()))
-                message.add("序列化实体的引用名称不能为空.");
+                message.add("序列化实体" + this.getName() + "中存在名称为空的引用.");
             if (reference.getValueGetter() == null)
                 message.add(this.getName() + "的引用" + reference.getName() + "没有取值器.");
             if (reference.getValueSetter() == null)

@@ -27,7 +27,17 @@ public class ObjectDataModelViewer {
      */
     public static StringBuilder getSimpleObjectDataModelMappingView(ObjectContext context) {
         //获取模型
-        ObjectDataModel model = context.getModel();
+        return getSimpleObjectDataModelMappingView(context.getModel());
+    }
+
+    /**
+     * 获取对象数据模型映射的简单视图
+     * 仅包含实体型的映射表和关联引用的映射关系
+     *
+     * @param model 要查看的模型
+     * @return 结果字符串
+     */
+    public static StringBuilder getSimpleObjectDataModelMappingView(ObjectDataModel model) {
         //结果
         StringBuilder result = new StringBuilder();
         //检查实体型即可
@@ -53,7 +63,17 @@ public class ObjectDataModelViewer {
      */
     public static StringBuilder getFullObjectDataModelMappingView(ObjectContext context) {
         //获取模型
-        ObjectDataModel model = context.getModel();
+        return getFullObjectDataModelMappingView(context.getModel());
+    }
+
+    /**
+     * 获取对象数据模型映射的完整视图
+     * 包含完整的映射关系
+     *
+     * @param model 要查看的模型
+     * @return 结果字符串
+     */
+    public static StringBuilder getFullObjectDataModelMappingView(ObjectDataModel model) {
         //结果
         StringBuilder result = new StringBuilder();
         //检查实体型即可

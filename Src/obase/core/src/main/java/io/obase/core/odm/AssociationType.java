@@ -318,15 +318,15 @@ public class AssociationType extends ObjectType {
             TypeElement attr = this.enumerateElements().stream().filter(p -> p.getElementType().equals(EElementType.Attribute)).findFirst().orElse(null);
             if (attr != null)
                 if (!((Attribute) attr).getIsForeignKeyDefineMissing())
-                    message.add("隐式关联型" + this.getName() + "内应只有关联端,属性" + attr.getName() + "不应被定义.");
+                    message.add("隐式关联型" + this.getName() + "内只能有关联端,不应定义属性" + attr.getName() + ".");
         }
 
         //关联端数量
         if (this.getAssociationEnds() == null || this.getAssociationEnds().size() == 0)
-            message.add("关联型" + this.getName() + "内无关联端.");
+            message.add("关联型" + this.getName() + "内没有关联端.");
 
         if (this.getAssociationEnds() != null && this.getAssociationEnds().size() < 2)
-            message.add("关联型" + this.getName() + "内关联端少于2个.");
+            message.add("关联型" + this.getName() + "的关联端少于2个,无法构成关联.");
 
         if (this.getAssociationEnds() != null) {
             //检查关联端
@@ -334,7 +334,7 @@ public class AssociationType extends ObjectType {
                 //检查关联端本身
                 Property endProperty = ObaseIntrospector.getObaseBeanProperties(this.clrType).stream().filter(p -> p.getName().equalsIgnoreCase(end.getName())).findFirst().orElse(null);
                 if (endProperty == null)
-                    message.add("关联型" + this.getName() + "内无法找到关联端" + end.getName() + "的属性访问器.");
+                    message.add("关联型" + this.getName() + "的类型" + this.getClrType().getName() + "上找不到与关联端" + end.getName() + "同名的属性.");
 
                 if (end.getMappings() == null || end.getMappings().size() == 0)
                     message.add("关联型" + this.getName() + "的关联端" + end.getName() + "没有映射.");
@@ -350,13 +350,13 @@ public class AssociationType extends ObjectType {
                     //检查Mapping的KeyAttr是否在端类型中存在
                     for (AssociationEndMapping mapping : end.getMappings())
                         if (end.getEntityType().getAttribute(mapping.getKeyAttribute()) == null)
-                            message.add("关联型" + this.getName() + "的关联端" + end.getName() + "映射" + mapping.getKeyAttribute() + "属性无法在端类型" + end.getEntityType().getClrType().getName() + "中找到.");
+                            message.add("关联型" + this.getName() + "的关联端" + end.getName() + "的映射键属性" + mapping.getKeyAttribute() + "在端类型" + end.getEntityType().getClrType().getName() + "中不存在.");
                     //检查是否所有的KeyAttr都有映射
                     for (String entityTypeKeyAttribute : end.getEntityType().getKeyAttributes()) {
                         //获取端类型的标识属性的映射数量 必须为1
                         long mapCount = end.getMappings().stream().filter(p -> p.getKeyAttribute().equalsIgnoreCase(entityTypeKeyAttribute)).count();
                         if (mapCount != 1)
-                            message.add("关联型" + this.getName() + "的" + end.getEntityType().getClrType().getName() + "类型关联端" + end.getName() + "的标识属性" + entityTypeKeyAttribute + "应有且只1个映射,但现在有" + mapCount + "个映射.");
+                            message.add("关联型" + this.getName() + "的关联端" + end.getName() + "(端类型" + end.getEntityType().getClrType().getName() + ")的标识属性" + entityTypeKeyAttribute + "应有且仅有1个映射,实际有" + mapCount + "个.");
                     }
                 }
 
