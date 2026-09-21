@@ -26,9 +26,10 @@ public abstract class OdmValidator {
     public ValidationResult validate() {
         //创建模型建造器 不指定上下文
         ModelBuilder modelBuilder = new ModelBuilder(null);
-        modelBuilder.hasIntegrityCheck(true);
         //创建模型配置
         this.createModel(modelBuilder);
+        //强制开启完整性检查
+        modelBuilder.hasIntegrityCheck(true);
 
         try {
             //开始创建模型
