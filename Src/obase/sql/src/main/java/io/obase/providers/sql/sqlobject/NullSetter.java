@@ -60,13 +60,13 @@ public class NullSetter implements IFieldSetter {
     public String toString(EDataSource sourceType) {
         switch (sourceType) {
             case SqlServer:
-                return " [" + this.getField().getName() + "] = null";
+                return " [" + this.getField().getName() + "] = NULL";
             case PostgreSql:
-                return " \"" + this.getField().getName() + "\" = null";
+                return " \"" + this.getField().getName() + "\" = NULL";
             case MySql:
             case Sqlite:
             case Oracle:
-                return " `" + this.getField().getName() + "` = null";
+                return " `" + this.getField().getName() + "` = NULL";
             default:
                 throw new IllegalArgumentException("不支持的数据源: " + sourceType);
         }
@@ -121,7 +121,7 @@ public class NullSetter implements IFieldSetter {
                 throw new IllegalArgumentException("不支持的数据源: " + sourceType);
         }
 
-        return " null ";
+        return " NULL ";
     }
 
     /**

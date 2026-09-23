@@ -61,8 +61,11 @@ public class TypeView extends ReferringType implements IMappable {
 
     /**
      * 用于存储锚点与视图元素之间关联的字典，其中键为锚点，值为元素集合。
+     * 说明
+     * 由lockObject加锁保护，读取方通过anchorElementsSnapshot获取有序快照，既保证线程安全，又保持元素的插入顺序
+     * （使用LinkedHashMap先按锚点的插入顺序，再按元素在锚点下的插入顺序）
      */
-    private Map<AssociationTreeNode, TypeElement[]> anchorElements;
+    private final Map<AssociationTreeNode, TypeElement[]> anchorElements = new LinkedHashMap<>();
 
     /**
      * 执行极限分解后的基础视图。
@@ -397,7 +400,6 @@ public class TypeView extends ReferringType implements IMappable {
     public void addElement(TypeElement element) {
         synchronized (this.lockObject) {
             super.addElement(element);
-            if (this.anchorElements == null) this.anchorElements = new HashMap<>();
             if (element instanceof ViewAttribute) {
                 ViewAttribute viewAttribute = (ViewAttribute) element;
                 for (ViewAttributeSource source : viewAttribute.getSources()) {
@@ -683,7 +685,7 @@ public class TypeView extends ReferringType implements IMappable {
     public void generateType() {
         /*生成隐含类型。*/
         List<FieldDescriptor> fields = new ArrayList<>();
-        List<TypeElement> elements = this.anchorElements.values().stream().flatMap(p -> Arrays.stream(p).distinct()).collect(Collectors.toList());
+        List<TypeElement> elements = this.anchorElementsSnapshot();
         for (TypeElement element : elements) {
             Class<?> type;
             if (element instanceof ViewAttribute) {
@@ -717,8 +719,9 @@ public class TypeView extends ReferringType implements IMappable {
 
         /*为视图元素绑定设值器和取值器*/
         for (FieldDescriptor field : fields) {
-            if (!this.elements.containsKey(field.getName())) continue;
-            TypeElement element = this.elements.get(field.getName());//元素
+            ObjectReferencePack<TypeElement> elementPack = new ObjectReferencePack<>();
+            if (!this.tryGetElement(field.getName(), elementPack)) continue;
+            TypeElement element = elementPack.realValue;//元素
 
             Property property = ObaseIntrospector.getObaseBeanProperties(this.clrType).stream().filter(p -> p.getName().equals(field.getName())).findFirst().orElse(null);
 
@@ -762,9 +765,23 @@ public class TypeView extends ReferringType implements IMappable {
      * @return 锚定于指定扩展节点的元素
      */
     public TypeElement[] getElements(AssociationTreeNode anchor) {
-        if (this.anchorElements == null)
-            this.anchorElements = new HashMap<>();
-        return this.anchorElements.containsKey(anchor) ? this.anchorElements.get(anchor) : new TypeElement[0];
+        //如果锚点元素字典中没有锚点，则返回空数组。
+        synchronized (this.lockObject) {
+            return this.anchorElements.containsKey(anchor) ? this.anchorElements.get(anchor) : new TypeElement[0];
+        }
+    }
+
+    /**
+     * 获取锚点元素的有序快照（先按锚点的插入顺序，再按元素在锚点下的插入顺序）。
+     * 说明
+     * 锚点元素字典由lockObject保护，读取方应通过本方法获取快照，既保证线程安全，又保持元素顺序。
+     *
+     * @return 按插入顺序排列的元素快照
+     */
+    private List<TypeElement> anchorElementsSnapshot() {
+        synchronized (this.lockObject) {
+            return this.anchorElements.values().stream().flatMap(p -> Arrays.stream(p).distinct()).collect(Collectors.toList());
+        }
     }
 
     /**
@@ -774,9 +791,10 @@ public class TypeView extends ReferringType implements IMappable {
      * @return 锚定于指定扩展节点的元素个数
      */
     public int countElements(AssociationTreeNode anchor) {
-        if (this.anchorElements == null)
-            this.anchorElements = new HashMap<>();
-        return this.anchorElements.containsKey(anchor) ? this.anchorElements.get(anchor).length : 0;
+        //如果锚点元素字典中没有锚点，则返回0。
+        synchronized (this.lockObject) {
+            return this.anchorElements.containsKey(anchor) ? this.anchorElements.get(anchor).length : 0;
+        }
     }
 
     /**
@@ -789,7 +807,7 @@ public class TypeView extends ReferringType implements IMappable {
     public ViewAttribute getIntuitiveAttribute(Attribute attribute, AssociationTreeNode extensionNode) {
         TypeElement[] elements;
         if (extensionNode == null) {
-            elements = this.elements.values().toArray(new TypeElement[0]);
+            elements = this.enumerateElements().toArray(new TypeElement[0]);
         } else {
             elements = this.getElements(extensionNode);
         }
@@ -802,7 +820,7 @@ public class TypeView extends ReferringType implements IMappable {
                 if (attrNode.getParent() != null || !attribute.equals(attrNode.getAttribute())) continue;
                 return viewAttribute;
             } else if (element instanceof ViewReference) {
-                for (TypeElement typeElement : this.elements.values()) {
+                for (TypeElement typeElement : this.enumerateElements()) {
                     if (typeElement instanceof ViewAttribute) {
                         ViewAttribute viewAttr = (ViewAttribute) typeElement;
                         if (viewAttr.getName().equals(attribute.getName()))
@@ -864,7 +882,7 @@ public class TypeView extends ReferringType implements IMappable {
             ElementAdder ea = new ElementAdder(this, baseView, this.attachingItems.toArray(new TypeViewAttachingItem[0]));
             //为基础视图和附加视图定义元素
             this.sourceExtension.accept(ea);
-            for (TypeElement typElementsValue : this.elements.values()) {
+            for (TypeElement typElementsValue : this.enumerateElements()) {
                 if (typElementsValue instanceof ViewAttribute) {
                     ViewAttribute viewAttribute = (ViewAttribute) typElementsValue;
                     if (viewAttribute.getShadow() == null) {

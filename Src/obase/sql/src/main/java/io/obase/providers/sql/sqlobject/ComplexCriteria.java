@@ -140,16 +140,16 @@ public class ComplexCriteria implements ICriteria {
         if (this.logicalOperator == ELogicalOperator.Not) {
             if (this.criterias.size() > 1)
                 throw new IllegalArgumentException("取反操作数不可大于1.");
-            return " ( not ( " + this.criterias.get(0).toString(sourceType) + " ) )";
+            return " ( NOT ( " + this.criterias.get(0).toString(sourceType) + " ) )";
         }
 
         //不是Not 构造操作符
         switch (this.logicalOperator) {
             case And:
-                logical = " and ";
+                logical = " AND ";
                 break;
             case Or:
-                logical = " or ";
+                logical = " OR ";
                 break;
         }
 
@@ -172,16 +172,16 @@ public class ComplexCriteria implements ICriteria {
         if (this.logicalOperator == ELogicalOperator.Not) {
             if (this.criterias.size() > 1)
                 throw new IllegalArgumentException("取反操作数不可大于1.");
-            return " ( not ( " + this.criterias.get(0).toString(sourceType, sqlParameters, creator) + " ) )";
+            return " ( NOT ( " + this.criterias.get(0).toString(sourceType, sqlParameters, creator) + " ) )";
         }
 
         //不是Not 构造操作符
         switch (this.logicalOperator) {
             case And:
-                logical = " and ";
+                logical = " AND ";
                 break;
             case Or:
-                logical = " or ";
+                logical = " OR ";
                 break;
         }
 

@@ -155,13 +155,13 @@ public class JoinedSource implements ISource {
         String joinTypeStr;
         switch (this.getJoinType()) {
             case Inner:
-                joinTypeStr = " inner join ";
+                joinTypeStr = " INNER JOIN ";
                 break;
             case Left:
-                joinTypeStr = " left join ";
+                joinTypeStr = " LEFT JOIN ";
                 break;
             case Right:
-                joinTypeStr = " right join ";
+                joinTypeStr = " RIGHT JOIN ";
                 break;
             default:
                 throw new IllegalArgumentException("不支持的连接方法: " + this.getJoinType());
@@ -170,7 +170,7 @@ public class JoinedSource implements ISource {
         return this.sources.get(0).toString(sourceType) +
                 joinTypeStr +
                 this.sources.get(1).toString(sourceType) +
-                " on " +
+                " ON " +
                 this.joinCriteria.toString(sourceType);
     }
 
@@ -187,13 +187,13 @@ public class JoinedSource implements ISource {
         String joinTypeStr;
         switch (this.getJoinType()) {
             case Left:
-                joinTypeStr = " left join ";
+                joinTypeStr = " LEFT JOIN ";
                 break;
             case Right:
-                joinTypeStr = " right join ";
+                joinTypeStr = " RIGHT JOIN ";
                 break;
             case Inner:
-                joinTypeStr = " inner join ";
+                joinTypeStr = " INNER JOIN ";
                 break;
             default:
                 throw new IllegalArgumentException("不支持的连接方法: " + this.getJoinType());
@@ -206,7 +206,7 @@ public class JoinedSource implements ISource {
         String resultBuilder = this.sources.get(0).toString(sourceType, leftDataParameters, creator) +
                 joinTypeStr +
                 this.sources.get(1).toString(sourceType, rightDataParameters, creator) +
-                " on " +
+                " ON " +
                 this.joinCriteria.toString(sourceType, criteriaDataParameters, creator);
 
         List<DataParameter> realSqlParameters = new ArrayList<>();

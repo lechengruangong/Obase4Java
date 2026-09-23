@@ -173,7 +173,7 @@ public class ComparisonExpression extends BinaryExpression {
                                 if (this.getLeft() instanceof UnaryExpression) {
                                     UnaryExpression unaryExpression = (UnaryExpression) this.getLeft();
                                     if (unaryExpression.getNodeType() == EExpressionType.Not) {
-                                        result = "Not " + unaryExpression.getOperand().toString(sourceType, leftSqlParameter, creator) + " = " + this.getRight().toString(sourceType, rightSqlParameter, creator);
+                                        result = "NOT " + unaryExpression.getOperand().toString(sourceType, leftSqlParameter, creator) + " = " + this.getRight().toString(sourceType, rightSqlParameter, creator);
                                         sqlParameters.realValue.addAll(leftSqlParameter.realValue);
                                         sqlParameters.realValue.addAll(rightSqlParameter.realValue);
                                         break;
@@ -197,7 +197,7 @@ public class ComparisonExpression extends BinaryExpression {
                                 if (this.getRight() instanceof UnaryExpression) {
                                     UnaryExpression unaryExpression = (UnaryExpression) this.getRight();
                                     if (unaryExpression.getNodeType() == EExpressionType.Not) {
-                                        result = "Not " + this.getLeft().toString(sourceType, leftSqlParameter, creator) + " = " + unaryExpression.getOperand().toString(sourceType, rightSqlParameter, creator);
+                                        result = "NOT " + this.getLeft().toString(sourceType, leftSqlParameter, creator) + " = " + unaryExpression.getOperand().toString(sourceType, rightSqlParameter, creator);
                                         sqlParameters.realValue.addAll(leftSqlParameter.realValue);
                                         sqlParameters.realValue.addAll(rightSqlParameter.realValue);
                                         break;
@@ -243,7 +243,7 @@ public class ComparisonExpression extends BinaryExpression {
                                 if (this.getLeft() instanceof UnaryExpression) {
                                     UnaryExpression unaryExpression = (UnaryExpression) this.getLeft();
                                     if (unaryExpression.getNodeType() == EExpressionType.Not) {
-                                        result = "Not " + unaryExpression.getOperand().toString(sourceType, leftSqlParameter, creator) + " <> " + this.getRight().toString(sourceType, rightSqlParameter, creator);
+                                        result = "NOT " + unaryExpression.getOperand().toString(sourceType, leftSqlParameter, creator) + " <> " + this.getRight().toString(sourceType, rightSqlParameter, creator);
                                         sqlParameters.realValue.addAll(leftSqlParameter.realValue);
                                         sqlParameters.realValue.addAll(rightSqlParameter.realValue);
                                         break;
@@ -268,7 +268,7 @@ public class ComparisonExpression extends BinaryExpression {
                             if (this.getRight() instanceof UnaryExpression) {
                                 UnaryExpression unaryExpression = (UnaryExpression) this.getRight();
                                 if (unaryExpression.getNodeType() == EExpressionType.Not) {
-                                    result = "Not " + this.getLeft().toString(sourceType, leftSqlParameter, creator) + " <> " + unaryExpression.getOperand().toString(sourceType, rightSqlParameter, creator);
+                                    result = "NOT " + this.getLeft().toString(sourceType, leftSqlParameter, creator) + " <> " + unaryExpression.getOperand().toString(sourceType, rightSqlParameter, creator);
                                     sqlParameters.realValue.addAll(leftSqlParameter.realValue);
                                     sqlParameters.realValue.addAll(rightSqlParameter.realValue);
                                     break;

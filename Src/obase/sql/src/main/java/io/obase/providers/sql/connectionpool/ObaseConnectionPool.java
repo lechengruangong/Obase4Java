@@ -17,9 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.locks.StampedLock;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 连接池
@@ -32,12 +31,14 @@ public class ObaseConnectionPool implements AutoCloseable {
     private static volatile ObaseConnectionPool instance;
     /**
      * 连接字符串对应的数据源
+     * 说明：并发字典的枚举是线程安全的，无需加锁
      */
-    private final Map<String, DataSource> sources = new HashMap<>();
+    private final Map<String, DataSource> sources = new ConcurrentHashMap<>();
     /**
-     * 邮戳锁
+     * 保护数据源建造过程的锁对象
+     * 说明：只在缺少数据源时进入，且异常路径不会导致锁无法释放
      */
-    private final StampedLock stampedLock = new StampedLock();
+    private final Object poolSyncRoot = new Object();
 
     /**
      * 私有构造
@@ -69,7 +70,7 @@ public class ObaseConnectionPool implements AutoCloseable {
      */
     public String getStatistics() {
         StringBuilder result = new StringBuilder();
-        long stamp = this.stampedLock.readLock();
+        //并发字典的枚举是线程安全的，无需加锁
         for (DataSource dataSource : this.sources.values()) {
             if (dataSource instanceof HikariDataSource) {
                 HikariDataSource hikariDataSource = (HikariDataSource) dataSource;
@@ -83,7 +84,6 @@ public class ObaseConnectionPool implements AutoCloseable {
             }
         }
 
-        this.stampedLock.unlock(stamp);
         return result.toString();
     }
 
@@ -94,7 +94,7 @@ public class ObaseConnectionPool implements AutoCloseable {
      */
     public String getFullStatistics() {
         StringBuilder result = new StringBuilder();
-        long stamp = this.stampedLock.readLock();
+        //并发字典的枚举是线程安全的，无需加锁
         for (DataSource dataSource : this.sources.values()) {
             if (dataSource instanceof HikariDataSource) {
                 HikariDataSource hikariDataSource = (HikariDataSource) dataSource;
@@ -115,7 +115,6 @@ public class ObaseConnectionPool implements AutoCloseable {
 
             }
         }
-        this.stampedLock.unlock(stamp);
         return result.toString();
     }
 
@@ -127,33 +126,32 @@ public class ObaseConnectionPool implements AutoCloseable {
      */
     public DataSource getPool(String driverName, String connectString, String userName, String passWord, Class<?> contextType) {
 
-        long stamp = this.stampedLock.readLock();
-        try {
-            String key = String.format("[%s][%s][%s][%s]", driverName, connectString, userName, passWord);
-            while (!this.sources.containsKey(key)) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    HikariConfig config = new HikariConfig();
-                    //必需的配置
-                    config.setDriverClassName(driverName);
-                    config.setJdbcUrl(connectString);
-                    config.setUsername(userName);
-                    config.setPassword(passWord);
-                    //可选的配置
-                    this.initPool(config, contextType);
+        String key = String.format("[%s][%s][%s][%s]", driverName, connectString, userName, passWord);
+        //快路径：已存在数据源时直接返回
+        DataSource existSource = this.sources.get(key);
+        if (existSource != null)
+            return existSource;
 
-                    DataSource source = new HikariDataSource(config);
-                    this.sources.put(key, source);
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
-                }
-            }
-            return this.sources.get(key);
-        } finally {
-            this.stampedLock.unlock(stamp);
+        //慢路径：仅在建造数据源时加锁，数据源建造完成后才对外发布
+        synchronized (this.poolSyncRoot) {
+            //双重检查
+            existSource = this.sources.get(key);
+            if (existSource != null)
+                return existSource;
+
+            HikariConfig config = new HikariConfig();
+            //必需的配置
+            config.setDriverClassName(driverName);
+            config.setJdbcUrl(connectString);
+            config.setUsername(userName);
+            config.setPassword(passWord);
+            //可选的配置
+            this.initPool(config, contextType);
+
+            DataSource source = new HikariDataSource(config);
+            //添加数据源
+            this.sources.put(key, source);
+            return source;
         }
     }
 
@@ -185,10 +183,17 @@ public class ObaseConnectionPool implements AutoCloseable {
      */
     @Override
     public void close() {
-        for (DataSource source : this.sources.values()) {
-            if (source instanceof HikariDataSource) {
-                HikariDataSource basicDataSource = (HikariDataSource) source;
-                basicDataSource.close();
+        //与建造数据源的过程互斥，保证释放数据源时不会与建造过程产生竞态
+        synchronized (this.poolSyncRoot) {
+            //移除并释放数据源，保证每个数据源只会被释放一次
+            for (Map.Entry<String, DataSource> entry : this.sources.entrySet()) {
+                DataSource source = this.sources.remove(entry.getKey());
+                if (source == null)
+                    continue;
+                if (source instanceof HikariDataSource) {
+                    HikariDataSource basicDataSource = (HikariDataSource) source;
+                    basicDataSource.close();
+                }
             }
         }
         //搞一些输出

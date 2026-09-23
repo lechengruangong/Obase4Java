@@ -91,7 +91,7 @@ public class ExpressionFieldSetter implements IFieldSetter {
      */
     @Override
     public String toString(EDataSource sourceType) {
-        return this.field.toString(sourceType) + " = " + (this.value == null ? "null" : "'" + this.value.toString(sourceType)) + "'";
+        return this.field.toString(sourceType) + " = " + (this.value == null ? "NULL" : "'" + this.value.toString(sourceType)) + "'";
     }
 
     /**
@@ -170,7 +170,7 @@ public class ExpressionFieldSetter implements IFieldSetter {
     public String toString(ObjectReferencePack<DataParameter> parameters, EDataSource sourceType, IParameterCreator creator) {
         String valueStr;
         if (this.value == null) {
-            valueStr = "null";
+            valueStr = "NULL";
             parameters.realValue = null;
         } else {
             ObjectReferencePack<List<DataParameter>> sqlParameters = new ObjectReferencePack<>();

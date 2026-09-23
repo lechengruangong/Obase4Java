@@ -15,18 +15,12 @@ import io.obase.core.common.Utils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
 /**
  * 表示实体型
  */
 public class EntityType extends ObjectType {
-
-    /**
-     * 邮戳锁
-     */
-    private final StampedLock stampedLock = new StampedLock();
 
     /**
      * 默认的存储排序规则
@@ -103,14 +97,14 @@ public class EntityType extends ObjectType {
      * @param keyIsSelfIncreased 一个值，该值指示标识是否自增
      */
     public void setKeyIsSelfIncreased(boolean keyIsSelfIncreased) {
-        long stamp = this.stampedLock.writeLock();
-        this.keyIsSelfIncreased = keyIsSelfIncreased;
-        this.getKeyAttributes().forEach(s -> {
-            Attribute attr = this.getAttribute(s);
-            if (attr != null)
-                attr.setDbGenerateValue(keyIsSelfIncreased);
-        });
-        this.stampedLock.unlockWrite(stamp);
+        synchronized (this) {
+            this.keyIsSelfIncreased = keyIsSelfIncreased;
+            this.getKeyAttributes().forEach(s -> {
+                Attribute attr = this.getAttribute(s);
+                if (attr != null)
+                    attr.setDbGenerateValue(keyIsSelfIncreased);
+            });
+        }
     }
 
     /**
@@ -119,8 +113,6 @@ public class EntityType extends ObjectType {
      * @return 标识属性组
      */
     public List<String> getKeyAttributes() {
-        if (this.keyAttributes == null)
-            this.keyAttributes = new ArrayList<>();
         return this.keyAttributes;
     }
 
@@ -130,14 +122,14 @@ public class EntityType extends ObjectType {
      * @param keyAttributes 标识属性组
      */
     public void setKeyAttributes(List<String> keyAttributes) {
-        long stamp = this.stampedLock.writeLock();
-        this.keyAttributes = keyAttributes;
-        this.getKeyAttributes().forEach(s -> {
-            Attribute attr = this.getAttribute(s);
-            if (attr != null)
-                attr.setDbGenerateValue(this.keyIsSelfIncreased);
-        });
-        this.stampedLock.unlockWrite(stamp);
+        synchronized (this) {
+            this.keyAttributes = keyAttributes != null ? keyAttributes : new ArrayList<>();
+            this.getKeyAttributes().forEach(s -> {
+                Attribute attr = this.getAttribute(s);
+                if (attr != null)
+                    attr.setDbGenerateValue(this.keyIsSelfIncreased);
+            });
+        }
     }
 
     /**
@@ -147,26 +139,14 @@ public class EntityType extends ObjectType {
      */
     @Override
     public List<String> getKeyFields() {
-
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.keyFields == null) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    this.keyFields = new ArrayList<>();
-                    for (String key : this.getKeyAttributes()) {
-                        this.keyFields.add(this.getAttribute(key).getTargetField());
-                    }
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
+        synchronized (this) {
+            if (this.keyFields == null) {
+                this.keyFields = new ArrayList<>();
+                for (String key : this.getKeyAttributes()) {
+                    this.keyFields.add(this.getAttribute(key).getTargetField());
                 }
             }
             return this.keyFields;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 
@@ -177,7 +157,9 @@ public class EntityType extends ObjectType {
      */
     @Override
     public void setKeyFields(List<String> keyFields) {
-        this.keyFields = keyFields;
+        synchronized (this) {
+            this.keyFields = keyFields;
+        }
     }
 
     /**
@@ -188,27 +170,16 @@ public class EntityType extends ObjectType {
      */
     @Override
     protected List<OrderRule> getDefaultStoringOrder() {
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.defaultStoringOrder == null || this.defaultStoringOrder.size() == 0) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    this.defaultStoringOrder = new ArrayList<>();
-                    this.getKeyAttributes().forEach(s -> {
-                        OrderRule orderRule = new OrderRule();
-                        orderRule.setOrderBy(this.getAttribute(s));
-                        this.defaultStoringOrder.add(orderRule);
-                    });
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
-                }
+        synchronized (this) {
+            if (this.defaultStoringOrder == null || this.defaultStoringOrder.size() == 0) {
+                this.defaultStoringOrder = new ArrayList<>();
+                this.getKeyAttributes().forEach(s -> {
+                    OrderRule orderRule = new OrderRule();
+                    orderRule.setOrderBy(this.getAttribute(s));
+                    this.defaultStoringOrder.add(orderRule);
+                });
             }
             return this.defaultStoringOrder;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 
@@ -255,14 +226,14 @@ public class EntityType extends ObjectType {
         }
         //再次检查 没有就抛异常
         if (this.keyAttributes == null || this.keyAttributes.size() == 0)
-            message.add("实体" + this.getName() + "的键属性未设置");
+            message.add("实体" + this.getName() + "未配置主键,请为实体指定主键属性.");
 
         //检查键
         List<Attribute> keyAttrs = this.getAttributes().stream().filter(p -> this.getKeyAttributes().contains(p.getName())).collect(Collectors.toList());
 
         //自增 但是是联合主键
         if (this.keyIsSelfIncreased && keyAttrs.size() > 1)
-            message.add("实体" + this.getName() + "的键属性是联合主键,不能是自增的");
+            message.add("实体" + this.getName() + "的主键是联合主键,不能配置为自增.");
 
         //检查主键
         for (Attribute keyAttr : keyAttrs) {
@@ -274,7 +245,7 @@ public class EntityType extends ObjectType {
             if (this.keyIsSelfIncreased && keyAttr.getDataType() != int.class && keyAttr.getDataType() != long.class &&
                     keyAttr.getDataType() != short.class && keyAttr.getDataType() != Integer.class && keyAttr.getDataType() != Long.class &&
                     keyAttr.getDataType() != Short.class)
-                message.add("实体" + this.getName() + "的键属性" + keyAttr.getName() + "是自增的但不是short,int,long类型.");
+                message.add("实体" + this.getName() + "的键属性" + keyAttr.getName() + "配置为自增,但类型" + keyAttr.getDataType() + "不是short,int,long之一.");
 
             if (keyAttr.getValueGetter() == null)
                 message.add("实体" + this.getName() + "的键属性" + keyAttr.getName() + "没有取值器.");
@@ -284,7 +255,7 @@ public class EntityType extends ObjectType {
         for (AssociationReference reference : this.getAssociationReferences()) {
             //检查左端
             if (Utils.getStringIsEmpty(reference.getLeftEnd()))
-                message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "的端未能自动配置,请手动配置此关联引用.");
+                message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "的左端未能自动推断,请手动配置此关联引用的左端.");
 
             if (reference.getAssociationType().getAssociationEnds().stream().noneMatch(p -> p.getName().equalsIgnoreCase(reference.getLeftEnd())))
                 message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "的左端" + reference.getLeftEnd() + "无法与关联端的名字相匹配,请检查关联端的名称和左端名称是否一致.");
@@ -313,7 +284,7 @@ public class EntityType extends ObjectType {
                 //而且也不是自关联 那么此关联引用的关联型映射表就不能与当前实体相同
                 if (!ends.stream().allMatch(p -> p.getEntityType().getClrType().equals(ends.get(0).getEntityType().getClrType()))
                         && this.getTargetTable().equalsIgnoreCase(reference.getAssociationType().getTargetTable()))
-                    message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "是一对多的,其关联型" + reference.getAssociationType().getTargetTable() + "关联表不能是自身的映射表" + this.getTargetTable() + ".");
+                    message.add(this.getClrType().getName() + "的关联引用" + reference.getName() + "是多重引用,其关联型的映射表不能与实体型自身的映射表" + this.getTargetTable() + "相同.");
             }
         }
 
@@ -344,7 +315,8 @@ public class EntityType extends ObjectType {
         //如果有检查失败消息
         if (message.size() > 0) {
             //就与现有的问题合并
-            String name = this.clrType != null ? this.clrType.getSimpleName() : this.name;
+            //与dotNet版保持一致 使用类型的全称作为键 无类型信息时使用类型名称
+            String name = this.clrType != null ? this.clrType.getName() : this.name;
             if (errDictionary.containsKey(name))
                 errDictionary.get(name).addAll(message);
             else

@@ -307,7 +307,7 @@ public abstract class ObjectType extends ReferringType implements IMappable {
         if (this.getDerivingFrom() != null && this.getConcreteTypeSign() == null)
             message.add(this.clrType.getName() + "配置为继承" + this.getDerivingFrom().getClrType().getName() + ",却没有配置具体类型判别标志.");
         if (this.getDerivedTypes().size() > 0 && this.getConcreteTypeSign() == null)
-            message.add(this.clrType.getName() + "配置为基础类型,却没有配置具体类型判别标志.");
+            message.add(this.clrType.getName() + "存在派生类型,作为基类型却没有配置具体类型判别标志.");
         //检查继承的映射表是否一致
         if (this.getDerivingFrom() instanceof ObjectType) {
             ObjectType derivingObjectType = (ObjectType) this.getDerivingFrom();
@@ -320,12 +320,12 @@ public abstract class ObjectType extends ReferringType implements IMappable {
             List<String> chain = Utils.getDerivingConcreteTypeValue(this).stream().map(Object::toString).collect(Collectors.toList());
             boolean hasDuplicates = chain.stream().distinct().count() < chain.size();
             if (hasDuplicates)
-                message.add(this.clrType.getName() + "的具体类型判别标志配置中自己和自己的子类中存在重复的具体类型判别标志值，具体类型判别标志值序列为：" + String.join(", ", chain) + ".");
+                message.add(this.clrType.getName() + "及其派生类型的具体类型判别标志值存在重复,具体类型判别标志值序列为:" + String.join(", ", chain) + ".");
             //顺带检查一下构造器的类型判别字段名是否和自己的类型判别标志一致
             if (this.getConstructor() instanceof AbstractConstructor) {
                 AbstractConstructor abstractConstructor = (AbstractConstructor) this.getConstructor();
                 if (!abstractConstructor.getTypeAttributeName().equalsIgnoreCase(this.getConcreteTypeSign().getItem1()))
-                    message.add(this.clrType.getName() + "的构造函数使用的类型判别字段名与自身的类型判别标识不一致，前者为" + abstractConstructor.getTypeAttributeName() + "，后者为" + this.getConcreteTypeSign().getItem1() + ".");
+                    message.add(this.clrType.getName() + "的构造函数使用的类型判别字段名与配置的具体类型判别标志不一致,前者为" + abstractConstructor.getTypeAttributeName() + ",后者为" + this.getConcreteTypeSign().getItem1() + ".");
             }
         }
 
@@ -348,7 +348,7 @@ public abstract class ObjectType extends ReferringType implements IMappable {
                     Class<?> derivingType = this.getDerivingFrom().getConstructor().getParameters().get(i).getType();
                     //检查类型是否相等
                     if (!currentType.equals(derivingType))
-                        message.add(this.clrType.getName() + "的构造器参数第" + (i + 1) + "个参数类型与父类参数类型不一致," + this.clrType.getName() + "为" + currentType.getName() + ",但父类" + this.getDerivingFrom().getName() + "的构造器参数类型为" + derivingType + ".");
+                        message.add(this.clrType.getName() + "的构造器第" + (i + 1) + "个参数所绑定元素的类型与父类不一致," + this.clrType.getName() + "为" + currentType.getName() + ",父类" + this.getDerivingFrom().getName() + "为" + derivingType + ".");
                 }
             }
         }
@@ -360,10 +360,10 @@ public abstract class ObjectType extends ReferringType implements IMappable {
                 if (this.getConstructor() != null && this.getConstructor().getParameterByElement(attribute.getName()) == null)
                     //如果最顶层的继承也没有为此属性的构造函数参数
                     if (Utils.getDerivedIInstanceConstructor(this) != null && Utils.getDerivedIInstanceConstructor(this).getParameterByElement(attribute.getName()) == null)
-                        message.add("实体" + this.getName() + "的属性" + attribute.getName() + "没有设值器,且没有在构造函数中使用.");
+                        message.add(this.clrType.getName() + "的属性" + attribute.getName() + "没有设值器,且没有在构造函数中使用.");
 
             if (attribute.getValueGetter() == null)
-                message.add("实体" + this.getName() + "的属性" + attribute.getName() + "没有取值器.");
+                message.add(this.clrType.getName() + "的属性" + attribute.getName() + "没有取值器.");
         }
 
         //检查引用元素的延迟加载配置
@@ -372,7 +372,8 @@ public abstract class ObjectType extends ReferringType implements IMappable {
         //如果有检查失败消息
         if (message.size() > 0) {
             //就与现有的问题合并
-            String name = this.clrType != null ? this.clrType.getSimpleName() : this.name;
+            //与dotNet版保持一致 使用类型的全称作为键 无类型信息时使用类型名称
+            String name = this.clrType != null ? this.clrType.getName() : this.name;
             if (errDictionary.containsKey(name))
                 errDictionary.get(name).addAll(message);
             else

@@ -24,7 +24,6 @@ import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.StampedLock;
 
 /**
  * 隐式关联型的Clr类型管理器
@@ -45,14 +44,15 @@ public class ImplicitAssociationManager {
     private final Set<Class<?>> impliedTypes = new HashSet<>();
 
     /**
-     * 邮戳锁
+     * 保护impliedTypes的锁对象。
+     * 说明：动态类型的定义过程（IL发射）不在此锁内执行，避免定义失败时锁无法释放。
      */
-    private final StampedLock stampedLock = new StampedLock();
+    private final Object impliedTypesSyncRoot = new Object();
 
     /**
      * 命名计数器，用于在命名过程中累加计数，避免命名重复。
      */
-    private int namingCounter;
+    private final AtomicInteger namingCounter = new AtomicInteger();
 
     /**
      * 创建ImplicitAssociationManager实例
@@ -80,7 +80,10 @@ public class ImplicitAssociationManager {
      * @return 所有已定义的隐式关联型
      */
     public Set<Class<?>> getImpliedTypes() {
-        return this.impliedTypes;
+        //返回快照，避免调用方与本管理器同时访问同一个集合
+        synchronized (this.impliedTypesSyncRoot) {
+            return new HashSet<>(this.impliedTypes);
+        }
     }
 
     /**
@@ -103,12 +106,13 @@ public class ImplicitAssociationManager {
      */
     private Class<?> searchOrDefineType(String fullName, FieldDescriptor[] fields) {
         //命名
-        String name = fullName + "_" + (++this.namingCounter);
-        long stamp = this.stampedLock.writeLock();
-        //定义一个新类型
+        String name = fullName + "_" + this.namingCounter.incrementAndGet();
+        //定义一个新类型，IL发射过程不持有任何锁
         Class<?> type = this.defineType(name, fields);
-        this.impliedTypes.add(type);
-        this.stampedLock.unlockWrite(stamp);
+        //登记已定义的类型
+        synchronized (this.impliedTypesSyncRoot) {
+            this.impliedTypes.add(type);
+        }
         return type;
     }
 

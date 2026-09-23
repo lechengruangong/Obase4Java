@@ -16,18 +16,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
 /**
  * 表示关联型
  */
 public class AssociationType extends ObjectType {
-
-    /**
-     * 邮戳锁
-     */
-    private final StampedLock stampedLock = new StampedLock();
 
     /**
      * 伴随端
@@ -185,27 +179,16 @@ public class AssociationType extends ObjectType {
      */
     @Override
     public List<String> getKeyFields() {
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.keyFields == null) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    this.keyFields = new ArrayList<>();
-                    for (AssociationEnd end : this.getAssociationEnds()) {
-                        for (AssociationEndMapping map : end.getMappings()) {
-                            this.keyFields.add(map.getTargetField());
-                        }
+        synchronized (this) {
+            if (this.keyFields == null) {
+                this.keyFields = new ArrayList<>();
+                for (AssociationEnd end : this.getAssociationEnds()) {
+                    for (AssociationEndMapping map : end.getMappings()) {
+                        this.keyFields.add(map.getTargetField());
                     }
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
                 }
             }
             return this.keyFields;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 
@@ -217,7 +200,9 @@ public class AssociationType extends ObjectType {
      */
     @Override
     public void setKeyFields(List<String> keyFields) {
-        this.keyFields = keyFields;
+        synchronized (this) {
+            this.keyFields = keyFields;
+        }
     }
 
     /**
@@ -228,29 +213,18 @@ public class AssociationType extends ObjectType {
      */
     @Override
     protected List<OrderRule> getDefaultStoringOrder() {
-        long stamp = this.stampedLock.readLock();
-        try {
-            while (this.defaultStoringOrder == null || this.defaultStoringOrder.size() == 0) {
-                long ws = this.stampedLock.tryConvertToWriteLock(stamp);
-                if (ws != 0L) {
-                    stamp = ws;
-                    this.defaultStoringOrder = new ArrayList<>();
-                    for (AssociationEnd end : this.getAssociationEnds()) {
-                        for (AssociationEndMapping map : end.getMappings()) {
-                            OrderRule orderRule = new OrderRule();
-                            orderRule.setOrderBy(map);
-                            this.defaultStoringOrder.add(orderRule);
-                        }
+        synchronized (this) {
+            if (this.defaultStoringOrder == null || this.defaultStoringOrder.size() == 0) {
+                this.defaultStoringOrder = new ArrayList<>();
+                for (AssociationEnd end : this.getAssociationEnds()) {
+                    for (AssociationEndMapping map : end.getMappings()) {
+                        OrderRule orderRule = new OrderRule();
+                        orderRule.setOrderBy(map);
+                        this.defaultStoringOrder.add(orderRule);
                     }
-                    break;
-                } else {
-                    this.stampedLock.unlockRead(stamp);
-                    stamp = this.stampedLock.writeLock();
                 }
             }
             return this.defaultStoringOrder;
-        } finally {
-            this.stampedLock.unlock(stamp);
         }
     }
 
@@ -341,18 +315,18 @@ public class AssociationType extends ObjectType {
 
         //隐式关联型 不能有属性
         if (!this.visible) {
-            TypeElement attr = this.elements.values().stream().filter(p -> p.getElementType().equals(EElementType.Attribute)).findFirst().orElse(null);
+            TypeElement attr = this.enumerateElements().stream().filter(p -> p.getElementType().equals(EElementType.Attribute)).findFirst().orElse(null);
             if (attr != null)
                 if (!((Attribute) attr).getIsForeignKeyDefineMissing())
-                    message.add("隐式关联型" + this.getName() + "内应只有关联端,属性" + attr.getName() + "不应被定义.");
+                    message.add("隐式关联型" + this.getName() + "内只能有关联端,不应定义属性" + attr.getName() + ".");
         }
 
         //关联端数量
         if (this.getAssociationEnds() == null || this.getAssociationEnds().size() == 0)
-            message.add("关联型" + this.getName() + "内无关联端.");
+            message.add("关联型" + this.getName() + "内没有关联端.");
 
         if (this.getAssociationEnds() != null && this.getAssociationEnds().size() < 2)
-            message.add("关联型" + this.getName() + "内关联端少于2个.");
+            message.add("关联型" + this.getName() + "的关联端少于2个,无法构成关联.");
 
         if (this.getAssociationEnds() != null) {
             //检查关联端
@@ -360,7 +334,7 @@ public class AssociationType extends ObjectType {
                 //检查关联端本身
                 Property endProperty = ObaseIntrospector.getObaseBeanProperties(this.clrType).stream().filter(p -> p.getName().equalsIgnoreCase(end.getName())).findFirst().orElse(null);
                 if (endProperty == null)
-                    message.add("关联型" + this.getName() + "内无法找到关联端" + end.getName() + "的属性访问器.");
+                    message.add("关联型" + this.getName() + "的类型" + this.getClrType().getName() + "上找不到与关联端" + end.getName() + "同名的属性.");
 
                 if (end.getMappings() == null || end.getMappings().size() == 0)
                     message.add("关联型" + this.getName() + "的关联端" + end.getName() + "没有映射.");
@@ -376,13 +350,13 @@ public class AssociationType extends ObjectType {
                     //检查Mapping的KeyAttr是否在端类型中存在
                     for (AssociationEndMapping mapping : end.getMappings())
                         if (end.getEntityType().getAttribute(mapping.getKeyAttribute()) == null)
-                            message.add("关联型" + this.getName() + "的关联端" + end.getName() + "映射" + mapping.getKeyAttribute() + "属性无法在端类型" + end.getEntityType().getClrType().getName() + "中找到.");
+                            message.add("关联型" + this.getName() + "的关联端" + end.getName() + "的映射键属性" + mapping.getKeyAttribute() + "在端类型" + end.getEntityType().getClrType().getName() + "中不存在.");
                     //检查是否所有的KeyAttr都有映射
                     for (String entityTypeKeyAttribute : end.getEntityType().getKeyAttributes()) {
                         //获取端类型的标识属性的映射数量 必须为1
                         long mapCount = end.getMappings().stream().filter(p -> p.getKeyAttribute().equalsIgnoreCase(entityTypeKeyAttribute)).count();
                         if (mapCount != 1)
-                            message.add("关联型" + this.getName() + "的" + end.getEntityType().getClrType().getName() + "类型关联端" + end.getName() + "的标识属性" + entityTypeKeyAttribute + "应有且只1个映射,但现在有" + mapCount + "个映射.");
+                            message.add("关联型" + this.getName() + "的关联端" + end.getName() + "(端类型" + end.getEntityType().getClrType().getName() + ")的标识属性" + entityTypeKeyAttribute + "应有且仅有1个映射,实际有" + mapCount + "个.");
                     }
                 }
 
@@ -421,7 +395,8 @@ public class AssociationType extends ObjectType {
         //如果有检查失败消息
         if (message.size() > 0) {
             //就与现有的问题合并
-            String name = this.clrType != null ? this.clrType.getSimpleName() : this.name;
+            //与dotNet版保持一致 使用类型的全称作为键 无类型信息时使用类型名称
+            String name = this.clrType != null ? this.clrType.getName() : this.name;
             if (!errDictionary.containsKey(name))
                 errDictionary.put(name, message);
             else

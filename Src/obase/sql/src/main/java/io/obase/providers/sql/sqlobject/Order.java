@@ -204,7 +204,8 @@ public class Order {
      * @return 字符串表示形式
      */
     public String toString(EDataSource sourceType) {
-        return this.getExpression().toString(sourceType) + " " + this.getDirection();
+        //输出ASC/DESC 而不是枚举名Asc/Desc
+        return this.getExpression().toString(sourceType) + " " + (this.getDirection() == EOrderDirection.Asc ? "ASC" : "DESC");
     }
 
     /**

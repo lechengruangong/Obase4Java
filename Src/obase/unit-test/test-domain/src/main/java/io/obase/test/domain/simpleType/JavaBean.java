@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -46,6 +47,19 @@ public class JavaBean implements IModel {
      * 以某种分隔符分割的数组
      */
     private String[] strings;
+
+    /**
+     * long类型的集合
+     * 值类型元素集合 与strings一样需要显式配置序列化器
+     * 注：Java没有long?类型 值类型元素统一由包装类型Long表示
+     */
+    private List<Long> numbers;
+
+    /**
+     * 可空long类型的集合
+     * 可空值类型元素集合 用于校验值类型元素中的可空类型（集合中允许存在null项）
+     */
+    private List<Long> nullableNumbers;
 
     /**
      * 长整型
@@ -196,6 +210,42 @@ public class JavaBean implements IModel {
     }
 
     /**
+     * 获取long类型的集合
+     *
+     * @return long类型的集合
+     */
+    public List<Long> getNumbers() {
+        return this.numbers;
+    }
+
+    /**
+     * 设置long类型的集合
+     *
+     * @param numbers long类型的集合
+     */
+    public void setNumbers(List<Long> numbers) {
+        this.numbers = numbers;
+    }
+
+    /**
+     * 获取可空long类型的集合
+     *
+     * @return 可空long类型的集合
+     */
+    public List<Long> getNullableNumbers() {
+        return this.nullableNumbers;
+    }
+
+    /**
+     * 设置可空long类型的集合
+     *
+     * @param nullableNumbers 可空long类型的集合
+     */
+    public void setNullableNumbers(List<Long> nullableNumbers) {
+        this.nullableNumbers = nullableNumbers;
+    }
+
+    /**
      * 获取长整型
      */
     public long getLongNumber() {
@@ -335,6 +385,8 @@ public class JavaBean implements IModel {
                 ", string='" + this.string + '\'' +
                 ", bool=" + this.bool +
                 ", strings=" + Arrays.toString(this.strings) +
+                ", numbers=" + this.numbers +
+                ", nullableNumbers=" + this.nullableNumbers +
                 ", longNumber=" + this.longNumber +
                 ", byteNumber=" + this.byteNumber +
                 ", charNumber=" + this.charNumber +

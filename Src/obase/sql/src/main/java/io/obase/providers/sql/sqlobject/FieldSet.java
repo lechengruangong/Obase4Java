@@ -422,8 +422,8 @@ public class FieldSet implements ISelectionSet {
                         if (this.source != null)
                             return ((Utils.getStringIsEmpty(simpleSource.getSymbol()))
                                     ? this.source.toString(sourceType)
-                                    : simpleSource.getSymbol()) + "." + s + " as " + this.getAliases().get(this.getNames().indexOf(s));
-                        return s + " as " + this.getAliases().get(this.getNames().indexOf(s));
+                                    : simpleSource.getSymbol()) + "." + s + " AS " + this.getAliases().get(this.getNames().indexOf(s));
+                        return s + " AS " + this.getAliases().get(this.getNames().indexOf(s));
                     }
 
                     if (this.source != null)

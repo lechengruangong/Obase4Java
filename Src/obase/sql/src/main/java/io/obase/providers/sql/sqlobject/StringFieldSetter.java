@@ -54,7 +54,7 @@ public class StringFieldSetter extends FieldSetter<String> {
      */
     @Override
     public String toString(EDataSource sourceType) {
-        return this.field.toString(sourceType) + " = " + (this.value == null ? "null" : "'" + this.valueDecriminalization(this.value) + "'");
+        return this.field.toString(sourceType) + " = " + (this.value == null ? "NULL" : "'" + this.valueDecriminalization(this.value) + "'");
     }
 
     /**
@@ -78,7 +78,7 @@ public class StringFieldSetter extends FieldSetter<String> {
     @Override
     public String toString(ObjectReferencePack<String> field, EDataSource sourceType) {
         field.realValue = this.getFiledString(sourceType);
-        return this.value == null ? "null" : this.value;
+        return this.value == null ? "NULL" : this.value;
     }
 
     /**
@@ -103,9 +103,10 @@ public class StringFieldSetter extends FieldSetter<String> {
      */
     @Override
     public String toString(ObjectReferencePack<DataParameter> parameters, EDataSource sourceType, IParameterCreator creator) {
-        String valueStr = this.value != null ? this.valueDecriminalization(this.value) : "null";
+        String valueStr = this.value != null ? this.valueDecriminalization(this.value) : "NULL";
 
-        String parameter = this.getParameters(parameters, sourceType, valueStr, creator);
+        //是否为空值由value本身判定 避免字符串值恰为"NULL"时被当作空值
+        String parameter = this.getParameters(parameters, sourceType, valueStr, this.value == null, creator);
 
         return this.field.toString(sourceType) + " = " + parameter;
     }
@@ -136,9 +137,10 @@ public class StringFieldSetter extends FieldSetter<String> {
     public String toString(ObjectReferencePack<DataParameter> parameters, ObjectReferencePack<String> field, EDataSource sourceType, IParameterCreator creator) {
         field.realValue = this.getFiledString(sourceType);
 
-        String valueStr = this.value != null ? this.valueDecriminalization(this.value) : "null";
+        String valueStr = this.value != null ? this.valueDecriminalization(this.value) : "NULL";
 
-        return this.getParameters(parameters, sourceType, valueStr, creator);
+        //是否为空值由value本身判定 避免字符串值恰为"NULL"时被当作空值
+        return this.getParameters(parameters, sourceType, valueStr, this.value == null, creator);
     }
 
     /**
