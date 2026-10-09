@@ -106,7 +106,7 @@ public class SerializationObjectDataModelDeSerializer {
                 try {
                     obj = type.getConstructor().construct(parameterValues.toArray());
                 } catch (Exception ex) {
-                    throw new IllegalArgumentException("反序列化" + type.getClrType() + "的构造函数参数时出错,请参考内部异常检查参数配置.", ex);
+                    throw new IllegalArgumentException("使用" + type.getClrType() + "配置的构造函数参数反序列化时出错,请参考内部异常检查参数配置.", ex);
                 }
 
                 //处理属性
