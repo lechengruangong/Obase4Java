@@ -17,6 +17,7 @@ public interface IParameterConfigurator {
 
     /**
      * 在所有参数配置完成后返回到当前类型
+     * 参数队列中仍有未配置的参数时抛出IllegalArgumentException
      *
      * @return 当前类型
      */

@@ -78,6 +78,7 @@ public class AssociationReferenceValueWrapper implements IValueGetter, IValueSet
 
     /**
      * 从指定对象取值
+     * 两方隐式关联直接返回标准元组的第一个元素；多方隐式关联则把各端对象组装成隐式关联型实例（每端一个实例），再按多重性返回单个实例或实例集合
      *
      * @param obj 目标对象
      * @return 值
@@ -154,6 +155,8 @@ public class AssociationReferenceValueWrapper implements IValueGetter, IValueSet
 
     /**
      * 为对象设值
+     * 两方隐式关联直接用标准元组的反函数还原后设值；多方隐式关联先逐个取出关联型对象中各端的值（以null补足缺失的端），
+     * 再用标准化器的反函数还原并设值（多重性为true时整体设值，否则逐个设值）
      *
      * @param obj   目标对象
      * @param value 值对象

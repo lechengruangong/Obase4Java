@@ -36,6 +36,7 @@ public interface IAssociationTypeConfigurator extends IObjectTypeConfigurator {
 
     /**
      * 设置是否为显式关联型
+     * override为false时，仅当当前值仍为默认值true（即被误认为显式关联）时才生效
      *
      * @param value    是否为显式关联型
      * @param override 是否覆盖

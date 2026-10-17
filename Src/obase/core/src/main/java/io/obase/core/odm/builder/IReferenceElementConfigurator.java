@@ -120,29 +120,29 @@ public interface IReferenceElementConfigurator extends ITypeElementConfigurator 
     /**
      * 使用成员名称和触发类型为引用元素创建加载触发器(覆盖现有配置)
      *
-     * @param memberName  成员名册
+     * @param memberName  成员的名称
      * @param triggerType 触发类型
      */
     void hasLoadingTriggerI(String memberName, EBehaviorTriggerType triggerType);
 
     /**
-     * 使用成员名称和触发类型为引用元素创建加载触发器(覆盖现有配置)
+     * 使用成员名称和触发类型为引用元素创建加载触发器
      *
-     * @param memberName  成员名册
+     * @param memberName  成员的名称
      * @param triggerType 触发类型
      * @param override    是否覆盖既有配置
      */
     void hasLoadingTriggerI(String memberName, EBehaviorTriggerType triggerType, boolean override);
 
     /**
-     * 使用成员名称为引用元素创建加载触发器(覆盖现有配置)
+     * 使用与引用元素同名的成员为引用元素创建加载触发器(覆盖现有配置)
      *
      * @param triggerType 触发类型
      */
     void hasLoadingTriggerI(EBehaviorTriggerType triggerType);
 
     /**
-     * 使用成员名称为引用元素创建加载触发器
+     * 使用与引用元素同名的成员为引用元素创建加载触发器
      *
      * @param triggerType 触发类型
      * @param override    是否覆盖既有配置
@@ -151,6 +151,7 @@ public interface IReferenceElementConfigurator extends ITypeElementConfigurator 
 
     /**
      * 为引用元素创建加载触发器(覆盖现有配置)
+     * 使用与引用元素同名的属性访问器创建Property-Get型加载触发器
      */
     void hasLoadingTriggerI();
 

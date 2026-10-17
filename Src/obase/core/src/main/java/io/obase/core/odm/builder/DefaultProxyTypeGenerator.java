@@ -38,6 +38,8 @@ public class DefaultProxyTypeGenerator implements IProxyTypeGenerator {
 
     /**
      * 构造默认的代理类型生成器
+     *
+     * @param next 代理类型生成管道中的下一个生成器
      */
     public DefaultProxyTypeGenerator(IProxyTypeGenerator next) {
         this.next = next;
@@ -55,6 +57,8 @@ public class DefaultProxyTypeGenerator implements IProxyTypeGenerator {
 
     /**
      * 为指定类型的代理类型定义成员
+     * 依次定义新实例构造函数（未配置新实例构造器时跳过）、缺失的外键字段、介入者与延迟加载相关成员、触发器需要拦截的方法，
+     * 以及承载类型判别标记的字段与方法；找不到新实例构造器对应的构造函数时抛出RuntimeException
      *
      * @param typeBuilder  一个类型建造器，用于定义代理类型
      * @param objType      要为其定义代理类的类型，即代理类的基类
@@ -145,6 +149,7 @@ public class DefaultProxyTypeGenerator implements IProxyTypeGenerator {
 
     /**
      * 判定指定的类型是否需要生成代理类型
+     * 满足任一条件即需要：存在行为触发器、存在定义的外键、存在顶级父类的类型判别标记
      *
      * @param objType      要判定的类型
      * @param configurator 上述类型的配置器
@@ -156,7 +161,7 @@ public class DefaultProxyTypeGenerator implements IProxyTypeGenerator {
         List<Attribute> attrs = Utils.getDefinedForeignAttributes(objType, null, new ObjectReferencePack<>());
         //获取顶级父类的类型判别标记对应的属性
         TwoTuple<String, Object> signAttr = Utils.getDerivedConcreteTypeSign(objType);
-        //默认的判断条件 1.有触发器 2.有定义的外键 3.没有标记属性
+        //默认的判断条件 1.有触发器 2.有定义的外键 3.存在顶级父类的类型判别标记
         return (long) configurator.getBehaviorTriggersI().size() > 0 || attrs.size() > 0 || signAttr != null;
     }
 }

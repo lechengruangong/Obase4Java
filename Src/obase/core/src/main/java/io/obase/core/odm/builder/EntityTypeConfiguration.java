@@ -118,7 +118,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
      * 根据名称获取元素配置器
      *
      * @param name 元素名称
-     * @return 类型元素配置器
+     * @return 类型元素配置器，不存在时返回null
      */
     @Override
     public ITypeElementConfigurator getElement(String name) {
@@ -138,6 +138,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 设置标识属性
+     * override为true时清空之前设置的标识属性再追加，为false时仅在尚未设置标识属性时生效
      *
      * @param attrName 属性名称
      * @param override 是否覆盖既有配置
@@ -186,6 +187,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 获取标识属性集合
+     * 返回的是各标识属性已配置的映射字段名（targetField），不是属性名本身；只有已配置为属性配置项的标识属性才会出现在结果中
      *
      * @return 标识属性集合
      */
@@ -218,6 +220,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 查找一个关联引用访问器，该关联引用基于指定显式关联定义。
+     * 本方法只在已登记的显式关联引用中查找，未找到时返回null（不会即时创建配置）
      *
      * @param associationType 关联类型
      * @return 属性
@@ -235,6 +238,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 查找一个关联引用访问器，该关联引用基于指定关联端标签代表的隐式关联定义，如果指定的关联端标签代表的关联不只一个，返回符合此标签的第一个关联引用。
+     * 本方法只在已登记的隐式关联引用中查找，未找到时返回null（不会即时创建配置）
      *
      * @param endsTag 关联端标签
      * @return 属性
@@ -251,6 +255,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 设置标识属性。
+     * 名称不存在时Utils.getProperty会抛出异常；标识属性已存在时不会重复添加
      *
      * @param attrName 标识属性
      * @return 自身
@@ -297,6 +302,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 根据类型配置项中的元数据构建模型类型
+     * 未配置构造函数时抛出IllegalArgumentException；仅配置了一个标识属性、该属性为long或int且未显式设置过是否自增时，自动按自增处理
      * 由派生类实现
      *
      * @param buildingModel 对象数据模型
@@ -347,7 +353,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
     }
 
     /**
-     * 通过反射从CLR类型中收集元数据，生成类型配置项
+     * 通过反射从Java类型中收集元数据，生成类型配置项
      *
      * @param analyticPipeline 类型解析管道
      */
@@ -362,6 +368,8 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 创建引用元素
+     * 先按显式关联型推断（属性类型已被配置为关联型），再按隐式关联型推断（属性类型为实体型则为两方关联，为元组且各类型参数均为实体型则为多方关联）；
+     * 无法推断出关联引用时抛出IllegalArgumentException
      *
      * @param property 属性
      * @return 引用元素配置
@@ -447,6 +455,8 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
 
     /**
      * 创建隐式关联型
+     * 遍历类型的可读属性（忽略“class”属性以及被ignore忽略的属性），对基元类型以外的属性按“属性类型为实体型则为两方关联，为元组且各类型参数均为实体型则为多方关联”的规则推断，
+     * 若对应的关联端标签尚无建造器，则在建模器中创建一个新的隐式关联建造器并注册各关联端
      */
     @Override
     public void createImplicitAssociationConfiguration() {

@@ -73,6 +73,7 @@ public class AssociationConfiguratorBuilder {
 
     /**
      * 根据指定的关联端实体型（顺序不敏感）生成关联端标签
+     * 标签为各端类型的全限定名排序后以“/”连接；任一类型未在建模器中注册时会在访问其配置项时抛出异常
      *
      * @param endTypes     作为关联端的实体型，顺序不敏感
      * @param modelBuilder 建模器
@@ -91,7 +92,7 @@ public class AssociationConfiguratorBuilder {
     /**
      * 获取生成的关联类型
      *
-     * @return 生成的关联类型
+     * @return 生成的关联类型，尚未调用build()时为null
      */
     public Class<?> getAssociationType() {
         return this.associationType;
@@ -126,6 +127,7 @@ public class AssociationConfiguratorBuilder {
 
     /**
      * 启动对一个新关联端的配置
+     * 关联端类型必须已在建模器中注册且为实体型，否则抛出IllegalArgumentException；每次调用都会清空缓存的关联端标签并新建一个关联端配置项
      *
      * @param endClass  关联端类型
      * @param <TEntity> 关联端类型
@@ -149,6 +151,7 @@ public class AssociationConfiguratorBuilder {
 
     /**
      * 为类型配置项设置一个扩展配置器
+     * 如果该类型的扩展配置器已存在则直接返回已存在的实例，不会重复创建
      *
      * @param extensionConfigurationClass 扩展配置器类型
      * @param <TExtensionConfiguration>   扩展配置器类型
@@ -170,7 +173,8 @@ public class AssociationConfiguratorBuilder {
 
     /**
      * 生成关联端标签。
-     * 关联端标签是以关联端类型（实体型）的完全限定名（即以命名空间限定的名称）串联而成的字符串。同一组类型（顺序无关）建立的多个隐式关联具有相同的关联端标签。
+     * 关联端标签是以关联端类型（实体型）的完全限定名（即包名限定的名称）排序后以“/”连接而成的字符串。同一组类型（顺序无关）建立的多个隐式关联具有相同的关联端标签。
+     * 关联端少于2个时抛出IllegalArgumentException；异常信息会带上端数量
      *
      * @return 关联端标签
      */
@@ -188,6 +192,7 @@ public class AssociationConfiguratorBuilder {
 
     /**
      * 设置映射表
+     * 与按关联端伴随关系推断出的映射表不一致时，build方法会抛出IllegalArgumentException
      *
      * @param table 映射表
      * @return 自身
@@ -199,6 +204,9 @@ public class AssociationConfiguratorBuilder {
 
     /**
      * 建造关联型配置器
+     * 已建造过则直接返回缓存结果；关联端少于2个时抛出IllegalArgumentException。
+     * 建造时按关联端实体类型名称排序生成隐式关联型动态类型（名称形如ImplicitAssociation_实体1_实体2…），
+     * 依据伴随端推断映射表（与显式设置的映射表冲突时抛出IllegalArgumentException），且只在关联端数量不等于2时把关联型设为可见
      *
      * @return 隐式关联型配置
      */
@@ -264,6 +272,7 @@ public class AssociationConfiguratorBuilder {
      *
      * @param entityType 实体型
      * @return 映射表
+     * @throws IllegalArgumentException 指定类型没有被配置为实体型
      */
     private String getEntityTargetTable(Class<?> entityType) {
         StructuralTypeConfiguration<?> structuralTypeConfiguration = this.builder.findConfiguration(entityType);

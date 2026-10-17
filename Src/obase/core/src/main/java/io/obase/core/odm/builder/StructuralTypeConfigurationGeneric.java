@@ -30,7 +30,8 @@ import java.util.stream.Collectors;
 /**
  * 为实体型配置项、关联型配置项和复杂类型配置项提供一个泛型类的基础实现，该泛型类的类型参数是上述三个类型对应的对象系统类型
  *
- * @param <TConfiguration> 配置
+ * @param <TStructural>    结构化类型的运行时类型
+ * @param <TConfiguration> 配置项的具体类型
  */
 public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfiguration extends StructuralTypeConfigurationGeneric<TStructural, TConfiguration>>
         extends StructuralTypeConfiguration<TStructural> implements IStructuralTypeConfigurator {
@@ -55,7 +56,8 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
     }
 
     /**
-     * 启动一个属性配置项，如果要启动的实体型配置项未创建则新建一个
+     * 启动一个属性配置项，如果要启动的实体型配置项未创建则新建一个。
+     * 注意:此方法为手动配置属性,不检查参数类型,不配置默认取值器和设值器；名称会转换为首字母大写后作为配置项的键，名称为空时抛出IllegalArgumentException
      *
      * @param name     属性名称，它将作为配置项的键
      * @param dataType 属性的数据类型
@@ -68,6 +70,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 指定当前类型的基类型
+     * 如果传入的类型不是当前类型的基类（或接口），抛出IllegalArgumentException
      *
      * @param type 基类型
      */
@@ -80,7 +83,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
      * 根据名称获取元素配置器
      *
      * @param name 元素名称
-     * @return 元素配置器
+     * @return 元素配置器，不存在时返回null
      */
     @Override
     public ITypeElementConfigurator getElementI(String name) {
@@ -91,7 +94,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
      * 使用一个构造函数为类型创建实例构造器(覆盖现有配置)
      *
      * @param constructorInfo 构造函数
-     * @return 实例构造器
+     * @return 实例构造器（构造器参数配置项）
      */
     @Override
     public IParameterConfigurator hasConstructorI(Constructor<?> constructorInfo) {
@@ -110,6 +113,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 设置类型的实例构造器
+     * 本实现中无论override取值如何，只要当前配置项尚未设置过构造器都会生效（override为true时先按传入构造器设置一次）
      *
      * @param constructor 实例构造器
      * @param override    是否覆盖既有配置
@@ -126,6 +130,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 为类型配置项设置一个扩展配置器
+     * 每调用一次都会通过无参构造函数创建一个新的扩展配置器并追加到扩展配置器集合中，重复调用不会返回已存在的配置器
      *
      * @param configType 扩展配置器的类型，须继承自TypeExtensionConfiguration
      * @return 扩展配置器
@@ -172,10 +177,11 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个构造函数为类型创建实例构造器
+     * override为true时直接使用传入的构造函数创建构造器；否则仅在尚未设置过构造器时设置，但仍会返回基于传入构造函数参数生成的参数配置项
      *
      * @param constructorInfo 构造函数
      * @param override        是否覆盖既有配置
-     * @return 实例构造器
+     * @return 实例构造器（构造器参数配置项）
      */
     @Override
     public IParameterConfigurator hasConstructorI(Constructor<?> constructorInfo, boolean override) {
@@ -194,7 +200,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 启动一个属性配置项，如果要启动的实体型配置项未创建则新建一个。
-     * 注意:此方法为手动配置属性,仅创建关联引用配置项,不检查参数类型,不配置默认取值器和设值器
+     * 注意:此方法为手动配置属性,不检查参数类型,不配置默认取值器和设值器；名称会转换为首字母大写后作为配置项的键，名称为空时抛出IllegalArgumentException
      *
      * @param name     属性名称，它将作为配置项的键
      * @param dataType 属性的属性类型
@@ -404,6 +410,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建新实例构造器
+     * 要求目标类型存在“以本类型为参数”的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型新实例的委托
      * @param tClass    构造目标类型
@@ -426,6 +433,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建实例构造器
+     * 要求本类型存在一个参数（类型为t1Class）的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型实例的委托
      * @param t1Class   参数1的类型
@@ -446,6 +454,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建新实例构造器
+     * 要求目标类型存在“(本类型, t1Class)”签名的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型新实例的委托
      * @param t1Class   参数1的类型
@@ -471,6 +480,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建实例构造器
+     * 要求本类型存在两个参数（类型依次为t1Class、t2Class）的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型实例的委托
      * @param t1Class   参数1的类型
@@ -493,6 +503,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建新实例构造器
+     * 要求目标类型存在“(本类型, t1Class, t2Class)”签名的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型实例的委托
      * @param t1Class   参数1的类型
@@ -521,6 +532,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建实例构造器
+     * 要求本类型存在三个参数（类型依次为t1Class、t2Class、t3Class）的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型实例的委托
      * @param t1Class   参数1的类型
@@ -545,6 +557,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建新实例构造器
+     * 要求目标类型存在“(本类型, t1Class, t2Class, t3Class)”签名的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型实例的委托
      * @param t1Class   参数1的类型
@@ -576,6 +589,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建实例构造器
+     * 要求本类型存在四个参数（类型依次为t1Class、t2Class、t3Class、t4Class）的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型实例的委托
      * @param t1Class   参数1的类型
@@ -602,6 +616,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个可以创建类型实例的委托为类型创建新实例构造器
+     * 要求目标类型存在“(本类型, t1Class, t2Class, t3Class, t4Class)”签名的公有构造函数，否则抛出IllegalArgumentException
      *
      * @param construct 构造类型实例的委托
      * @param t1Class   参数1的类型
@@ -648,6 +663,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 使用一个构造函数为类型新实例构造器
+     * 将构造函数记录的参数类型设置为新实例构造器的参数类型（无参构造函数不设置）
      *
      * @param constructorInfo 新实例构造器
      * @return 自身
@@ -665,6 +681,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
     /**
      * 设置此类型的具体类型判别规范
      * 用于判断此类型的要如何创建具体的类型
+     * 传入的判别字段名称不能为空；如果基类型上已配置过不同的判别字段名称，则抛出IllegalArgumentException
      *
      * @param typeAttributeName 用于判断类型的字段名称
      * @return 自身
@@ -676,9 +693,10 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
     /**
      * 设置此类型的具体类型判别规范
      * 用于判断此类型的要如何创建具体的类型
+     * 传入的判别字段名称不能为空；如果基类型上已配置过不同的判别字段名称，则抛出IllegalArgumentException
      *
-     * @param concreteTypeDiscriminator 具体类型判别器 传空则表示使用内置的具体类型判别器
      * @param typeAttributeName         用于判断类型的字段名称
+     * @param concreteTypeDiscriminator 具体类型判别器 传空则表示使用内置的具体类型判别器
      * @return 自身
      */
     public StructuralTypeConfiguration<TStructural> hasConcreteTypeDiscriminator(String typeAttributeName, IConcreteTypeDiscriminator concreteTypeDiscriminator) {
@@ -697,6 +715,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 设置此类型的判别字段和判别字段的值
+     * 判别字段的值不能为空，且只能是Integer、Long或String类型；判别字段名称取自继承链上已配置的名称，找不到时抛出IllegalArgumentException
      *
      * @param value 判别字段的值
      * @return 自身
@@ -723,6 +742,10 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 反射建模
+     * 遍历类型的可读属性（忽略“class”属性与被ignore忽略的属性），按类型解析管道判定属性是否建模；需要建模而尚无配置项时创建配置项，
+     * 然后交由类型成员解析管道依次配置；被忽略的属性与原类型自身作为“挂起项”交给管道处理
+     *
+     * @param analyticPipeline 类型成员解析管道
      */
     @Override
     void reflectionModeling(ITypeMemberAnalyzer analyticPipeline) {
@@ -781,6 +804,8 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 创建具体的配置
+     * 基元类型、枚举或已配置为复杂类型的属性生成属性配置项，其余已配置的结构化类型或元组生成引用元素配置项；
+     * 无法判定时返回null，同一类型同时作为关联型和实体型时抛出IllegalArgumentException
      *
      * @param property 属性
      * @param name     名称
@@ -857,10 +882,11 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 添加类型扩展配置器
+     * 每调用一次都会通过无参构造函数创建一个新的扩展配置器并追加到扩展配置器集合中，重复调用不会返回已存在的配置器
      *
      * @param extensionConfigurationType 类型扩展配置器类型
      * @param <TExtensionConfiguration>  类型扩展配置器
-     * @return
+     * @return 新建的类型扩展配置器
      */
     public <TExtensionConfiguration extends TypeExtensionConfiguration> TExtensionConfiguration hasExtension(Class<TExtensionConfiguration> extensionConfigurationType) {
         try {
@@ -874,9 +900,10 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
     }
 
     /**
-     * 忽略某个方法
+     * 忽略某个属性（在反射建模时不生成对应的元素配置项）
+     * 传入的名称会被转换为首字母大写后加入忽略列表
      *
-     * @param name 要忽略的方法名
+     * @param name 要忽略的属性名
      */
     public void ignore(String name) {
         //添加到过滤属性集合中
@@ -884,7 +911,8 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
     }
 
     /**
-     * 忽略某个方法
+     * 忽略某个属性（在反射建模时不生成对应的元素配置项）
+     * 使用表达式中的成员名称原样加入忽略列表（不做首字母大写转换）
      *
      * @param get       表达式
      * @param <TResult> 表达式的结果
@@ -906,6 +934,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 指定当前类型的基类型
+     * 如果传入的类型不是当前类型的基类（或接口），抛出IllegalArgumentException
      *
      * @param type 基类型
      * @return 自身
@@ -920,6 +949,7 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
     /**
      * 创建引用元素
+     * 由派生类实现各结构化类型创建引用元素（关联引用或关联端）的规则
      *
      * @param property 属性
      * @return 引用元素配置

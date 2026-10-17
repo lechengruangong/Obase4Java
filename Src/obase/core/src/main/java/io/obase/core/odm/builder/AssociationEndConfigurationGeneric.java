@@ -102,6 +102,7 @@ public class AssociationEndConfigurationGeneric<TAssociation, TEntity> extends A
 
     /**
      * 设置一个值，该值指示当前关联端是否为聚合关联端
+     * 仅当override为true时生效
      *
      * @param isAggregated 指示当前关联端是否为聚合关联端
      * @param override     是否覆盖既有配置
@@ -125,6 +126,7 @@ public class AssociationEndConfigurationGeneric<TAssociation, TEntity> extends A
 
     /**
      * 配置关联端映射
+     * 语义与接口上的hasMappingI一致（反射加入的映射集合与现有映射一一对应时才允许追加），覆盖时会先清空已有映射
      *
      * @param keyAttribute 关联端标识属性的名称
      * @param targetField  上述标识属性的映射字段

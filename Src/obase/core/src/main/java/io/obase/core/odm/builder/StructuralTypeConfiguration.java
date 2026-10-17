@@ -44,7 +44,7 @@ public abstract class StructuralTypeConfiguration<TStructural> {
      */
     private final ModelBuilder modelBuilder;
     /**
-     * 类型的CLR类型
+     * 类型的CLR类型（在Java中即该配置项所配置的Class，是配置项在建模器中的键）
      */
     protected Class<TStructural> clrType;
 
@@ -126,7 +126,7 @@ public abstract class StructuralTypeConfiguration<TStructural> {
     }
 
     /**
-     * 获取类型各元素上设置的行为触发器，注：相同的触发器只返回一个实例
+     * 获取类型各元素上设置的行为触发器，注：相同的触发器只返回一个实例；如果本类型配置了基类型，还会合并基类型的行为触发器
      *
      * @return 行为触发器
      */
@@ -143,7 +143,7 @@ public abstract class StructuralTypeConfiguration<TStructural> {
     }
 
     /**
-     * 获取类型的CLR类型
+     * 获取类型的CLR类型（在Java中即该配置项所配置的Class）
      *
      * @return 类型的CLR类型
      */
@@ -222,16 +222,16 @@ public abstract class StructuralTypeConfiguration<TStructural> {
     /**
      * 获取判别类型标记
      *
-     * @return 判别类型标记
+     * @return 用于判断类型的字段名称（未配置时为null）
      */
     public String getTypeAttributeName() {
         return this.typeAttributeName;
     }
 
     /**
-     * 获取用于判断类型的字段名称
+     * 获取此类型的判别标记，即判别字段名称与判别字段值的二元组
      *
-     * @return 用于判断类型的字段名称
+     * @return 判别标记（判别字段名称, 判别字段值），未配置时为null
      */
     public TwoTuple<String, Object> getConcreteTypeSign() {
         return this.concreteTypeSign;
@@ -268,7 +268,9 @@ public abstract class StructuralTypeConfiguration<TStructural> {
 
     /**
      * 根据类型配置项中的元数据构建模型类型
+     * 依次调用派生类实现的createReally创建类型、添加已配置的类型扩展、设置判别类型标记，并记录创建出的类型（getCreatedType）
      *
+     * @param buildingModel 对象数据模型
      * @return 构建的类型
      */
     StructuralType create(ObjectDataModel buildingModel) {
@@ -334,9 +336,10 @@ public abstract class StructuralTypeConfiguration<TStructural> {
 
     /**
      * 获取行为触发器触发的对象行为所涉及到的元素。（有触发器的元素配置项）
+     * 同一触发器下的元素按加载优先级升序排列，没有实现ILazyLoadingConfiguration的元素优先级按99999处理
      *
      * @param trigger 指定的触发器实例
-     * @return 行为触发器触发的对象行为所涉及到的元素
+     * @return 行为触发器触发的对象行为所涉及到的元素（没有对应元素时返回空集合）
      */
     protected List<TypeElementConfiguration> getBehaviorElements(IBehaviorTrigger trigger) {
         Map<IBehaviorTrigger, List<TypeElementConfiguration>> triggerElems = this.getTriggerElems();
@@ -393,7 +396,9 @@ public abstract class StructuralTypeConfiguration<TStructural> {
 
     /**
      * 创建指定对象类型的代理类型
+     * 依次交由代理类型生成管道的各生成器定义成员，并由本方法生成代理类型的抽象方法后创建代理类
      *
+     * @param generationPipeline 代理类型生成管道
      * @return 指定对象类型的代理类型
      */
     Class<?> createProxyType(IProxyTypeGenerator generationPipeline) {
@@ -448,6 +453,10 @@ public abstract class StructuralTypeConfiguration<TStructural> {
 
     /**
      * 定义抽象方法的实现
+     * 类型上所有抽象方法都会被重写为抛出RuntimeException的实现
+     *
+     * @param builder 代理类型建造器
+     * @return 定义了抽象方法实现的代理类型建造器
      */
     private DynamicType.Builder<?> defineProxyTypeAbstractMethod(DynamicType.Builder<?> builder) {
         //查找所有的抽象方法
@@ -484,7 +493,7 @@ public abstract class StructuralTypeConfiguration<TStructural> {
 
     /**
      * 根据类型配置项中的元数据配置模型类型，被配置的模型类型已根据当前类型配置项实例生成并已注册到指定的模型中。
-     * 注：调用方调用Create方法创建模型类型时，由于类型的元素还未创建，因此某些属性可能无法当场配置，可以等到类型元素创建（CreateElement被调用）完成
+     * 注：调用create方法创建模型类型时，由于类型的元素还未创建，因此某些属性可能无法当场配置，可以等到类型元素创建（createElements被调用）完成
      * 时，调用本方法完成类型配置。
      *
      * @param model 对象数据模型
@@ -495,12 +504,12 @@ public abstract class StructuralTypeConfiguration<TStructural> {
      * 根据名称获取元素配置器
      *
      * @param name 元素名称
-     * @return 类型元素配置器
+     * @return 类型元素配置器，不存在时返回null
      */
     public abstract ITypeElementConfigurator getElement(String name);
 
     /**
-     * 通过反射从CLR类型中收集元数据，生成类型配置项
+     * 通过反射从Java类型中收集元数据，生成类型配置项
      *
      * @param analyticPipeline 类型解析管道
      */
@@ -542,6 +551,7 @@ public abstract class StructuralTypeConfiguration<TStructural> {
 
         /**
          * 在外键属性缺失的情况下定义所缺的属性
+         * 为每个缺失的外键属性在代理类型上定义公有字段与get方法，并先设置空的占位取值器/设值器，后续由defineValueGetterAndSetter改为基于字段的实现
          *
          * @param attrs   要定义的外键属性
          * @param objType 要定义属性的类型
@@ -570,6 +580,8 @@ public abstract class StructuralTypeConfiguration<TStructural> {
 
         /**
          * 在定义了字段后覆盖定义取值和设值器
+         * 未定义过缺失属性时直接返回；否则基于代理类型上的字段重新构造取值器/设值器并把属性加入模型类型，
+         * 代理类型上取不到对应字段时抛出RuntimeException
          */
         public void defineValueGetterAndSetter() {
             if (this.definedAttrs == null)

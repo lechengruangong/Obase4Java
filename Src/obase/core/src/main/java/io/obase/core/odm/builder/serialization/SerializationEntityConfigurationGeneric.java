@@ -77,7 +77,7 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
     /**
      * 手动配置属性方法
      * 根据名称和值类型创建一个属性配置项并添加到序列化元素的字典中
-     * 不会设置取值器和设值器 需要用户手动设置
+     * 值类型不是Obase基元类型时抛出IllegalArgumentException；不会设置取值器和设值器 需要用户手动设置
      *
      * @param name      名称
      * @param valueType 值类型
@@ -101,6 +101,7 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
     /**
      * 自动配置属性方法
      * 根据名称和自动侦测的类型创建一个属性配置项并添加到序列化元素的字典中
+     * 取值器和设值器只在尚未设置时自动设置（已存在时不覆盖）
      *
      * @param name 名称
      * @return 属性配置项
@@ -120,6 +121,7 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
     /**
      * 自动配置属性方法
      * 根据表达式代表的名称和自动侦测的类型创建一个属性配置项并添加到序列化元素的字典中
+     * 表达式主体不是MemberExpression时抛出IllegalArgumentException
      *
      * @param expression 表达式
      * @param <TResult>  目标类型
@@ -140,6 +142,7 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
 
     /**
      * 启动一个序列化构造器配置
+     * 构造函数为空时抛出IllegalArgumentException；重复调用会替换已有的构造器配置
      *
      * @param constructor 构造函数
      * @return 构造函数配置
@@ -176,7 +179,7 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
     /**
      * 自动配置引用方法
      * 根据名称和自动侦测的多重性创建一个引用配置项并添加到序列化元素的字典中
-     * 不会设置取值器和设值器 需要用户手动设置
+     * 取值器和设值器只在尚未设置时自动设置（已存在时不覆盖）
      *
      * @param name 名称
      * @return 引用配置项
@@ -196,8 +199,8 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
 
     /**
      * 自动配置引用方法
-     * 根据名称和自动侦测的多重性创建一个引用配置项并添加到序列化元素的字典中
-     * 不会设置取值器和设值器 需要用户手动设置
+     * 根据表达式代表的名称和自动侦测的多重性创建一个引用配置项并添加到序列化元素的字典中
+     * 会自动设置取值器和设值器（已存在时不覆盖）
      *
      * @param expression 表达式
      * @return 引用配置项
@@ -217,6 +220,7 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
 
     /**
      * 忽略属性
+     * 同时从已配置的序列化元素中移除该属性；属性不存在时Utils.getProperty会抛出异常
      *
      * @param name 属性名称
      * @return 自身
@@ -231,6 +235,7 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
 
     /**
      * 忽略属性
+     * 同时从已配置的序列化元素中移除该属性；属性不存在时Utils.getProperty会抛出异常；表达式主体不是MemberExpression时抛出IllegalArgumentException
      *
      * @param expression 属性表达式
      * @return 自身
@@ -250,7 +255,8 @@ public class SerializationEntityConfigurationGeneric<T> extends SerializationEnt
 
     /**
      * 根据类型配置项中的元数据构建模型类型
-     * 本方法由派生类实现
+     * 为基元类型属性自动生成属性配置项，为已注册为序列化实体的引用类型属性自动生成引用配置项（取值器/设值器已存在时不覆盖）；
+     * 用户未配置构造函数时默认使用无参构造函数
      *
      * @return 序列化实体类型
      */

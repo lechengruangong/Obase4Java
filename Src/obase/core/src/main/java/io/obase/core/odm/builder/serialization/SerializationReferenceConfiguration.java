@@ -31,8 +31,8 @@ public class SerializationReferenceConfiguration<TStructural> extends Serializat
     /**
      * 初始化序列化实体的引用配置
      *
-     * @param multiple 属性名称
-     * @param name     引用是多重的还是单值的
+     * @param multiple 引用是多重的还是单值的
+     * @param name     引用（属性）名称
      */
     public SerializationReferenceConfiguration(boolean multiple, String name) {
         super(null);

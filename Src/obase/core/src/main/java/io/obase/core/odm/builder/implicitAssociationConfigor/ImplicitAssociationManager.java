@@ -77,7 +77,7 @@ public class ImplicitAssociationManager {
     /**
      * 获取所有已定义的隐式关联型
      *
-     * @return 所有已定义的隐式关联型
+     * @return 所有已定义的隐式关联型（当前集合的快照）
      */
     public Set<Class<?>> getImpliedTypes() {
         //返回快照，避免调用方与本管理器同时访问同一个集合
@@ -87,7 +87,7 @@ public class ImplicitAssociationManager {
     }
 
     /**
-     * 向隐含类型管理器申请一个类型，该类型派生自指定的基类型，定义且只定义了指定的字段，如果这样的类型有多个则以指定的子标识进一步识别。
+     * 向隐含类型管理器申请一个类型：本实现每次调用都会新建一个类型（名称由fullName加上自增计数器组成），不会复用已创建的类型
      *
      * @param fields   类型应当且只能定义的字段
      * @param fullName 全名
@@ -98,7 +98,8 @@ public class ImplicitAssociationManager {
     }
 
     /**
-     * 以指定的标识搜索隐含类型，如果未找到则根据指定的内容创建隐式关联型Clr类型。
+     * 以指定的标识搜索隐含类型，未找到时根据指定的内容创建隐式关联型Clr类型（即Java中动态生成的关联型Class）。
+     * 注意：当前实现并不做搜索，总是以“fullName_自增计数器”为名称新建类型并登记到已定义类型集合中
      *
      * @param fullName 全名
      * @param fields   类型应当且只能定义的字段

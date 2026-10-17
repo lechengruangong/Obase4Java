@@ -53,6 +53,7 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
 
     /**
      * 在所有参数配置完成后返回到当前类型
+     * 参数队列中仍有未配置的参数时抛出IllegalArgumentException
      *
      * @return 当前类型
      */
@@ -102,6 +103,7 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
 
     /**
      * 从构造函数参数队列取出一项，将之绑定到指定的类型元素。
+     * 队列为空或当前类型配置项尚未配置构造函数时不做绑定（参数仍会被取出）；表达式主体不是MemberExpression时抛出IllegalArgumentException
      *
      * @param get            表示绑定元素名称的表达式
      * @param valueConverter 值转换器，用于将存储源中的值转换为元素的值。
@@ -130,7 +132,8 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
     }
 
     /**
-     * 从构造函数参数队列取出一项，将之绑定到指定的类型元素。
+     * 从构造函数参数队列取出一项，将之绑定到指定的类型元素(不使用类型转换器)。
+     * 队列为空或当前类型配置项尚未配置构造函数时不做绑定（参数仍会被取出）；表达式主体不是MemberExpression时抛出IllegalArgumentException
      *
      * @param get       表示绑定元素名称的表达式
      * @param <TResult> 参数类型
@@ -142,7 +145,8 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
 
 
     /**
-     * 从构造函数参数队列取出一项，将之绑定到指定的类型元素
+     * 从构造函数参数队列取出一项，将之绑定到指定的类型元素。
+     * 队列为空时不做任何处理；队列非空但当前类型配置项尚未配置构造函数时同样跳过该项（参数仍会被取出）
      *
      * @param elementName    绑定元素的名称
      * @param valueConverter 值转换器，用于将存储源中的值转换为元素的值
@@ -159,7 +163,8 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
     }
 
     /**
-     * 从构造函数参数队列取出一项，将之绑定到指定的类型元素
+     * 从构造函数参数队列取出一项，将之绑定到指定的类型元素(不使用类型转换器)。
+     * 队列为空时不做任何处理；队列非空但当前类型配置项尚未配置构造函数时同样跳过该项（参数仍会被取出）
      *
      * @param elementName 绑定元素的名称
      * @return 构造器参数配置
@@ -170,7 +175,8 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
 
 
     /**
-     * 从构造函数参数队列取出一项，将之绑定到同名类型元素
+     * 从构造函数参数队列取出一项，将之绑定到同名类型元素。
+     * 队列为空时不做任何处理；队列非空但当前类型配置项尚未配置构造函数时同样跳过该项（参数仍会被取出）
      *
      * @param valueConverter 值转换器，用于将存储源中的值转换为元素的值
      * @return 构造器参数配置
@@ -187,7 +193,8 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
     }
 
     /**
-     * 从构造函数参数队列取出一项，将之绑定到同名类型元素
+     * 从构造函数参数队列取出一项，将之绑定到同名类型元素(不使用类型转换器)。
+     * 队列为空时不做任何处理；队列非空但当前类型配置项尚未配置构造函数时同样跳过该项（参数仍会被取出）
      *
      * @return 构造器参数配置
      */
@@ -197,6 +204,7 @@ public class ParameterConfiguration<TStructural, TTypeConfiguration extends Stru
 
     /**
      * 在所有参数配置完成后返回到当前类型
+     * 参数队列中仍有未配置的参数时抛出IllegalArgumentException
      *
      * @return 创建参数配置项的类型配置项
      */

@@ -187,15 +187,20 @@ public interface IAttributeConfigurator extends ITypeElementConfigurator {
 
     /**
      * 设置最大字符数
+     * 仅属性数据类型为String时有效，否则抛出IllegalArgumentException；传入值会乘以8后作为属性的值长度（以位为单位）。
+     * 未配置时最大字符数为0（即未设置），此时属性的值长度为0，由SQL结构映射生成字段时按40个字符处理，即数据库字段的默认长度为40
      *
-     * @param maxCharNumber 最大字符数 只有1到255是有效的 如果设置为0 会被设置为255 如果超过255 会被设置为Text字段
+     * @param maxCharNumber 最大字符数，不能为负值，否则抛出IllegalArgumentException
      */
     void hasMaxCharNumberI(int maxCharNumber);
 
     /**
      * 设置最大字符数
+     * 仅属性数据类型为String时有效，否则抛出IllegalArgumentException；传入值会乘以8后作为属性的值长度（以位为单位）。
+     * 未配置时最大字符数为0（即未设置），此时属性的值长度为0，由SQL结构映射生成字段时按40个字符处理，即数据库字段的默认长度为40
+     * override为false时，仅在当前最大字符数仍为0（未设置）时才生效
      *
-     * @param maxCharNumber 最大字符数 只有1到255是有效的 如果设置为0 会被设置为255 如果超过255 会被设置为Text字段
+     * @param maxCharNumber 最大字符数，不能为负值，否则抛出IllegalArgumentException
      * @param override      是否覆盖既有配置
      */
     void hasMaxCharNumberI(int maxCharNumber, boolean override);

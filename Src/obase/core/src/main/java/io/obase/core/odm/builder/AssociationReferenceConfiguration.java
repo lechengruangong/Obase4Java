@@ -32,7 +32,7 @@ public abstract class AssociationReferenceConfiguration<TEntity>
      */
     private final EElementType elementType;
     /**
-     * 关联型对应的CLR类型
+     * 关联型对应的CLR类型（即关联型在Java中对应的Class）
      */
     protected Class<?> associationType;
 
@@ -55,6 +55,7 @@ public abstract class AssociationReferenceConfiguration<TEntity>
      * @param dataType          关联引用的关联类型
      * @param name              元素（属性、关联引用、关联端）名称
      * @param isMultiple        指示元素是否具有多重性，即其值是否为集合
+     * @param entityType        关联引用所属的实体型类型
      * @param typeConfiguration 创建当前元素配置项的类型配置项。
      */
     protected AssociationReferenceConfiguration(String name, Class<?> dataType, Boolean isMultiple, Class<TEntity> entityType, EntityTypeConfiguration<TEntity> typeConfiguration) {
@@ -98,7 +99,7 @@ public abstract class AssociationReferenceConfiguration<TEntity>
     }
 
     /**
-     * 关联型对应的CLR类型
+     * 关联型对应的CLR类型（即关联型在Java中对应的Class）
      *
      * @return 关联型对应的CLR类型
      */
@@ -117,7 +118,7 @@ public abstract class AssociationReferenceConfiguration<TEntity>
     }
 
     /**
-     * 获取行为触发器，对于属性是指修改触发器，对于关联引用和关联端是加载触发器
+     * 获取行为触发器，对于关联引用是指加载触发器（未设置时返回空集合，不会返回null）
      *
      * @return 行为触发器
      */
@@ -242,6 +243,7 @@ public abstract class AssociationReferenceConfiguration<TEntity>
 
     /**
      * 根据元素配置项包含的元数据信息创建元素实例
+     * 关联型为空时会调用关联型获取委托，两者都为空或未取到关联型时抛出IllegalArgumentException
      * 本方法由派生类实现
      *
      * @param model 对象数据模型

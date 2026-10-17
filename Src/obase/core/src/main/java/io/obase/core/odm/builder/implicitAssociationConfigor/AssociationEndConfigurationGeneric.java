@@ -35,7 +35,7 @@ public class AssociationEndConfigurationGeneric<TEntity> extends AssociationEndC
     /**
      * 初始化适用于隐式关联的关联端配置器
      *
-     * @param endIndex           关联端在关联型上的索引号（从1开始计数
+     * @param endIndex           关联端在关联型上的索引号（从1开始计数）
      * @param assocConfigBuilder 关联配置器建造器
      * @param entityType         端的实体型
      */
@@ -48,7 +48,7 @@ public class AssociationEndConfigurationGeneric<TEntity> extends AssociationEndC
     }
 
     /**
-     * 获取行为触发器，对于属性是指修改触发器，对于关联引用和关联端是加载触发器
+     * 获取行为触发器，对于关联端是指加载触发器（直接返回内部集合，未设置时为空集合而非null）
      *
      * @return 行为触发器
      */
@@ -59,6 +59,8 @@ public class AssociationEndConfigurationGeneric<TEntity> extends AssociationEndC
 
     /**
      * 启动对关联端上基于当前关联定义的关联引用的配置；如果相应的配置项未创建则新建一个。
+     * 关联端最多只能有一个关联引用配置项，已创建时后续调用会直接返回它，传入的名称与多重性不再生效；
+     * 新建的配置项会加入关联端实体型的配置，并把当前关联端名设置为关联引用的左端名
      *
      * @param name        关联引用名称，它将作为关联引用的键
      * @param isMultiple  关联引用是否具有多重性
@@ -89,6 +91,7 @@ public class AssociationEndConfigurationGeneric<TEntity> extends AssociationEndC
 
     /**
      * 启动对关联端上基于当前关联定义的关联引用的配置；如果相应的配置项未创建则新建一个。
+     * 表达式主体不是MemberExpression时抛出IllegalArgumentException；关联引用已创建时直接返回已存在的配置项
      *
      * @param get       表达式
      * @param <TResult> 引用类型
@@ -146,7 +149,7 @@ public class AssociationEndConfigurationGeneric<TEntity> extends AssociationEndC
 
     /**
      * 根据元素配置项包含的元数据信息创建元素实例
-     * 本方法由派生类实现
+     * 关联端实体型未在模型中注册时抛出IllegalArgumentException
      *
      * @param model 对象数据模型
      * @return 类型元素

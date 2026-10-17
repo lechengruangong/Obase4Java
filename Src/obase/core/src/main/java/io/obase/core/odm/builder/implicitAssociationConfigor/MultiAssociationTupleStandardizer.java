@@ -39,9 +39,10 @@ public class MultiAssociationTupleStandardizer implements ITupleStandardizer {
 
     /**
      * 元组标准化函数的反函数，将标准元组转换成被引对象元组。
+     * 每个标准元组项（对象数组）按元组泛型参数的类型顺序匹配出对应的端对象，并据此构造出元组对象；构造失败时使用TupleUtils生成元组
      *
-     * @param tupleItems 被引对象组成的元组（不限定元组的数据类型，只要逻辑上为元组即可）
-     * @return 标准化元组的项序列
+     * @param tupleItems 标准元组，即被引对象按其在关联端建模登记次序排列（跳过引用源对象）组成的对象数组
+     * @return 由元组对象组成的数组
      */
     @Override
     public Object revert(Object[] tupleItems) {
@@ -84,9 +85,10 @@ public class MultiAssociationTupleStandardizer implements ITupleStandardizer {
 
     /**
      * 元组标准化函数，将被引对象元组转换成标准元组。
+     * 传入的可以是单个元组，也可以是元组的集合；只有Tuple类型的项会被转换（取其项序列），其余项被忽略
      *
-     * @param referredTuple 表示标准化元组的对象数组
-     * @return 被引对象组成的元组（不限定元组的数据类型，只要逻辑上为元组即可）。被引对象是指关联引用指向的对象，如果关联引用是多重性的，它是指其中的一个。
+     * @param referredTuple 被引对象组成的元组（不限定元组的数据类型，只要逻辑上为元组即可）。被引对象是指关联引用指向的对象，如果关联引用是多重性的，它是指其中的一个。
+     * @return 表示标准化元组的对象数组，元素按关联端建模次序排列（跳过引用源对象）
      */
     @Override
     public Object[] standardize(Object referredTuple) {

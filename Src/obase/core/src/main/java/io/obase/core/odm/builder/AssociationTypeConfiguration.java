@@ -112,6 +112,7 @@ public class AssociationTypeConfiguration<TAssociation> extends ObjectTypeConfig
 
     /**
      * 设置是否为显式关联型
+     * override为false时，仅当当前值仍为默认值true（即被误认为显式关联）时才生效
      *
      * @param value    是否为显式关联型
      * @param override 是否覆盖
@@ -143,7 +144,7 @@ public class AssociationTypeConfiguration<TAssociation> extends ObjectTypeConfig
      * 根据名称获取元素配置器
      *
      * @param name 元素名称
-     * @return 类型元素配置器
+     * @return 类型元素配置器，不存在时返回null
      */
     @Override
     public ITypeElementConfigurator getElement(String name) {
@@ -151,7 +152,7 @@ public class AssociationTypeConfiguration<TAssociation> extends ObjectTypeConfig
     }
 
     /**
-     * 通过反射从CLR类型中收集元数据，生成类型配置项
+     * 通过反射从Java类型中收集元数据，生成类型配置项
      *
      * @param analyticPipeline 类型解析管道
      */
@@ -245,6 +246,7 @@ public class AssociationTypeConfiguration<TAssociation> extends ObjectTypeConfig
 
     /**
      * 根据类型配置项中的元数据构建模型类型
+     * 未配置实例构造器时抛出IllegalArgumentException；未设置映射表时，使用第一个已配置的伴随端的实体型映射表作为关联表
      * 由派生类实现
      *
      * @param buildingModel 对象数据模型
@@ -304,6 +306,8 @@ public class AssociationTypeConfiguration<TAssociation> extends ObjectTypeConfig
 
     /**
      * 创建引用元素
+     * 关联型的“引用元素”实际为关联端：已存在同名配置项时直接返回，否则按属性类型创建关联端配置项；
+     * 属性类型未在建模器中注册时抛出IllegalArgumentException
      *
      * @param property 属性
      * @return 引用元素配置

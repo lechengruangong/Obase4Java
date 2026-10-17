@@ -23,6 +23,7 @@ public interface ITypeElementConfigurator {
 
     /**
      * 为元素配置项设置一个扩展配置器
+     * 每调用一次都会新建一个扩展配置器并追加到扩展配置器集合中，重复调用不会返回已存在的配置器
      *
      * @param configType 扩展配置器的类型，须继承自ElementExtensionConfiguration
      * @return 扩展配置器
@@ -149,7 +150,7 @@ public interface ITypeElementConfigurator {
     void hasValueSetterI(Method method, EValueSettingMode mode, boolean override);
 
     /**
-     * 使用一个能够获取类型元素值的属性访问器为类型元素创建设值器覆盖现有配置)
+     * 使用一个能够获取类型元素值的属性访问器为类型元素创建设值器(覆盖现有配置)
      *
      * @param property 获取元素值的属性访问器
      */

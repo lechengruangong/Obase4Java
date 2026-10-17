@@ -48,6 +48,8 @@ public class DefaultComplementConfigurator implements IComplementConfigurator {
 
     /**
      * 根据类型配置项中的元数据配置指定的类型
+     * 为两方关联的关联引用补全右端名；类型有继承类时补充类型判别字段的虚拟属性并把子类新增的属性补进来；
+     * 类型自身是继承类时补充自己的类型判别属性
      *
      * @param targetType    要配置的类型
      * @param configuration 包含配置元数据的类型配置项

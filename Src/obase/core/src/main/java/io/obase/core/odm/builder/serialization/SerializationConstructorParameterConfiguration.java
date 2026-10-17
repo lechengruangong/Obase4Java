@@ -37,7 +37,7 @@ public class SerializationConstructorParameterConfiguration extends Serializatio
     /**
      * 初始化序列化实体类型构造器参数配置
      *
-     * @param index       对应的构造参数索引
+     * @param index       对应的构造参数索引（形如“#0”，从#0开始）
      * @param needStorage 是否需要存储
      * @param valueGetter 取值器
      * @param valueType   值类型
@@ -49,11 +49,11 @@ public class SerializationConstructorParameterConfiguration extends Serializatio
     /**
      * 初始化序列化实体类型构造器参数配置
      *
-     * @param index        对应的构造参数索引
+     * @param index        对应的构造参数索引（形如“#0”，从#0开始）
      * @param needStorage  是否需要存储
      * @param valueGetter  取值器
      * @param valueType    值类型
-     * @param valueConvert 值转换委托
+     * @param valueConvert 值转换委托，可以为null
      */
     public SerializationConstructorParameterConfiguration(String index, boolean needStorage, IValueGetter valueGetter, Class<?> valueType,
                                                           FunctionWithOneArg<Object, Object> valueConvert) {

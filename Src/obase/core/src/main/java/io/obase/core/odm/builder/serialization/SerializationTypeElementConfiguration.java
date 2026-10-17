@@ -52,15 +52,15 @@ public abstract class SerializationTypeElementConfiguration<TStructural> extends
      */
     public SerializationTypeElementConfiguration<TStructural> hasValueGetter(Field field) {
         //构造一个字段取值器
-        FieldValueGetter filedSetter = new FieldValueGetter(field);
-        return this.hasValueGetter(filedSetter);
+        FieldValueGetter fieldValueGetter = new FieldValueGetter(field);
+        return this.hasValueGetter(fieldValueGetter);
     }
 
     /**
      * 用委托设置取值器
      *
-     * @param getValue    要取的值类型
-     * @param <TProperty> 取值委托
+     * @param getValue    取值委托
+     * @param <TProperty> 取值委托返回的值类型
      * @return 自身
      */
     public <TProperty> SerializationTypeElementConfiguration<TStructural> hasValueGetter(FunctionWithOneArg<TStructural, TProperty> getValue) {
