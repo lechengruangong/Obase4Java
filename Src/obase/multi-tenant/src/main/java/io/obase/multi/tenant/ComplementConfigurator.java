@@ -57,7 +57,7 @@ public class ComplementConfigurator implements IComplementConfigurator {
     public void configure(StructuralType targetType, StructuralTypeConfiguration<?> configuration) {
         MultiTenantExtension ext = (MultiTenantExtension) targetType.getExtension(MultiTenantExtension.class);
         if (ext != null && (ext.getTenantIdMark() == null || ext.getTenantIdMark().isEmpty())) {
-            Attribute attribute = new Attribute(boolean.class, "Obase_gen_tenantIdMark");
+            Attribute attribute = new Attribute(ext.getTenantIdType(), "Obase_gen_tenantIdMark");
             //目标字段 若果未设置DeletionField就和DeletionMark相同
             attribute.setTargetField((ext.getTenantIdField() == null || ext.getTenantIdField().isEmpty()) ? ext.getTenantIdMark() : ext.getTenantIdField());
             Field field;
