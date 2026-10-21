@@ -362,7 +362,7 @@ public class AssociationType extends ObjectType {
 
                 //检查设值器和取值器
                 if (end.getValueSetter() == null)
-                    message.add(this.getClrType().getName() + "的关联端" + end.getName() + "没有设值器.");
+                    message.add(this.getClrType().getName() + "的关联端" + end.getName() + "没有设值器" + this.constructorParameterHint(end.getName()) + ".");
 
                 if (end.getValueGetter() == null)
                     message.add(this.getClrType().getName() + "的关联端" + end.getName() + "没有取值器.");
@@ -401,6 +401,32 @@ public class AssociationType extends ObjectType {
                 errDictionary.put(name, message);
             else
                 errDictionary.get(name).addAll(message);
+        }
+    }
+
+    /**
+     * 生成“该元素被用作构造函数参数”的提示。
+     * 说明
+     * 元素没有设值器的真实原因常常是把构造函数参数误绑到了引用元素上，此时在错误信息后附加指向性提示。
+     *
+     * @param elementName 元素名称
+     * @return 提示信息；该元素没有被用作构造函数参数时返回空字符串
+     */
+    private String constructorParameterHint(String elementName) {
+        try {
+            //优先从本类型的构造器中查找 再尝试从继承类型（派生实例构造器）中查找
+            IInstanceConstructor constructor = this.getConstructor();
+            Parameter parameter = constructor == null ? null : constructor.getParameterByElement(elementName);
+            if (parameter == null) {
+                IInstanceConstructor derivedConstructor = Utils.getDerivedIInstanceConstructor(this);
+                if (derivedConstructor != null)
+                    parameter = derivedConstructor.getParameterByElement(elementName);
+            }
+            return parameter == null ? "" :
+                    "（注意：该元素被配置为构造函数参数" + parameter.getName() + "，请检查HasConstructor(...).Map(...)是否误绑了关联端；关系应通过AssociationEnd + HasMapping配置）";
+        } catch (Exception e) {
+            //提示信息属于附加信息 获取失败时不影响原有的完整性检查结果
+            return "";
         }
     }
 

@@ -196,8 +196,18 @@ public class AssociationReference extends ReferenceElement {
      */
     @Override
     public TypeBase getValueType() {
-        if (!this.associationType.getVisible())//隐式关联
-            return this.gotRightEnd().getEntityType();
+        if (!this.associationType.getVisible()) {//隐式关联 右端实体型
+            //右端可能不存在（关联型的端数多于两个时，关联引用不指向具体关联端）
+            AssociationEnd rightEnd = this.gotRightEnd();
+            if (rightEnd == null)
+                throw new IllegalArgumentException("关联引用" + this.getName() + "无法确定值类型：右端名称为“" + this.getRightEnd() + "”，"
+                        + "关联型" + (this.associationType.getClrType() == null ? null : this.associationType.getClrType().getName())
+                        + "的端数为" + (this.associationType.getAssociationEnds() == null ? null : this.associationType.getAssociationEnds().size())
+                        + "（显式关联或多于两端的关联不提供右端）。若此关联引用被用作构造函数参数，请改为绑定到本类型的简单属性；"
+                        + "关系请用AssociationEnd + HasMapping + AssociationReference配置。");
+            return rightEnd.getEntityType();
+        }
+        //显式关联 关联型
         return this.associationType;
     }
 
