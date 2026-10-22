@@ -122,8 +122,8 @@ public class DataErrorTest {
         stu.setStudentInfo(studentInfo);
 
         //保存
-        var exception2 = assertThrows(IllegalArgumentException.class, saveContext::saveChanges, "应抛出异常:发生了伴随关联保存错误,请检查以下类型新对象有没有正确的附加:DataErrorStudentInfo.");
+        var exception2 = assertThrows(IllegalArgumentException.class, saveContext::saveChanges, "应抛出异常:发生了伴随关联保存错误:已建立了伴随关联,但参与该关联的关联端对象中存在没有附加到上下文的对象,请检查以下类型的新对象有没有正确的附加:DataErrorStudentInfo.");
         assertNotNull(exception2);
-        assertTrue(exception2.getMessage().contains("发生了伴随关联保存错误,请检查以下类型新对象有没有正确的附加:DataErrorStudentInfo."));
+        assertTrue(exception2.getMessage().contains("发生了伴随关联保存错误:已建立了伴随关联,但参与该关联的关联端对象中存在没有附加到上下文的对象,请检查以下类型的新对象有没有正确的附加:DataErrorStudentInfo."));
     }
 }
