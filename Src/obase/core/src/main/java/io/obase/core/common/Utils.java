@@ -923,6 +923,12 @@ public final class Utils {
         derivingList.add(current);
         while (deriving != null) {
             current = modelBuilder.findConfiguration(deriving);
+            //父类没有注册时 给出说明性异常 而不是在下面解引用空引用
+            if (current == null)
+                throw new IllegalArgumentException(targetTypeConfiguration.getClrType().getName() + "声明继承自" + deriving.getName() + ",但" + deriving.getName() + "尚未在模型中注册." +
+                        "请先为" + deriving.getName() + "调用Entity<>()/Association<>()/Complex<>()完成注册," +
+                        "并配置好继承判别器(先调用HasConcreteTypeDiscriminator配置判别字段,再调用HasConcreteTypeSign配置判别值)," +
+                        "然后再配置其子类" + targetTypeConfiguration.getClrType().getName() + ":继承要求父类在前,子类在后.");
             derivingList.add(current);
             deriving = current.getDerivedFrom();
         }
@@ -1024,9 +1030,11 @@ public final class Utils {
      * @return 区分标记值
      */
     public static List<Object> getDerivingConcreteTypeValue(StructuralType structuralType) {
-        //加入自己的区分标记
         List<Object> result = new ArrayList<>();
-        result.add(structuralType.getConcreteTypeSign().getItem2());
+        //加入自己的区分标记
+        //没有配置判别值的类型不加入 由完整性检查给出说明性错误 避免此处解引用空引用
+        if (structuralType.getConcreteTypeSign() != null)
+            result.add(structuralType.getConcreteTypeSign().getItem2());
         for (StructuralType derivedType : structuralType.getDerivedTypes()) {
             //加入自己继承类的区分标记
             result.addAll(getDerivingConcreteTypeValue(derivedType));

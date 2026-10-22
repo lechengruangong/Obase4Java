@@ -315,7 +315,7 @@ public class EntityTypeConfiguration<TEntity> extends ObjectTypeConfiguration<TE
         if (this.derivingFrom != null) {
             StructuralType derivingFrom = buildingModel.getStructuralType(this.derivingFrom);
             if (derivingFrom == null)
-                throw new IllegalArgumentException(String.format("无法找到%s所声明的基类%s,需要先注册基类.", this.clrType.getName(), this.derivingFrom.getName()));
+                throw new IllegalArgumentException(String.format("无法找到%s所声明的基类%s,需要先注册基类,继承要求父类在前,子类在后.", this.clrType.getName(), this.derivingFrom.getName()));
             entityType = new EntityType(this.clrType, derivingFrom);
         } else {
             entityType = new EntityType(this.clrType, null);

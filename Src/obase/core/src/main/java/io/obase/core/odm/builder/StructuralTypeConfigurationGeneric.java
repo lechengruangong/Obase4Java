@@ -729,7 +729,8 @@ public abstract class StructuralTypeConfigurationGeneric<TStructural, TConfigura
 
         //获取类型判别字段的名称
         List<StructuralTypeConfiguration<?>> chain = Utils.getDerivingConfigChain(this, this.getModelBuilder());
-        String typeName = chain.stream().map(StructuralTypeConfiguration::getTypeAttributeName).findFirst().orElse(null);
+        //继承链上未配置判别字段的类型其名称为null 不能直接交给findFirst 否则会抛出空指针异常
+        String typeName = chain.stream().map(StructuralTypeConfiguration::getTypeAttributeName).filter(attributeName -> !Utils.getStringIsEmpty(attributeName)).findFirst().orElse(null);
         if (Utils.getStringIsEmpty(typeName))
             throw new IllegalArgumentException("没有找到类型判别字段,请先在基类上用HasConcreteTypeDiscriminator配置判别字段");
         //如果当前类型没有配置类型判别字段的名称 则使用从基类上找到的类型判别字段的名称
