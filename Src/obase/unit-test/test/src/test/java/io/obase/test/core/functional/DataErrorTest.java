@@ -95,10 +95,35 @@ public class DataErrorTest {
         //仍然有两个
         assertEquals(2, count);
         //使用无法转换的字符串进行查询
-        assertThrows(RuntimeException.class, () -> {
+        var exception1 = assertThrows(RuntimeException.class, () -> {
             var newContext = ContextUtils.createContext(dataSource);
             //查询学生
             newContext.createSet(DataErrorStudent.class).include(DataErrorStudent::getStudentInfo).findFirst(p -> p.getStudentId() == Long.parseLong("aaa"));
-        }, "无法构造表达式解析器,请参考内部异常.");
+        }, "应抛出异常:无法构造表达式解析器,请参考内部异常.");
+        assertNotNull(exception1);
+        assertTrue(exception1.getMessage().contains("无法构造表达式解析器,请参考内部异常."));
+
+        //新建一个关联 但是不附加新对象
+        var saveContext = ContextUtils.createContext(dataSource);
+
+        //加入一个DataErrorStudent
+        DataErrorStudent stu = new DataErrorStudent();
+        stu.setStudentId(4);
+        stu.setName("小4");
+        //附加
+        saveContext.attach(stu);
+        //加入一个DataErrorStudentInfo 但是不附加
+        DataErrorStudentInfo studentInfo = new DataErrorStudentInfo();
+        studentInfo.setBackground("普通4");
+        studentInfo.setDescription("普普通通4");
+        studentInfo.setStudentId(4);
+        studentInfo.setStudentInfoId(4);
+        //建立关联
+        stu.setStudentInfo(studentInfo);
+
+        //保存
+        var exception2 = assertThrows(IllegalArgumentException.class, saveContext::saveChanges, "应抛出异常:发生了伴随关联保存错误,请检查以下类型新对象有没有正确的附加:DataErrorStudentInfo.");
+        assertNotNull(exception2);
+        assertTrue(exception2.getMessage().contains("发生了伴随关联保存错误,请检查以下类型新对象有没有正确的附加:DataErrorStudentInfo."));
     }
 }
