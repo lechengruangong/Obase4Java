@@ -96,6 +96,7 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 判定指定的类型成员是否将作为类型元素
+     * 默认约定：成员类型为Obase基元类型时作为元素；无论结果如何都会把name重置为null，由后续管道或调用方决定元素名称
      *
      * @param memberInfo 类型成员
      * @param name       如果作为元素，返回元素名称 取元素[0]
@@ -111,6 +112,7 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 基于指定的类型成员，配置指定的元素
+     * 若配置器同时支持引用元素或属性，则继续按对应的重载分别配置
      *
      * @param memberInfo   要解析的成员
      * @param configurator 用于配置类型元素的配置器
@@ -130,6 +132,7 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 基于指定的类型成员，配置指定的属性
+     * 以成员名称作为映射字段（不覆盖既有配置），并配置取值器和设值器
      *
      * @param memberInfo   要解析的成员
      * @param configurator 用于配置类型元素的配置器
@@ -145,6 +148,7 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 基于指定的类型成员，配置指定的引用元素
+     * 若配置器同时支持关联端或关联引用，则继续按对应的重载分别配置
      *
      * @param memberInfo   要解析的成员
      * @param configurator 用于配置类型元素的配置器
@@ -164,6 +168,8 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 基于指定的类型成员，配置指定的关联引用
+     * 属性类型为已配置的关联型时按显式关联推断左右端，否则按隐式关联（两方或元组表示的多方关联）推断左端；
+     * 自关联不做推断（需用户手工配置）；最后配置取值器/设值器，并在启用延迟加载且尚无触发器时追加Property-Get加载触发器
      *
      * @param memberInfo   要解析的成员
      * @param configurator 用于配置类型元素的配置器
@@ -278,6 +284,8 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 基于指定的类型成员，配置指定的关联端
+     * 配置取值器/设值器；启用了延迟加载且尚无同名触发器时追加Property-Get加载触发器；
+     * 关联端实体型未配置为实体型时抛出IllegalArgumentException；关联端宿主为关联型时，按标识属性生成映射（不覆盖既有映射）
      *
      * @param memberInfo   要解析的成员
      * @param configurator 用于配置类型元素的配置器
@@ -334,6 +342,7 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 基于指定的类型成员，配置指定的类型或其所属的元素
+     * 默认解析器对类型本身不做任何配置
      *
      * @param memberInfo   要解析的成员
      * @param configurator 用于配置类型元素的配置器
@@ -345,6 +354,7 @@ public class DefaultTypeMemberAnalyzer implements ITypeMemberAnalyzer {
 
     /**
      * 配置左端和右端
+     * 在关联型属性中查找与当前属性所在类型一致（或为其父类型）的属性作为左端名（不覆盖既有配置）；右端不在此推断，由补充配置器完成
      *
      * @param configurator 关联引用配置器
      * @param props        关联型属性集合

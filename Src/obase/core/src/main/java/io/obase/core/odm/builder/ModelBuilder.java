@@ -30,9 +30,8 @@ import java.util.stream.Collectors;
  * 建模器，用于存储模型元数据，并可以依据这些元数据生成对象数据模型。
  * 对应于对象数据模型的实体型、复杂类型和关联型，建模器包含实体型配置项、复杂类型配置项和关联型配置项，各类型的元数据即存储于这三种类型配置项中。
  * 各类型配置项又包含相应元素配置项：属性配置项、关联引用配置项、关联端配置项，分别存储属性、关联引用和关联端的元数据。
- * 当Build方法被调用时，建模器根据这些配置项中的元数据信息构建对象数据模型。生成模型前，建模器还利用反映自动从CLR类型中收集元数据信息，因此大多数元数据不需
- * 要手工配置。
- * 此外，建模器会自动生成对象类型的派生代理类型，该派生类型实现IIntervene接口以允许第三方介入者介入对象行为。
+ * build方法本身只负责构建对象数据模型，不执行反射建模；由上下文在注册模型时（通常在CreateModel中）依据配置项进行反射建模。
+ * 此外，建模器会自动生成对象类型的派生代理类型，该派生类型实现IIntervener接口以允许第三方介入者介入对象行为。
  */
 public class ModelBuilder {
 
@@ -110,6 +109,10 @@ public class ModelBuilder {
 
     /**
      * 初始化ModelBuilder的新实例
+     * 构造函数会为四条管道（代理类型生成、类型成员解析、类型解析、补充配置）注册默认实现，
+     * 并在上下文不为null时把上下文类型的类加载器注册为Obase使用的类加载器
+     *
+     * @param context 上下文实例，可以为null（此时不设置上下文类型与类加载器，用于直接建造模型，如ODM验证器）
      */
     public ModelBuilder(ObjectContext context) {
         //实例化代理类型生成管道建造器，并自动添加默认的生成器。
@@ -156,17 +159,17 @@ public class ModelBuilder {
     /**
      * 获取上下文类型
      *
-     * @return 上下文类型
+     * @return 上下文类型，构造建模器时未传入上下文则为null
      */
     public Class<? extends ObjectContext> getContextType() {
         return this.contextType;
     }
 
     /**
-     * 启动一个实体型配置项，如果要启动的实体型配置项未创建则新建一个。
-     * 类型参数TEntity指定该实体型对应的CLR类型（即对象系统中的类型），在建模器中它是配置项的键。
+     * 启动一个实体型配置项，如果要启动的实体型配置项未创建则新建一个；若该类型此前被配置为其他类型，则替换为实体型配置项。
+     * 类型参数TEntity指定该实体型对应的Java类型（即对象系统中的类型），在建模器中它是配置项的键。
      *
-     * @param entityClass 对应的CLR类型
+     * @param entityClass 对应的Java类型
      * @return 实体型配置
      */
     public <TEntity> EntityTypeConfiguration<TEntity> entity(Class<TEntity> entityClass) {
@@ -182,10 +185,10 @@ public class ModelBuilder {
     }
 
     /**
-     * 启动一个复杂类型配置项，如果要启动的复杂类型配置项未创建则新建一个。
-     * 类型参数TComplex指定该复杂类型对应的CLR类型（即对象系统中的类型），在建模器中它是配置项的键。
+     * 启动一个复杂类型配置项，如果要启动的复杂类型配置项未创建则新建一个；若该类型此前被配置为其他类型，则替换为复杂类型配置项。
+     * 类型参数TComplex指定该复杂类型对应的Java类型（即对象系统中的类型），在建模器中它是配置项的键。
      *
-     * @param complexClass 对应的CLR类型
+     * @param complexClass 对应的Java类型
      * @return 复杂类型配置
      */
     public <TComplex> ComplexTypeConfiguration<TComplex> complex(Class<TComplex> complexClass) {
@@ -200,8 +203,8 @@ public class ModelBuilder {
     }
 
     /**
-     * 启动一个关联型配置项，如果要启动的关联型配置项未创建则新建一个。
-     * 类型参数TAssociation指定该实体型对应的CLR类型（即对象系统中的类型），在建模器中它是配置项的键。
+     * 启动一个关联型配置项，如果要启动的关联型配置项未创建则新建一个；若该类型此前被配置为其他类型，则替换为关联型配置项。
+     * 类型参数TAssociation指定该关联型对应的Java类型（即对象系统中的类型），在建模器中它是配置项的键。
      * 使用此方法启动的关联型配置项将来生成的关联型为显式关联。
      *
      * @param associationType 关联型
@@ -231,7 +234,7 @@ public class ModelBuilder {
     }
 
     /**
-     * 启动一个新的序列化实体型配置项，如果要启动的序列化实体型配置项未创建则新建一个。
+     * 启动一个新的序列化实体型配置项，如果要启动的序列化实体型配置项未创建则新建一个；已创建时返回已存在的配置项。
      *
      * @param entityClass 序列化实体型类型
      * @param <TEntity>   序列化实体型类型
@@ -250,9 +253,12 @@ public class ModelBuilder {
     }
 
     /**
-     * 生成对象数据模型。
-     * 第一步，遍历类型配置项构建类型实例（实体型、关联型、复杂类型）放入模型，（这个过程中会自动生成代理类型）；
-     * 第二步，再次遍历类型配置项，通过反射从CLR类型收集元素元数据，然后遍历元素配置项，构建元素实例。
+     * 生成对象数据模型（使用默认的存储标记，不执行模型结构映射）。
+     * 第一步，根据已配置的序列化实体生成序列化模型并做完整性检查，然后生成各条处理管道；
+     * 第二步，构建隐式关联型配置项，并将类型配置项按复杂类型、实体型（按继承链）、关联型的顺序排序，
+     * 依次执行类型解析管道、创建类型实例并做继承与代理类型处理，再执行类型成员解析管道、创建类型元素并做补充配置；
+     * 最后补全未配置存储标记的类型的存储标记，并执行完整性检查。
+     * 模型在首次调用时构建，后续调用直接返回已构建的模型（此时不再重复建模，但仍会重新执行存储标记补全）。
      *
      * @return 对象数据模型
      */
@@ -261,10 +267,10 @@ public class ModelBuilder {
     }
 
     /**
-     * 生成对象数据模型。
-     * 第一步，遍历类型配置项构建类型实例（实体型、关联型、复杂类型）放入模型，（这个过程中会自动生成代理类型）；
-     * 第二步，再次遍历类型配置项，通过反射从CLR类型收集元素元数据，然后遍历元素配置项，构建元素实例。
+     * 生成对象数据模型，并在模型构建后（或模型已存在时）执行指定的模型结构映射。
+     * 构建过程与无参的build()一致；每次调用本方法时若executor不为null，都会对其执行一次execute。
      *
+     * @param executor 模型结构映射执行器，可以为null
      * @return 对象数据模型
      */
     public ObjectDataModel build(IStructMappingExecutor executor) {
@@ -468,6 +474,18 @@ public class ModelBuilder {
      * @return 具体类型标记值与结构化类型的字典
      */
     private HashMap<String, StructuralType> getDerivingConcreteTypeValue(StructuralType structuralType) {
+        //参与继承的类型必须配置了具体类型判别值 否则无法构造判别器 此处给出说明性异常
+        if (structuralType.getConcreteTypeSign() == null || structuralType.getConcreteTypeSign().getItem2() == null) {
+            //区分配置为继承却没有判别值 与 作为基类型却没有判别值 两种情形
+            String reason = structuralType.getDerivingFrom() != null
+                    ? "配置为继承" + structuralType.getDerivingFrom().getClrType().getName() + ",却没有配置具体类型判别值"
+                    : "存在派生类型,作为基类型却没有配置具体类型判别值";
+            throw new IllegalArgumentException(structuralType.getClrType().getName() + reason + "." +
+                    "请先调用HasConcreteTypeDiscriminator配置判别字段,再调用HasConcreteTypeSign配置判别值," +
+                    "例如:cfg.HasConcreteTypeDiscriminator(\"XxxType\");cfg.HasConcreteTypeSign(0);" +
+                    "(抽象类型不会被创建,配置一个不会被使用的值即可)");
+        }
+
         //加入自己的区分标记
         HashMap<String, StructuralType> result = new HashMap<>();
         result.put(structuralType.getConcreteTypeSign().getItem2().toString(), structuralType);
@@ -707,9 +725,9 @@ public class ModelBuilder {
     }
 
     /**
-     * 从模型查找隐式关联配置项建造器
+     * 从模型查找隐式关联配置项建造器，返回第一个关联端标签与endsTag相同的建造器，如果未找到返回null。
      *
-     * @param endsTag 如果未找到返回null
+     * @param endsTag 关联端标签
      * @return 配置项建造器
      */
     public AssociationConfiguratorBuilder findImplicitAssociationConfigurationBuilder(String endsTag) {
@@ -717,7 +735,8 @@ public class ModelBuilder {
     }
 
     /**
-     * 从模型查找序列化实体型配置项。如果未找到返回false。
+     * 从模型查找序列化实体型配置项，如果未找到返回false。
+     * 先查找与type完全相同的配置项；未找到时，如果已配置的某个序列化类型是type的子类型（即type是其基类或接口），也视为存在。
      *
      * @param type 类型
      * @return 是否存在
@@ -739,7 +758,8 @@ public class ModelBuilder {
     }
 
     /**
-     * 设置模型是否进行完整性检查
+     * 设置模型是否进行完整性检查（默认true）
+     * 开启后建模时会先检查序列化模型，再检查对象数据模型，出现错误则抛出IntegrityCheckFailException
      *
      * @param integrityCheck 是否进行完整性检查
      */
@@ -749,6 +769,7 @@ public class ModelBuilder {
 
     /**
      * 为模型设置默认的存储标记
+     * 建模时，尚未配置HeterogStorageExtension类型扩展的类型会被补上默认存储标记；只要存在这样的类型，模型的存储标记也会被一并设置
      *
      * @param defaultStorageSymbol 默认的存储标记
      * @return 自身
@@ -772,7 +793,7 @@ public class ModelBuilder {
      * 启动一个复杂类型配置项，如果要启动的复杂类型配置项未创建则新建一个
      *
      * @param complexType 要配置的复杂类型
-     * @return 复杂类型配置项，
+     * @return 复杂类型配置项
      */
     public IStructuralTypeConfigurator complexI(Class<?> complexType) {
         return this.complex(complexType);
@@ -789,7 +810,7 @@ public class ModelBuilder {
     }
 
     /**
-     * 从指定的程序集中提取类型并注册到模型
+     * 从指定的程序集名称中提取类型并注册到模型（参数为程序集名称或包含类型的包名，由解析器决定其含义）
      *
      * @param assembly 类型所在的程序集
      * @param analyzer 程序集解析器，负责从程序集中发现类型
@@ -799,7 +820,8 @@ public class ModelBuilder {
     }
 
     /**
-     * 指定的程序集字符串加载程序集，按照推断约定提取类型并注册到模型。
+     * 从指定的程序集名称中提取类型并注册到模型。
+     * 使用默认的程序集解析器（DefaultAssemblyAnalyzer）按推断约定发现类型，建模器中已忽略的类型不会被注册。
      *
      * @param assembly 类型所在的程序集
      */
@@ -808,8 +830,10 @@ public class ModelBuilder {
         analyzer.analyze(assembly, this);
     }
 
-    /***
-     * 从指定的类型集合中提取类型并注册到模型
+    /**
+     * 从指定的类型集合中提取类型并注册到模型。
+     * 使用默认的程序集解析器（DefaultAssemblyAnalyzer）按推断约定处理这些类型，建模器中已忽略的类型不会被注册。
+     *
      * @param types 类型集合
      */
     public void registerType(Class<?>... types) {
@@ -817,10 +841,11 @@ public class ModelBuilder {
         analyzer.analyze(types, this);
     }
 
-    /***
-     * 从指定的类型集合中提取类型并注册到模型
+    /**
+     * 使用指定的程序集解析器从类型集合中提取类型并注册到模型
+     *
      * @param analyzer 程序集解析器，负责从程序集中发现类型
-     * @param types 类型集合
+     * @param types    类型集合
      */
     public void registerType(IAssemblyAnalyzer analyzer, Class<?>... types) {
         analyzer.analyze(types, this);
@@ -869,7 +894,7 @@ public class ModelBuilder {
     }
 
     /**
-     * 向建模器添加类型配置项
+     * 向建模器添加类型配置项，以配置项的类型（getClrType()）为键存入类型配置项集合，已存在同键配置项时直接替换。
      *
      * @param configuration 类型配置项
      */
@@ -878,7 +903,7 @@ public class ModelBuilder {
     }
 
     /**
-     * 指定从程序集解析类型过程中应忽略的类型；如果类型已创建配置器，应删除该配置器。
+     * 指定从程序集解析类型过程中应忽略的类型；如果该类型已创建配置项，则立即删除该配置项（模型构建时也会再次剔除）。
      *
      * @param ignored 要忽略的类型
      * @return 自身
@@ -894,7 +919,8 @@ public class ModelBuilder {
     /**
      * 为建模设置类加载器
      * 在SpringBoot等框架中 存在多个类加载 此时需要将Obase的类加载器设置为主加载器而不是依赖加载器
-     * 通常情况下 Obase会自动将上下文类型的类加载器设置为自己的类加载器 如果需要更改 使用此方法在注册模型时修改
+     * 通常情况下 建模器在构造时（上下文不为null）会自动将上下文类型的类加载器设置为Obase的类加载器 如果需要更改 使用此方法在注册模型时修改
+     * 注意：本方法设置的是全局类加载器缓存，会影响此后所有建模过程
      *
      * @param classLoader 类加载器
      */

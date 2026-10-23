@@ -22,6 +22,7 @@ public interface IEntityTypeConfigurator extends IObjectTypeConfigurator {
 
     /**
      * 设置标识属性
+     * override为true时清空之前设置的标识属性再追加，为false时仅在尚未设置标识属性时生效
      *
      * @param attrName 属性名称
      * @param override 是否覆盖既有配置
@@ -45,6 +46,7 @@ public interface IEntityTypeConfigurator extends IObjectTypeConfigurator {
 
     /**
      * 获取标识属性集合
+     * 返回的是各标识属性已配置的映射字段名（targetField），不是属性名本身；只有已配置为属性配置项的标识属性才会出现在结果中
      *
      * @return 标识属性集合
      */

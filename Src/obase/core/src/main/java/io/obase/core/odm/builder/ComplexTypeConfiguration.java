@@ -76,6 +76,7 @@ public class ComplexTypeConfiguration<TComplex> extends StructuralTypeConfigurat
 
     /**
      * 创建引用元素
+     * 复杂类型不支持引用元素，本实现始终返回null
      *
      * @param property 属性
      * @return 引用元素配置
@@ -96,6 +97,7 @@ public class ComplexTypeConfiguration<TComplex> extends StructuralTypeConfigurat
 
     /**
      * 根据类型配置项中的元数据构建模型类型
+     * 未配置实例构造器时会尝试使用公开无参构造函数，不存在时抛出IllegalArgumentException
      * 由派生类实现
      *
      * @param buildingModel 对象数据模型
@@ -108,7 +110,7 @@ public class ComplexTypeConfiguration<TComplex> extends StructuralTypeConfigurat
         if (this.derivingFrom != null) {
             StructuralType derivingFrom = buildingModel.getStructuralType(this.derivingFrom);
             if (derivingFrom == null)
-                throw new IllegalArgumentException(String.format("无法找到%s所声明的基类%s,需要先注册基类.", this.clrType.getName(), this.derivingFrom.getName()));
+                throw new IllegalArgumentException(String.format("无法找到%s所声明的基类%s,需要先注册基类,继承要求父类在前,子类在后.", this.clrType.getName(), this.derivingFrom.getName()));
             structuralType = new ComplexType(this.clrType, derivingFrom);
         } else {
             structuralType = new ComplexType(this.clrType, null);
@@ -138,8 +140,8 @@ public class ComplexTypeConfiguration<TComplex> extends StructuralTypeConfigurat
 
     /**
      * 根据类型配置项中的元数据配置模型类型，被配置的模型类型已根据当前类型配置项实例生成并已注册到指定的模型中。
-     * 注：调用方调用Create方法创建模型类型时，由于类型的元素还未创建，因此某些属性可能无法当场配置，可以等到类型元素创建（CreateElement被调用）完成
-     * 时，调用本方法完成类型配置。
+     * 注：调用create方法创建模型类型时，由于类型的元素还未创建，因此某些属性可能无法当场配置，可以等到类型元素创建（createElements被调用）完成
+     * 时，调用本方法完成类型配置。复杂类型无需额外配置，本实现为空。
      *
      * @param model 对象数据模型
      */
@@ -152,7 +154,7 @@ public class ComplexTypeConfiguration<TComplex> extends StructuralTypeConfigurat
      * 根据名称获取元素配置器
      *
      * @param name 元素名称
-     * @return 类型元素配置器
+     * @return 类型元素配置器，不存在时返回null
      */
     @Override
     public ITypeElementConfigurator getElement(String name) {
@@ -160,7 +162,7 @@ public class ComplexTypeConfiguration<TComplex> extends StructuralTypeConfigurat
     }
 
     /**
-     * 通过反射从CLR类型中收集元数据，生成类型配置项
+     * 通过反射从Java类型中收集元数据，生成类型配置项
      *
      * @param analyticPipeline 类型解析管道
      */

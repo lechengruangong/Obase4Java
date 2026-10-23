@@ -52,7 +52,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     protected byte endIndex;
 
     /**
-     * 关联端的实体Clr类型
+     * 关联端的实体Clr类型（即关联端实体在Java中对应的Class）
      */
     protected Class<?> entityType;
 
@@ -100,7 +100,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 获取关联端的实体Clr类型
+     * 获取关联端的实体Clr类型（即关联端实体在Java中对应的Class）
      *
      * @return 关联端的实体Clr类型
      */
@@ -109,9 +109,9 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 端的ClrType
+     * 获取关联端的实体Clr类型（即关联端实体在Java中对应的Class）
      *
-     * @return 端的ClrType
+     * @return 关联端的实体Clr类型
      */
     @Override
     public Class<?> getEntityTypeI() {
@@ -119,7 +119,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 获取该关联端上基于当前关联定义的关联引用。
+     * 获取该关联端上基于当前关联定义的关联引用，未配置时为null。
      *
      * @return 当前关联定义的关联引用
      */
@@ -140,6 +140,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 设置一个值，该值指示是否把关联端对象默认视为新对象。当该属性为true时，如果关联端对象未被显式附加到上下文，该对象将被视为新对象实施持久化
+     * 仅当override为true时生效
      *
      * @param defaultAsNew 指示是否把关联端对象默认视为新对象
      * @param override     是否覆盖既有配置
@@ -162,6 +163,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 设置一个值，该值指示当前关联端是否为聚合关联端
+     * 仅当override为true时生效
      *
      * @param isAggregated 指示当前关联端是否为聚合关联端
      * @param override     是否覆盖既有配置
@@ -185,6 +187,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 配置关联端映射
+     * 当关联端实体不包含指定的标识属性时抛出IllegalArgumentException；当前映射集合与反射建模加入的映射集合不一一对应时不会追加映射
      *
      * @param keyAttribute 关联端标识属性的名称
      * @param targetField  上述标识属性的映射字段
@@ -228,9 +231,8 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 指示是否将当前关联端作为伴随端
+     * 指示是否将当前关联端作为伴随端(覆盖现有配置)
      * 设置当前端为伴随端会将之前设置的伴随端改设不作为伴随端。
-     * 当override为false时，其它端只要任意一端已设置为伴随端，本方法就不再执行设置操作。
      *
      * @param value 是否伴随
      */
@@ -260,10 +262,11 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 生成基于当前关联定义的关联引用的配置器，如果配置器已存在返回该配置器。
+     * 获取基于当前关联定义的关联引用的配置器，如果配置器已存在返回该配置器，不存在时返回null（本方法不会新建配置器）。
+     * 同时通过propInfo返回关联端实体类型上与关联端同名的属性
      *
-     * @param propInfo 返回关联引用的访问器，如果关联引用没有访问器返回null
-     * @return 当前关联定义的关联引用的配置器
+     * @param propInfo 返回关联引用的访问器（入参本身不被使用，仅作为返回访问器的载体）
+     * @return 当前关联定义的关联引用的配置器，未配置时为null
      */
     @Override
     public IAssociationReferenceConfigurator associationReferenceI(ObjectReferencePack<Property> propInfo) {
@@ -274,7 +277,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     /**
      * 是否已启用延迟加载
      *
-     * @return 已启用延迟加载
+     * @return 是否已启用延迟加载
      */
     @Override
     public boolean getEnableLazyLoadingI() {
@@ -293,6 +296,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 设置是否支持延迟加载
+     * 仅当override为true时生效
      *
      * @param enableLazyLoading 是否支持延迟加载
      * @param override          是否覆盖既有配置
@@ -315,6 +319,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 指定关联或关联端的加载优先级，数值小者先加载
+     * 仅当override为true时生效
      *
      * @param loadingPriority 加载优先级
      * @param override        是否覆盖既有配置
@@ -337,6 +342,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 设置加载触发器
+     * 每次调用本方法，override为false时追加一个触发器，为true时先清空之前的全部触发器
      *
      * @param loadingTrigger 加载触发器
      * @param override       是否覆盖既有配置
@@ -381,6 +387,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能触发引用加载的属性访问器为引用元素创建加载触发器(覆盖现有配置)
+     * 使用访问器的get方法创建Property-Get型加载触发器
      *
      * @param property 触发引用加载的属性访问器
      */
@@ -391,6 +398,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能触发引用加载的属性访问器为引用元素创建加载触发器
+     * 使用访问器的get方法创建Property-Get型加载触发器
      *
      * @param property 触发引用加载的属性访问器
      * @param override 是否覆盖既有配置
@@ -438,7 +446,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     /**
      * 使用成员名称和触发类型为引用元素创建加载触发器(覆盖现有配置)
      *
-     * @param memberName  成员名册
+     * @param memberName  成员名称
      * @param triggerType 触发类型
      */
     @Override
@@ -447,9 +455,9 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 使用成员名称和触发类型为引用元素创建加载触发器(覆盖现有配置)
+     * 使用成员名称和触发类型为引用元素创建加载触发器
      *
-     * @param memberName  成员名册
+     * @param memberName  成员名称
      * @param triggerType 触发类型
      * @param override    是否覆盖既有配置
      */
@@ -466,7 +474,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 使用成员名称为引用元素创建加载触发器(覆盖现有配置)
+     * 使用与关联端同名的成员为引用元素创建加载触发器(覆盖现有配置)
      *
      * @param triggerType 触发类型
      */
@@ -476,7 +484,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 使用成员名称为引用元素创建加载触发器
+     * 使用与关联端同名的成员为引用元素创建加载触发器
      *
      * @param triggerType 触发类型
      * @param override    是否覆盖既有配置
@@ -495,6 +503,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 为引用元素创建加载触发器(覆盖现有配置)
+     * 使用与关联端同名的属性访问器创建Property-Get型加载触发器
      */
     @Override
     public void hasLoadingTriggerI() {
@@ -503,6 +512,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 为引用元素创建加载触发器
+     * 使用与关联端同名的属性访问器创建Property-Get型加载触发器
      *
      * @param override 是否覆盖既有配置
      */
@@ -520,6 +530,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 为元素配置项设置一个扩展配置器
+     * 每调用一次都会新建一个扩展配置器并追加到扩展配置器集合中
      *
      * @param configType 扩展配置器的类型，须继承自ElementExtensionConfiguration
      * @return 扩展配置器
@@ -753,7 +764,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 使用一个能够获取类型元素值的属性访问器为类型元素创建设值器覆盖现有配置)
+     * 使用一个能够获取类型元素值的属性访问器为类型元素创建设值器(覆盖现有配置)
      *
      * @param property 获取元素值的属性访问器
      */
@@ -905,6 +916,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 配置关联端映射
+     * 当关联端实体不包含指定的标识属性时抛出IllegalArgumentException；已存在映射字段或标识属性相同的映射时不会重复添加
      *
      * @param keyAttribute 关联端标识属性的名称
      * @param targetField  上述标识属性的映射字段
@@ -930,7 +942,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 指示是否将当前关联端作为伴随端
-     * 设置当前端为伴随端会将之前设置的伴随端改设不作为伴随端。
+     * 设置为伴随端时会先将其它关联端的伴随设置全部取消；同一关联型内同时只会有一个伴随端
      *
      * @param value 指示是否作为伴随端
      * @return 自身
@@ -962,7 +974,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能够获取类型元素值的方法为类型元素创建取值器。
-     * 如果该方法的返回值类型与元素的IsMultiple属性不匹配，则引发异常
+     * 方法的返回值类型是否为Iterable（含集合）必须与元素的多重性一致，否则抛出IllegalArgumentException
      *
      * @param method 获取元素值的方法
      * @return 自身
@@ -1028,6 +1040,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能够获取类型元素的值且返回值为单个对象的委托为不具备多重性的类型元素创建取值器
+     * 元素具备多重性时抛出IllegalArgumentException
      *
      * @param getValue    获取元素值的委托
      * @param <TProperty> 表示元素的类型。对于属性，它表示属性值类型；对于关联引用，它表示关联类型；对于关联端，它表示关联端的类型。
@@ -1042,6 +1055,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能够获取类型元素的值且返回值为对象序列的委托为具备多重性的类型元素创建取值器。
+     * 元素不具备多重性时抛出IllegalArgumentException
      *
      * @param getValue    获取元素值的委托
      * @param <TProperty> 表示元素的类型。对于属性，它表示属性值类型；对于关联引用，它表示关联类型；对于关联端，它表示关联端的类型。
@@ -1068,6 +1082,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能够为类型元素设值的方法为类型元素创建设值器
+     * 方法必须有且仅有一个参数，否则抛出IllegalArgumentException
      *
      * @param method 为类型元素设值的方法
      * @param mode   设值模式
@@ -1083,6 +1098,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能够为类型元素设值的Property为类型元素创建设值器
+     * 使用属性的set方法构造Assignment模式设值器
      *
      * @param property 为类型元素设值的属性访问器
      * @return 自身
@@ -1104,6 +1120,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用指定的类成员为类型元素创建设值器
+     * 在关联型上只支持公有字段；如果成员是方法，则抛出IllegalArgumentException（暂不支持用方法构造设值器）；都找不到时同样抛出IllegalArgumentException
      *
      * @param memberName 成员的名称
      * @return 自身
@@ -1125,11 +1142,11 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 为lambda表达式指示的元素创建设值器，该lambda表达式的主体须为MemberExpression，其访问的成员代表要设值的元素
+     * 为lambda表达式指示的元素创建设值器，使用传入的valueCreator把值序列构造为元素值
      *
      * @param propertyExp  表示属性访问器的Lambda表达式
      * @param valueCreator 元素创建委托
-     * @param <TProperty>  作为lambda表达式主体的MemberExpression的类型
+     * @param <TProperty>  元素值的类型（元素或序列项类型的集合）
      * @param <TElement>   值序列项的类型
      * @return 自身
      */
@@ -1139,10 +1156,10 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 为lambda表达式指示的元素创建设值器，该lambda表达式的主体须为MemberExpression，其访问的成员代表要设值的元素
+     * 为lambda表达式指示的元素创建设值器，设值模式为Assignment
      *
      * @param propertyExp 表达式
-     * @param <TProperty> 作为lambda表达式主体的MemberExpression的类型，亦即元素值的类型
+     * @param <TProperty> 元素值的类型
      * @return 自身
      */
     public <TStructural, TProperty> AssociationEndConfiguration hasValueSetter(ActionWithTwoArg<TStructural, TProperty> propertyExp) {
@@ -1200,10 +1217,11 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 使用一个能触发引用加载的属性访问器为引用元素创建加载触发器
+     * 传入Method类型时抛出IllegalArgumentException
      *
      * @param property    触发引用加载的属性访问器
      * @param triggerType 要创建的加载触发器的类型
-     * @return 引用加载触发器
+     * @return 自身
      */
     public AssociationEndConfiguration hasLoadingTrigger(Property property, EBehaviorTriggerType triggerType) {
         Method method;
@@ -1225,7 +1243,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     /**
      * 使用成员名称和触发类型为引用元素创建加载触发器
      *
-     * @param memberName  成员名册
+     * @param memberName  成员名称
      * @param triggerType 触发类型
      * @return 自身
      */
@@ -1235,7 +1253,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
     }
 
     /**
-     * 使用成员名称为引用元素创建加载触发器
+     * 使用与关联端同名的属性访问器为引用元素创建加载触发器
      *
      * @param triggerType 触发类型
      * @return 自身
@@ -1247,6 +1265,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 为引用元素创建加载触发器
+     * 使用与关联端同名的属性访问器创建Property-Get型加载触发器
      *
      * @return 自身
      */
@@ -1268,6 +1287,7 @@ public abstract class AssociationEndConfiguration extends TypeElementConfigurati
 
     /**
      * 设置关联型
+     * 仅用于更换当前关联端配置项所属的类型配置项（即把关联端挂到另一个关联型配置项上），不会创建或注册关联型
      *
      * @param structuralTypeConfiguration 关联型
      */

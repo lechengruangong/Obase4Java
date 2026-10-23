@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class DefaultTypeAnalyzer implements ITypeAnalyzer {
 
     /**
-     * 存储从程序集解析类型过程中应忽略的类型
+     * 存储从类型解析过程中应忽略的类型（程序集概念在Java中对应一组类型）
      */
     private final HashSet<Class<?>> ignoredTypes;
 
@@ -65,6 +65,8 @@ public class DefaultTypeAnalyzer implements ITypeAnalyzer {
 
     /**
      * 配置指定的类型
+     * 被忽略的类型不参与推断；推断构造器时在全部构造函数中取最后一个无参构造函数（找不到时不设置），
+     * 推断到后以不覆盖的方式设置为实例构造器并立即结束参数配置
      *
      * @param type         要配置的类型
      * @param configurator 该类型的配置器
@@ -111,6 +113,8 @@ public class DefaultTypeAnalyzer implements ITypeAnalyzer {
 
     /**
      * 配置指定的对象类型
+     * 被忽略的类型不参与推断；实体型与显式关联型以类型简单名称推断为映射表，隐式关联型按伴随端或两方/多方关联规则推断映射表；
+     * 配置器既不是实体型也不是关联型时抛出IllegalArgumentException
      *
      * @param type         要配置的对象类型
      * @param configurator 该对象类型的配置器
@@ -176,6 +180,7 @@ public class DefaultTypeAnalyzer implements ITypeAnalyzer {
 
     /**
      * 配置指定的实体型
+     * 被忽略的类型不参与推断；按Utils.existIdentity识别出的标识属性逐个设置为键属性
      *
      * @param type         要配置的实体类
      * @param configurator 该实体型的配置器
@@ -194,6 +199,7 @@ public class DefaultTypeAnalyzer implements ITypeAnalyzer {
 
     /**
      * 配置指定的关联型
+     * 被忽略的类型不参与推断；推断时将关联型配置为可见（显式关联）
      *
      * @param type         要配置的关联型
      * @param configurator 该关联型的配置器

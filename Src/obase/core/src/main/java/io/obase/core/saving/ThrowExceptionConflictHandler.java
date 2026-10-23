@@ -53,7 +53,21 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
         if (mappingUnit == null)
             return;
         Object obj = mappingUnit.getHostObject();
-        if (obj == null) return;
+        if (obj == null) {
+            //如果是HostObject为null的情况 说明此时是处理伴随关联时发生了虚假的并发冲突 实际上是因为伴随关联要保存的表内没有正确的插入新对象数据导致的
+            //此时需要抛一个特定的异常来表示此时的情况
+            List<CompanionMapping> companions = mappingUnit.getCompanionMappings();
+            //没有伴随关联对象时无法判断是哪个类型的问题 与之前的行为保持一致 直接忽略
+            if (companions.isEmpty()) return;
+
+            List<String> companionTypeNames = new ArrayList<>();
+            for (CompanionMapping companionMapping : companions) {
+                AssociationType associationType = this.getModel().getAssociationType(companionMapping.getAssociationObj().getClass());
+                if (associationType == null || associationType.getCompanionEnd() == null) continue;
+                companionTypeNames.add(associationType.getCompanionEnd().getEntityType().getClrType().getSimpleName());
+            }
+            throw new IllegalArgumentException("发生了伴随关联保存错误:已建立了伴随关联,但参与该关联的关联端对象中存在没有附加到上下文的对象,请检查以下类型的新对象有没有正确的附加:" + String.join(", ", companionTypeNames) + ".");
+        }
         ObjectType objType = this.getModel().getObjectType(obj.getClass());
         RuntimeException ex = null;
         switch (conflictType) {
@@ -63,14 +77,16 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
                 break;
             case VersionConflict:
 
-                //没有版本键 发生版本冲突异常不能表示实际的情况 暂且忽略
-                if (objType.getVersionAttributes() == null || objType.getVersionAttributes().size() == 0)
-                    return;
+                //没有版本键 发生版本冲突异常不能表示实际的情况 抛出带有内部异常的异常以说明情况
+                if (objType.getVersionAttributes() == null || objType.getVersionAttributes().isEmpty()) {
+                    ex = new IllegalArgumentException("没有版本键,无法处理版本冲突,请参照内部异常.", this.innerException);
+                    break;
+                }
 
                 List<Object> objItems = mappingUnit.getMappingObjects();
                 List<ObjectKey> keys = new ArrayList<>();
 
-                if (objItems != null && objItems.size() > 0) {
+                if (objItems != null && !objItems.isEmpty()) {
                     for (Object objItem : objItems) {
                         if (objItem == null) continue;
                         List<ObjectKeyMember> members = new ArrayList<>();
@@ -82,7 +98,7 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
                             members.add(
                                     new ObjectKeyMember(itemType.getClrType().getName() + "-" + keyMenberName, keyMemberValue));
                         }
-                        if (itemType.getVersionAttributes() != null && itemType.getVersionAttributes().size() > 0) {
+                        if (itemType.getVersionAttributes() != null && !itemType.getVersionAttributes().isEmpty()) {
                             for (String attrName : itemType.getVersionAttributes()) {
                                 Attribute attr = itemType.getAttribute(attrName);
                                 Object valObj = this.attributeOriginalValueGetter.getAttributeValue(objItem, attr, null);

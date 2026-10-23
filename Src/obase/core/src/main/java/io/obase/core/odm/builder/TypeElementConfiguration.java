@@ -106,6 +106,7 @@ public abstract class TypeElementConfiguration {
 
     /**
      * 根据元素配置项包含的元数据信息创建元素实例
+     * 调用派生类的createReally创建元素后，会把已配置的元素扩展一并附加到元素上
      *
      * @param model 对象数据模型
      * @return 类型元素
@@ -120,10 +121,12 @@ public abstract class TypeElementConfiguration {
     }
 
     /**
-     * 为元素配置项设置一个指定类型的扩展配置器，如果指定类型的配置器已存在，返回该配置器。
+     * 为元素配置项设置一个指定类型的扩展配置器。
+     * 每调用一次都会通过无参构造函数创建一个新的扩展配置器并追加到扩展配置器集合中，重复调用不会返回已存在的配置器。
+     * 指定的类型必须具有可访问的无参构造函数，否则抛出IllegalArgumentException。
      *
      * @param configType 扩展配置器的类型，须继承自ElementExtensionConfiguration。
-     * @return 扩展配置器
+     * @return 新建的扩展配置器
      */
     public ElementExtensionConfiguration hasExtension(Class<? extends ElementExtensionConfiguration> configType) {
         try {

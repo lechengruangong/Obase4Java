@@ -47,7 +47,7 @@ public class ObjectDataModelViewer {
         for (EntityType entity : entities) {
             result.append(System.lineSeparator());
             processEntity(entity, result);
-            processAssociationReference(entity, result);
+            processAssociationReference(entity, result, false);
             result.append(System.lineSeparator());
         }
 
@@ -84,7 +84,7 @@ public class ObjectDataModelViewer {
             result.append(System.lineSeparator());
             processEntity(entity, result);
             processAttribute(entity, result);
-            processAssociationReference(entity, result);
+            processAssociationReference(entity, result, true);
             result.append(System.lineSeparator());
         }
 
@@ -117,13 +117,23 @@ public class ObjectDataModelViewer {
     /**
      * 处理属性的映射
      *
-     * @param entityType    实体型
+     * @param structuralType    结构化类型
      * @param stringBuilder 结果
      */
-    private static void processAttribute(EntityType entityType, StringBuilder stringBuilder) {
-        stringBuilder.append("实体型").append(entityType.getClrType().getName()).append("共有").append(entityType.getAttributes().size()).append("个属性.").append(System.lineSeparator());
+    private static void processAttribute(StructuralType structuralType, StringBuilder stringBuilder) {
+
+        String typeName;
+        if (structuralType.getClass().equals(AssociationType.class)) {
+            typeName = "关联型";
+        } else if (structuralType.getClass().equals(EntityType.class)) {
+            typeName = "实体型";
+        } else {
+            typeName = "";
+        }
+
+        stringBuilder.append(typeName).append(structuralType.getClrType().getName()).append("共有").append(structuralType.getAttributes().size()).append("个属性.").append(System.lineSeparator());
         int seq = 1;
-        for (Attribute attribute : entityType.getAttributes()) {
+        for (Attribute attribute : structuralType.getAttributes()) {
             if (attribute instanceof ComplexAttribute) {
                 ComplexAttribute complex = (ComplexAttribute) attribute;
                 stringBuilder.append(seq).append(". ").append("复杂属性").append(complex.getName()).append(",使用的复杂类型为").append(complex.getComplexType().getClrType().getName()).append(",映射类型").append(complex.getDataType())
@@ -141,13 +151,20 @@ public class ObjectDataModelViewer {
      *
      * @param entityType    实体型
      * @param stringBuilder 结果
+     * @param needAttr 是否需要输出属性信息
      */
-    private static void processAssociationReference(EntityType entityType, StringBuilder stringBuilder) {
+    private static void processAssociationReference(EntityType entityType, StringBuilder stringBuilder, boolean needAttr) {
         stringBuilder.append("实体型").append(entityType.getClrType().getName()).append("共有").append(entityType.getAssociationReferences().size()).append("个关联引用.").append(System.lineSeparator());
         int seq = 1;
         for (AssociationReference reference : entityType.getAssociationReferences()) {
             stringBuilder.append(seq).append(". 关联引用").append(reference.getName()).append(",对应关联型为").append(reference.getAssociationType().getClrType().getName()).append(",映射表为").append(reference.getAssociationType().getTargetTable())
                     .append(System.lineSeparator());
+
+            //如果是显式关联型  且 需要输出属性信息 则增加关联型上的属性输出
+            if (reference.getAssociationType().getVisible() && needAttr) {
+                processAttribute(reference.getAssociationType(), stringBuilder);
+            }
+
             stringBuilder.append("在映射表").append(reference.getAssociationType().getTargetTable()).append("中,共有关联端").append(reference.getAssociationType().getAssociationEnds().size()).append("个.")
                     .append(System.lineSeparator());
             for (AssociationEnd end : reference.getAssociationType().getAssociationEnds()) {

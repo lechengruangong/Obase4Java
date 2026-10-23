@@ -62,6 +62,7 @@ public interface IAssociationEndConfigurator extends IReferenceElementConfigurat
 
     /**
      * 配置关联端映射(覆盖现有配置)
+     * override为true时先清空已有的映射再添加，否则按“反射加入的映射集合与现有映射一一对应”的规则决定是否添加
      *
      * @param keyAttribute 关联端标识属性的名称
      * @param targetField  上述标识属性的映射字段
@@ -70,6 +71,7 @@ public interface IAssociationEndConfigurator extends IReferenceElementConfigurat
 
     /**
      * 配置关联端映射
+     * override为true时先清空已有的映射再添加，否则按“反射加入的映射集合与现有映射一一对应”的规则决定是否添加
      *
      * @param keyAttribute 关联端标识属性的名称
      * @param targetField  上述标识属性的映射字段
@@ -80,7 +82,7 @@ public interface IAssociationEndConfigurator extends IReferenceElementConfigurat
     /**
      * 指示是否将当前关联端作为伴随端
      * 设置当前端为伴随端会将之前设置的伴随端改设不作为伴随端。
-     * 当override为false时，其它端只要任意一端已设置为伴随端，本方法就不再执行设置操作。
+     * override为false时，其它端只要任意一端已设置为伴随端，本方法就不再执行设置操作。
      *
      * @param value 是否伴随
      */
@@ -89,7 +91,7 @@ public interface IAssociationEndConfigurator extends IReferenceElementConfigurat
     /**
      * 指示是否将当前关联端作为伴随端
      * 设置当前端为伴随端会将之前设置的伴随端改设不作为伴随端。
-     * 当override为false时，其它端只要任意一端已设置为伴随端，本方法就不再执行设置操作。
+     * override为false时，其它端只要任意一端已设置为伴随端，本方法就不再执行设置操作。
      *
      * @param value    是否伴随
      * @param override 是否覆盖既有配置
@@ -97,10 +99,11 @@ public interface IAssociationEndConfigurator extends IReferenceElementConfigurat
     void asCompanionI(boolean value, boolean override);
 
     /**
-     * 生成基于当前关联定义的关联引用的配置器，如果配置器已存在返回该配置器。
+     * 获取基于当前关联定义的关联引用的配置器，如果配置器已存在返回该配置器，不存在时返回null（本方法不会新建配置器）。
+     * 若关联端的实体类型上存在与关联端同名的属性，会同时通过propInfo返回该属性访问器。
      *
-     * @param propInfo 返回关联引用的访问器，如果关联引用没有访问器返回null
-     * @return 当前关联定义的关联引用的配置器
+     * @param propInfo 返回关联引用的访问器（入参本身不被使用，仅作为返回访问器的载体）
+     * @return 当前关联定义的关联引用的配置器，未配置时为null
      */
     IAssociationReferenceConfigurator associationReferenceI(ObjectReferencePack<Property> propInfo);
 }

@@ -101,7 +101,13 @@ public class SerializationObjectDataModelDeSerializer {
                     parameterValues.add(value);
                 }
 
-                Object obj = type.getConstructor().construct(parameterValues.toArray());
+                //使用构造函数参数创建对象
+                Object obj;
+                try {
+                    obj = type.getConstructor().construct(parameterValues.toArray());
+                } catch (Exception ex) {
+                    throw new IllegalArgumentException("使用" + type.getClrType() + "配置的构造函数参数反序列化时出错,请参考内部异常检查参数配置.", ex);
+                }
 
                 //处理属性
                 for (SerializationAttribute attribute : type.getAttributes()) {
@@ -178,7 +184,7 @@ public class SerializationObjectDataModelDeSerializer {
                                 }
 
                                 //设置值
-                                if (results.size() > 0)
+                                if (!results.isEmpty())
                                     //如果是多值的属性 直接设置 否则 设置首个
                                     refElement.setValue(obj, refElement.getMultiple() ? results : results.get(0));
                             }

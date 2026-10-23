@@ -401,13 +401,13 @@ public class SqlStorageStructMappingProvider implements IStorageStructMappingPro
                     sql = "SELECT TOP 1 [" + tableName + "].[" + field.getName() + "] FROM [" + tableName + "]";
                     break;
                 case MySql:
-                    sql = "SELECT `" + tableName + "`.`" + field.getName() + "` FROM `" + tableName + "` LIMIT 0,1";
+                    sql = "SELECT `" + tableName + "`.`" + field.getName() + "` FROM `" + tableName + "` LIMIT 0,0";
                     break;
                 case PostgreSql:
-                    sql = "SELECT \"" + tableName + "\".\"" + field.getName() + "\" FROM \"" + tableName + "\" LIMIT 0 OFFSET 1";
+                    sql = "SELECT \"" + tableName + "\".\"" + field.getName() + "\" FROM \"" + tableName + "\" LIMIT 0 OFFSET 0";
                     break;
                 case Sqlite:
-                    sql = "SELECT  `" + tableName + "`.`" + field.getName() + "` FROM `" + tableName + "` LIMIT 0,1";
+                    sql = "SELECT  `" + tableName + "`.`" + field.getName() + "` FROM `" + tableName + "` LIMIT 0,0";
                     break;
                 default:
                     throw new IllegalArgumentException("未知的数据源类型" + this.executor.getSourceType());

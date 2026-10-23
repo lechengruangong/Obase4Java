@@ -546,7 +546,12 @@ public abstract class StructuralType extends TypeBase {
         //取出所有的值
         Object[] paraValues = paras == null ? new Object[0] : paras.stream().map(argGetter::invoke).toArray();
 
-        Object resultObj = this.constructor.construct(paraValues);
+        Object resultObj;
+        try {
+            resultObj = this.constructor.construct(paraValues);
+        } catch (Exception ex) {
+            throw new IllegalArgumentException("使用" + this.getClrType() + "配置的构造函数参数反持久化时出错,请参考内部异常检查参数配置.", ex);
+        }
 
         List<Attribute> attrs = this.getAttributes();
         if (this.constructor instanceof AbstractConstructor) {
@@ -830,7 +835,7 @@ public abstract class StructuralType extends TypeBase {
         if (derivedType.getConcreteTypeSign() != null) {
             for (StructuralType derived : this.derivedTypes) {
                 if (derived.getConcreteTypeSign() != null && !derived.getConcreteTypeSign().getItem2().getClass().equals(derivedType.getConcreteTypeSign().getItem2().getClass()))
-                    throw new IllegalArgumentException("" + derivedType.getName() + "与" + derived.getName() + "均为" + this.derivingFrom.getName() + "的继承类,但判别字段类型不相符.");
+                    throw new IllegalArgumentException(derivedType.getName() + "与" + derived.getName() + "均为" + this.derivingFrom.getName() + "的继承类,但判别字段类型不相符.");
             }
         }
 

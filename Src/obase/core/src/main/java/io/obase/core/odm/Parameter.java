@@ -150,6 +150,12 @@ public class Parameter {
      * @return 构造参数的类型
      */
     public Class<?> getType() {
-        return this.getElement().getValueType().getClrType();
+        TypeElement element = this.getElement();
+        //绑定元素不存在 通常是因为Map时写错了成员名
+        if (element == null)
+            throw new IllegalArgumentException("构造函数参数" + this.name + "绑定的元素“" + this.elementName + "”不存在于类型"
+                    + (this.constructor.getInstanceType() == null ? null : this.constructor.getInstanceType().getClrType().getName())
+                    + "中，请检查Map配置的成员名是否正确。");
+        return element.getValueType().getClrType();
     }
 }

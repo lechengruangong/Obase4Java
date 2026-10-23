@@ -76,7 +76,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
     /**
      * 是否已启用延迟加载
      *
-     * @return 已启用延迟加载
+     * @return 是否已启用延迟加载
      */
     @Override
     public boolean getEnableLazyLoadingI() {
@@ -95,6 +95,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
 
     /**
      * 设置是否支持延迟加载
+     * 仅当override为true时生效
      *
      * @param enableLazyLoading 是否支持延迟加载
      * @param override          是否覆盖既有配置
@@ -117,6 +118,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
 
     /**
      * 指定关联或关联端的加载优先级，数值小者先加载
+     * 仅当override为true时生效
      *
      * @param loadingPriority 加载优先级
      * @param override        是否覆盖既有配置
@@ -240,7 +242,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
     /**
      * 使用成员名称和触发类型为引用元素创建加载触发器(覆盖现有配置)
      *
-     * @param memberName  成员名册
+     * @param memberName  成员名称
      * @param triggerType 触发类型
      */
     @Override
@@ -249,9 +251,9 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
     }
 
     /**
-     * 使用成员名称和触发类型为引用元素创建加载触发器(覆盖现有配置)
+     * 使用成员名称和触发类型为引用元素创建加载触发器
      *
-     * @param memberName  成员名册
+     * @param memberName  成员名称
      * @param triggerType 触发类型
      * @param override    是否覆盖既有配置
      */
@@ -268,7 +270,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
     }
 
     /**
-     * 使用成员名称为引用元素创建加载触发器(覆盖现有配置)
+     * 使用与引用元素同名的成员为引用元素创建加载触发器(覆盖现有配置)
      *
      * @param triggerType 触发类型
      */
@@ -278,7 +280,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
     }
 
     /**
-     * 使用成员名称为引用元素创建加载触发器
+     * 使用与引用元素同名的成员为引用元素创建加载触发器
      *
      * @param triggerType 触发类型
      * @param override    是否覆盖既有配置
@@ -297,6 +299,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
 
     /**
      * 为引用元素创建加载触发器(覆盖现有配置)
+     * 使用与引用元素同名的属性访问器创建Property-Get型加载触发器
      */
     @Override
     public void hasLoadingTriggerI() {
@@ -359,10 +362,11 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
 
     /**
      * 使用一个能触发引用加载的属性访问器为引用元素创建加载触发器
+     * 传入Method类型时抛出IllegalArgumentException
      *
      * @param property    触发引用加载的属性访问器
      * @param triggerType 要创建的加载触发器的类型
-     * @return 引用加载触发器
+     * @return 自身
      */
     public TConfiguration hasLoadingTrigger(Property property, EBehaviorTriggerType triggerType) {
         Method method;
@@ -384,7 +388,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
     /**
      * 使用成员名称和触发类型为引用元素创建加载触发器
      *
-     * @param memberName  成员名册
+     * @param memberName  成员名称
      * @param triggerType 触发类型
      * @return 自身
      */
@@ -394,7 +398,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
     }
 
     /**
-     * 使用成员名称为引用元素创建加载触发器
+     * 使用与引用元素同名的属性访问器为引用元素创建加载触发器
      *
      * @param triggerType 触发类型
      * @return 自身
@@ -406,6 +410,7 @@ public abstract class ReferenceElementConfiguration<TObject, TConfiguration exte
 
     /**
      * 为引用元素创建加载触发器
+     * 使用与引用元素同名的属性访问器创建Property-Get型加载触发器
      *
      * @return 自身
      */

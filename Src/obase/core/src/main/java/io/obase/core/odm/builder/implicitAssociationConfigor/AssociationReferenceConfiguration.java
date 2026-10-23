@@ -70,7 +70,8 @@ public class AssociationReferenceConfiguration<TEntity, TReferred> extends io.ob
 
     /**
      * 根据元素配置项包含的元数据信息创建元素实例
-     * 本方法由派生类实现
+     * 关联型为空时通过隐式关联建造器获取关联型；未配置元组标准化器时，两方关联使用TwoAssociationTupleStandardizer，
+     * 多方关联使用MultiAssociationTupleStandardizer。创建时会把取值器/设值器替换为处理元组标准化的包装器后再交给基类创建
      *
      * @param model 对象数据模型
      * @return 类型元素

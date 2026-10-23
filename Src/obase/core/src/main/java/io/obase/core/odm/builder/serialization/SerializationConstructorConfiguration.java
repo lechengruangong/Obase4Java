@@ -61,6 +61,8 @@ public class SerializationConstructorConfiguration<TStructural> {
 
     /**
      * 配置构造函数的参数
+     * 参数按调用顺序依次对应构造函数的第0、1、2…个参数（索引形如“#0”），超出构造函数实际参数个数时抛出IllegalArgumentException；
+     * needStorage为true时值类型必须是Obase基元类型；未提供值转换委托时配置的值类型必须与对应构造参数的类型完全一致，否则抛出IllegalArgumentException
      *
      * @param field       取值字段
      * @param valueType   取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
@@ -73,6 +75,8 @@ public class SerializationConstructorConfiguration<TStructural> {
 
     /**
      * 配置构造函数的参数
+     * 参数按调用顺序依次对应构造函数的第0、1、2…个参数（索引形如“#0”），超出构造函数实际参数个数时抛出IllegalArgumentException；
+     * needStorage为true时值类型必须是Obase基元类型；未提供值转换委托时配置的值类型必须与对应构造参数的类型完全一致，否则抛出IllegalArgumentException
      *
      * @param field        取值字段
      * @param valueType    取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
@@ -89,6 +93,8 @@ public class SerializationConstructorConfiguration<TStructural> {
 
     /**
      * 配置构造函数的参数
+     * 参数按调用顺序依次对应构造函数的第0、1、2…个参数（索引形如“#0”），超出构造函数实际参数个数时抛出IllegalArgumentException；
+     * needStorage为true时值类型必须是Obase基元类型；未提供值转换委托时配置的值类型必须与对应构造参数的类型完全一致，否则抛出IllegalArgumentException
      *
      * @param getValue    取值委托
      * @param valueType   取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
@@ -101,6 +107,8 @@ public class SerializationConstructorConfiguration<TStructural> {
 
     /**
      * 配置构造函数的参数
+     * 参数按调用顺序依次对应构造函数的第0、1、2…个参数（索引形如“#0”），超出构造函数实际参数个数时抛出IllegalArgumentException；
+     * needStorage为true时值类型必须是Obase基元类型；未提供值转换委托时配置的值类型必须与对应构造参数的类型完全一致，否则抛出IllegalArgumentException
      *
      * @param getValue     取值委托
      * @param valueType    取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
@@ -117,6 +125,8 @@ public class SerializationConstructorConfiguration<TStructural> {
 
     /**
      * 配置构造函数的参数
+     * 参数按调用顺序依次对应构造函数的第0、1、2…个参数（索引形如“#0”），超出构造函数实际参数个数时抛出IllegalArgumentException；
+     * needStorage为true时值类型必须是Obase基元类型；未提供值转换委托时配置的值类型必须与对应构造参数的类型完全一致，否则抛出IllegalArgumentException
      *
      * @param valueGetter 取值器
      * @param valueType   取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
@@ -129,6 +139,8 @@ public class SerializationConstructorConfiguration<TStructural> {
 
     /**
      * 配置构造函数的参数
+     * 参数按调用顺序依次对应构造函数的第0、1、2…个参数（索引形如“#0”），超出构造函数实际参数个数时抛出IllegalArgumentException；
+     * needStorage为true时值类型必须是Obase基元类型；未提供值转换委托时配置的值类型必须与对应构造参数的类型完全一致，否则抛出IllegalArgumentException
      *
      * @param valueGetter  取值器
      * @param valueType    取得的值类型 如果设置needStorage为true 则在序列化时会检查取值器取得的值是否是此类型的
@@ -157,6 +169,7 @@ public class SerializationConstructorConfiguration<TStructural> {
 
     /**
      * 创建序列化实体类型构造器
+     * 已配置的参数以“#序号”为键放入构造器的参数集合中
      *
      * @return 序列化实体类型构造器
      */

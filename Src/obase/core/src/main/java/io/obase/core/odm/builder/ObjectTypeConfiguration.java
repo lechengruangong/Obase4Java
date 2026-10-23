@@ -241,7 +241,7 @@ public abstract class ObjectTypeConfiguration<TObject, TConfiguration extends Ob
     }
 
     /**
-     * 设置版本标识属性集（版本键）。每调用一次本方法将追加一个版本标识属性。(覆盖现有配置)
+     * 设置版本标识属性集（版本键）。每调用一次本方法将追加一个版本标识属性(覆盖现有配置)
      *
      * @param attribute 属性的名称
      */
@@ -251,7 +251,7 @@ public abstract class ObjectTypeConfiguration<TObject, TConfiguration extends Ob
     }
 
     /**
-     * 设置版本标识属性集（版本键）。每调用一次本方法将追加一个版本标识属性。
+     * 设置版本标识属性集（版本键）。override为true时先清空已有的版本标识属性再追加，否则直接追加
      *
      * @param attribute 属性的名称
      * @param override  是否覆盖既有配置
@@ -368,6 +368,7 @@ public abstract class ObjectTypeConfiguration<TObject, TConfiguration extends Ob
 
     /**
      * 根据lambda表达式包含的信息设置对象在关系数据库中的存储顺序
+     * 每调用一次追加一个排序依据，且以倒序（降序）方式追加
      *
      * @param get       一个lambda表达式，用于指定要作为排序依据的属性
      * @param <TResult> 属性类型

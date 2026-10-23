@@ -64,6 +64,9 @@ public class AttributeConfiguration<TStructural>
     private char mappingConnectionChar = (char) -1;
     /**
      * 字符串的最大长度（字符数），仅当属性类型为字符串时有效。
+     * 内部实际保存的是“最大字符数 × 8”的值长度（以位为单位），0表示未设置。
+     * 默认值为0（未设置），模型构建时会把0写入属性的值长度；由SQL结构映射生成字段时，
+     * 值长度除以8仍为0则按40个字符处理，因此未配置的最大字符数最终体现为数据库字段的默认长度40（SQLite不限制长度）
      */
     private int maxCharNumber;
     /**
@@ -101,6 +104,7 @@ public class AttributeConfiguration<TStructural>
      *
      * @param name              元素（属性、关联引用、关联端）名称
      * @param dataType          数据类型
+     * @param structuralType    属性所属的结构化类型
      * @param typeConfiguration 创建当前元素配置项的类型配置项。
      */
     protected AttributeConfiguration(String name, Class<?> dataType, Class<TStructural> structuralType, StructuralTypeConfiguration<TStructural> typeConfiguration) {
@@ -124,9 +128,9 @@ public class AttributeConfiguration<TStructural>
     }
 
     /**
-     * 获取行为触发器，对于属性是指修改触发器，对于关联引用和关联端是加载触发器
+     * 获取行为触发器，属性配置项返回的是修改触发器集合（未设置时返回空集合，不会返回null）
      *
-     * @return 行为触发器
+     * @return 修改触发器集合
      */
     @Override
     public List<IBehaviorTrigger> getBehaviorTriggers() {
@@ -467,8 +471,13 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 设置最大字符数
+     * 仅属性数据类型为String时有效，否则抛出IllegalArgumentException；传入值会乘以8后作为属性的值长度（以位为单位）。
+     * 未配置时最大字符数为0（即未设置），因此构造属性时其值长度被置为0；
+     * 由SQL结构映射生成字段时，值长度为0按40个字符处理，即数据库字段的默认长度为40
+     * （生成表结构时按数据库区分：MySQL与PostgreSQL为 类型(40)，超过255的为Text；SqlServer为 类型(40)，超过500的为[Text]；SQLite不限制长度）。
+     * 已设置的值不会因为未再次配置而丢失，只有显式配置为0才会把值长度改回0
      *
-     * @param maxCharNumber 最大字符数 只有1到255是有效的 如果设置为0 会被设置为255 如果超过255 会被设置为Text字段
+     * @param maxCharNumber 最大字符数，不能为负值，否则抛出IllegalArgumentException
      */
     @Override
     public void hasMaxCharNumberI(int maxCharNumber) {
@@ -477,8 +486,13 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 设置最大字符数
+     * 仅属性数据类型为String时有效，否则抛出IllegalArgumentException；传入值会乘以8后作为属性的值长度（以位为单位）。
+     * 未配置时最大字符数为0（即未设置），因此构造属性时其值长度被置为0；
+     * 由SQL结构映射生成字段时，值长度为0按40个字符处理，即数据库字段的默认长度为40
+     * （生成表结构时按数据库区分：MySQL与PostgreSQL为 类型(40)，超过255的为Text；SqlServer为 类型(40)，超过500的为[Text]；SQLite不限制长度）。
+     * override为false时，仅在当前最大字符数仍为0（未设置）时才生效
      *
-     * @param maxCharNumber 最大字符数 只有1到255是有效的 如果设置为0 会被设置为255 如果超过255 会被设置为Text字段
+     * @param maxCharNumber 最大字符数，不能为负值，否则抛出IllegalArgumentException
      * @param override      是否覆盖既有配置
      */
     @Override
@@ -494,9 +508,9 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 设置精度
-     * 只支持为映射类型decimal设置精度
+     * 仅属性的数据类型为BigDecimal（decimal）时有效，否则抛出IllegalArgumentException
      *
-     * @param precision 以小数位数表示的精度，0表示小数点后没有位数。精度最大值28
+     * @param precision 以小数位数表示的精度，0表示小数点后没有位数。精度不能为负且最大值为28，否则抛出IllegalArgumentException
      */
     @Override
     public void hasPrecisionI(byte precision) {
@@ -505,9 +519,10 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 设置精度
-     * 只支持为映射类型decimal设置精度
+     * 仅属性的数据类型为BigDecimal（decimal）时有效，否则抛出IllegalArgumentException
+     * override为false时，仅在当前精度仍为0（未设置）时才生效
      *
-     * @param precision 以小数位数表示的精度，0表示小数点后没有位数。精度最大值28
+     * @param precision 以小数位数表示的精度，0表示小数点后没有位数。精度不能为负且最大值为28，否则抛出IllegalArgumentException
      * @param override  是否覆盖既有配置
      */
     @Override
@@ -550,7 +565,7 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 设置修改触发器
-     * 每次调用本方法将追加一个触发器
+     * 每次调用本方法将追加一个触发器（相同的修改触发器只会保留一个）
      *
      * @param changeTrigger 触发器
      * @return 自身
@@ -575,6 +590,7 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 使用一个能触发属性修改的属性访问器为属性创建修改触发器
+     * 传入Method类型时抛出IllegalArgumentException
      *
      * @param property    触发属性修改的属性访问器
      * @param triggerType 要创建的触发器类型
@@ -695,9 +711,13 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 最大字符数
-     * 仅限字符串类型
+     * 仅限字符串类型，否则抛出IllegalArgumentException；传入值会乘以8后作为属性的值长度（以位为单位）。
+     * 未配置时最大字符数为0（即未设置），因此构造属性时其值长度被置为0；
+     * 由SQL结构映射生成字段时，值长度为0按40个字符处理，即数据库字段的默认长度为40
+     * （生成表结构时按数据库区分：MySQL与PostgreSQL为 类型(40)，超过255的为Text；SqlServer为 类型(40)，超过500的为[Text]；SQLite不限制长度）。
+     * 已设置的值不会因为未再次配置而丢失，只有显式配置为0才会把值长度改回0
      *
-     * @param maxCharNumber 最大字符数 只有1到255是有效的 如果设置为0 会被设置为255 如果超过255 会被设置为Text字段
+     * @param maxCharNumber 最大字符数，不能为负值，否则抛出IllegalArgumentException
      * @return 自身
      */
     public AttributeConfiguration<TStructural> hasMaxCharNumber(int maxCharNumber) {
@@ -713,9 +733,9 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 设置精度
-     * 只支持为映射类型decimal设置精度
+     * 只支持为映射类型decimal（BigDecimal）设置精度，其他类型抛出IllegalArgumentException
      *
-     * @param precision 以小数位数表示的精度，0表示小数点后没有位数。精度最大值28
+     * @param precision 以小数位数表示的精度，0表示小数点后没有位数。精度不能为负且最大值为28，否则抛出IllegalArgumentException
      * @return 自身
      */
     public AttributeConfiguration<TStructural> hasPrecision(byte precision) {
@@ -783,7 +803,8 @@ public class AttributeConfiguration<TStructural>
 
     /**
      * 设置是否使用预制的序列化方案基类进行序列化
-     * 如果设置为true 则根据进行配置的序列化模型进行序列化 否则 只将原始值进行序列化
+     * 如果设置为true 则启用序列化模型：取值器由SerializedModelValueGetter包装、设值器由SerializedModelValueSetter包装
+     * 启用前必须先通过useSerializer设置序列化器，且需要通过SerializationEntityConfiguration配置对应的序列化模型，否则取值或建模时抛出异常
      *
      * @param use 是否使用序列化模型进行序列化
      * @return 当前属性配置

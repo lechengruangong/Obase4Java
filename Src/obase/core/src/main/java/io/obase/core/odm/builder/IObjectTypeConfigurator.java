@@ -116,14 +116,14 @@ public interface IObjectTypeConfigurator extends IStructuralTypeConfigurator {
     void hasNotifyUpdateI(boolean notifyUpdate, boolean override);
 
     /**
-     * 设置版本标识属性集（版本键）。每调用一次本方法将追加一个版本标识属性。(覆盖现有配置)
+     * 设置版本标识属性集（版本键）。每调用一次本方法将追加一个版本标识属性(覆盖现有配置)
      *
      * @param attribute 属性的名称
      */
     void hasVersionAttributeI(String attribute);
 
     /**
-     * 设置版本标识属性集（版本键）。每调用一次本方法将追加一个版本标识属性。
+     * 设置版本标识属性集（版本键）。override为true时先清空已有的版本标识属性再追加，否则直接追加
      *
      * @param attribute 属性的名称
      * @param override  是否覆盖既有配置

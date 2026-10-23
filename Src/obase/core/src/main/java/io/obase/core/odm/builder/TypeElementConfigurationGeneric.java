@@ -59,6 +59,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 为元素配置项设置一个扩展配置器
+     * 每调用一次都会通过无参构造函数创建一个新的扩展配置器并追加到扩展配置器集合中
      *
      * @param configType 扩展配置器的类型，须继承自ElementExtensionConfiguration
      * @return 扩展配置器
@@ -263,6 +264,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用一个能够为类型元素设值的方法为类型元素创建设值器(覆盖现有配置)
+     * 方法必须有且仅有一个参数，否则抛出IllegalArgumentException
      *
      * @param method 为类型元素设值的方法
      * @param mode   设值模式
@@ -274,6 +276,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用一个能够为类型元素设值的方法为类型元素创建设值器
+     * 方法必须有且仅有一个参数，否则抛出IllegalArgumentException
      *
      * @param method   为类型元素设值的方法
      * @param mode     设值模式
@@ -292,7 +295,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
     }
 
     /**
-     * 使用一个能够获取类型元素值的属性访问器为类型元素创建设值器覆盖现有配置)
+     * 使用一个能够获取类型元素值的属性访问器为类型元素创建设值器(覆盖现有配置)
      *
      * @param property 获取元素值的属性访问器
      */
@@ -349,6 +352,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用指定的类成员为类型元素创建设值器(覆盖现有配置)
+     * 只支持公有字段；如果成员是方法，则抛出IllegalArgumentException（暂不支持用方法构造设值器）；都找不到时同样抛出IllegalArgumentException
      *
      * @param memberName 成员的名称
      */
@@ -359,6 +363,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用指定的类成员为类型元素创建设值器
+     * 只支持公有字段；如果成员是方法，则抛出IllegalArgumentException（暂不支持用方法构造设值器）；都找不到时同样抛出IllegalArgumentException
      *
      * @param memberName 成员的名称
      * @param override   是否覆盖既有配置
@@ -377,6 +382,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用与类型元素同名的属性访问器为类型元素创建设值器(覆盖现有配置)
+     * 只支持公有字段；同名的成员是方法时抛出IllegalArgumentException（暂不支持用方法构造设值器）
      */
     @Override
     public void hasValueSetterI() {
@@ -385,6 +391,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用与类型元素同名的属性访问器为类型元素创建设值器
+     * 只支持公有字段；同名的成员是方法时抛出IllegalArgumentException（暂不支持用方法构造设值器）
      *
      * @param override 是否覆盖既有配置
      */
@@ -422,8 +429,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
     }
 
     /**
-     * 使用一个能够获取类型元素值的方法为类型元素创建取值器。
-     * 如果该方法的返回值类型与元素的IsMultiple属性不匹配，则引发异常
+     * 使用一个能够获取类型元素值的方法为类型元素创建取值器
      *
      * @param method 获取元素值的方法
      * @return 自身
@@ -445,6 +451,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用表示类型元素的字段为类型元素创建取值器
+     * 字段类型是否为Iterable（String除外）必须与元素的多重性一致，否则抛出IllegalArgumentException
      *
      * @param field 表示类型元素的字段
      * @return 自身
@@ -463,6 +470,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用指定的类成员为类型元素创建取值器。
+     * 优先按字段处理，找不到字段时按方法处理，两者都没有时抛出IllegalArgumentException
      *
      * @param memberName 成员的名称
      * @return 自身
@@ -483,6 +491,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用一个能够获取类型元素的值且返回值为单个对象的委托为不具备多重性的类型元素创建取值器
+     * 元素具备多重性时抛出IllegalArgumentException
      *
      * @param getValue    获取元素值的委托
      * @param <TProperty> 表示元素的类型。对于属性，它表示属性值类型；对于关联引用，它表示关联类型；对于关联端，它表示关联端的类型。
@@ -497,6 +506,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用一个能够获取类型元素的值且返回值为对象序列的委托为具备多重性的类型元素创建取值器。
+     * 元素不具备多重性时抛出IllegalArgumentException
      *
      * @param getValue    获取元素值的委托
      * @param <TProperty> 表示元素的类型。对于属性，它表示属性值类型；对于关联引用，它表示关联类型；对于关联端，它表示关联端的类型。
@@ -523,6 +533,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用一个能够为类型元素设值的方法为类型元素创建设值器
+     * 方法必须有且仅有一个参数，否则抛出IllegalArgumentException
      *
      * @param method 为类型元素设值的方法
      * @param mode   设值模式
@@ -538,6 +549,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用一个能够为类型元素设值的Property为类型元素创建设值器
+     * 使用属性的set方法构造Assignment模式设值器
      *
      * @param property 为类型元素设值的属性访问器
      * @return 自身
@@ -559,6 +571,7 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
 
     /**
      * 使用指定的类成员为类型元素创建设值器
+     * 只支持公有字段；如果成员是方法，则抛出IllegalArgumentException（暂不支持用方法构造设值器）；都找不到时同样抛出IllegalArgumentException
      *
      * @param memberName 成员的名称
      * @return 自身
@@ -580,11 +593,11 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
     }
 
     /**
-     * 为lambda表达式指示的元素创建设值器，该lambda表达式的主体须为MemberExpression，其访问的成员代表要设值的元素
+     * 为lambda表达式指示的元素创建设值器，使用传入的valueCreator把值序列构造为元素值
      *
      * @param propertyExp  表示属性访问器的Lambda表达式
      * @param valueCreator 元素创建委托
-     * @param <TProperty>  作为lambda表达式主体的MemberExpression的类型
+     * @param <TProperty>  元素值的类型（元素或序列项类型的集合）
      * @param <TElement>   值序列项的类型
      * @return 自身
      */
@@ -594,10 +607,10 @@ public abstract class TypeElementConfigurationGeneric<TStructural,
     }
 
     /**
-     * 为lambda表达式指示的元素创建设值器，该lambda表达式的主体须为MemberExpression，其访问的成员代表要设值的元素
+     * 为lambda表达式指示的元素创建设值器，设值模式为Assignment
      *
      * @param propertyExp 表达式
-     * @param <TProperty> 作为lambda表达式主体的MemberExpression的类型，亦即元素值的类型
+     * @param <TProperty> 元素值的类型
      * @return 自身
      */
     public <TProperty> TConfiguration hasValueSetter(ActionWithTwoArg<TStructural, TProperty> propertyExp) {

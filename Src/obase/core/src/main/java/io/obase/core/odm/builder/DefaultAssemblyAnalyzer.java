@@ -22,7 +22,7 @@ import java.util.Set;
 public class DefaultAssemblyAnalyzer implements IAssemblyAnalyzer {
 
     /**
-     * 存储从程序集解析类型过程中应忽略的类型
+     * 存储解析过程中应忽略的类型（“程序集”在Java中对应一组类型）
      */
     private final HashSet<Class<?>> ignoredTypes;
 
@@ -37,6 +37,7 @@ public class DefaultAssemblyAnalyzer implements IAssemblyAnalyzer {
 
     /**
      * 从指定的程序集提取类型并注册到模型
+     * 参数assembly实际按包名处理，会取出该包下的所有类型再逐个注册（不支持递归子包）
      *
      * @param assembly     要解析的包名
      * @param modelBuilder 建模器
@@ -53,6 +54,8 @@ public class DefaultAssemblyAnalyzer implements IAssemblyAnalyzer {
 
     /**
      * 从指定的类型数组中提取类型并注册到模型
+     * 忽略集合中的类型、已存在配置项的类型、枚举、接口和抽象类都不参与推断；
+     * 其余类型中，定义了符合“标识属性推断”约定访问器的注册为实体型，否则注册为显式关联型（Java中无结构体，不会推断出复杂类型）
      *
      * @param types        指定的类型
      * @param modelBuilder 建模器

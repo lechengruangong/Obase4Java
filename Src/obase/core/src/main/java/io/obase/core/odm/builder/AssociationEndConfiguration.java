@@ -33,7 +33,7 @@ public abstract class AssociationEndConfiguration<TAssociation>
      */
     protected List<AssociationEndMapping> mappings;
     /**
-     * 端的CLR类型
+     * 端的CLR类型（即关联端实体在Java中对应的Class）
      */
     protected Class<?> entityType;
     /**
@@ -50,6 +50,7 @@ public abstract class AssociationEndConfiguration<TAssociation>
      *
      * @param name              元素（属性、关联引用、关联端）名称
      * @param dataType          关联端的实体类型
+     * @param associationType   关联端的关联型类型
      * @param typeConfiguration 创建当前元素配置项的类型配置项。
      */
     protected AssociationEndConfiguration(String name, Class<?> dataType, Class<TAssociation> associationType, AssociationTypeConfiguration<TAssociation> typeConfiguration) {
@@ -71,7 +72,7 @@ public abstract class AssociationEndConfiguration<TAssociation>
     }
 
     /**
-     * 触发器集合
+     * 触发器集合（对于关联端是指加载触发器，未设置时返回空集合）
      *
      * @return 触发器集合
      */
@@ -83,7 +84,7 @@ public abstract class AssociationEndConfiguration<TAssociation>
     }
 
     /**
-     * 获取端的CLR类型
+     * 获取端的CLR类型（即关联端实体在Java中对应的Class）
      *
      * @return 端的CLR类型
      */
@@ -124,13 +125,14 @@ public abstract class AssociationEndConfiguration<TAssociation>
 
     /**
      * 设置关联端映射。
-     * 每次调用此方法将追加一个关联端映射
+     * 每次调用此方法将追加一个关联端映射（如果已存在“字段和目标字段都相同”或“字段和目标字段都不同”的映射，则不会重复加入）
      * 其中keyAttribute为此端的键属性
      * targetField为此端的键属性在关联表中映射的字段
      *
      * @param keyAttribute 此端的标志属性
      * @param targetField  此段在关联表内的映射属性
      * @return 自身
+     * @throws IllegalArgumentException 当前端的实体类型中不包含keyAttribute属性
      */
     public AssociationEndConfiguration<TAssociation> hasMapping(String keyAttribute, String targetField) {
         if (this.mappings == null)
