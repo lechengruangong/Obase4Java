@@ -28,12 +28,18 @@ jobs:
           server-password: SERVER_PASSWORD
           gpg-private-key: ${{ secrets.GPG_SECRET }}
           gpg-passphrase: GPG_PASSPHRASE
-      # 发布
+      # 打印构建工具版本 便于排查发布环境差异
+      - name: Show toolchain versions
+        run: |
+          cd Src
+          cd obase
+          ./mvnw -v
+      # 发布 使用 Maven Wrapper 固定 Maven 版本 避免 runner 镜像升级 Maven 影响发布
       - name: Publish to Apache Maven Central
         run: |
           cd Src
           cd obase
-          mvn deploy -DskipTests
+          ./mvnw deploy -DskipTests
         env:
           SERVER_USERNAME: ${{ secrets.SERVER_USERNAME }}
           SERVER_PASSWORD: ${{ secrets.SERVER_PASSWORD }}
