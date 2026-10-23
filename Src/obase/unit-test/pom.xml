@@ -42,11 +42,11 @@
         <plugins>
             <!-- 发布插件 -->
             <plugin>
-                <groupId>io.github.mavenplugins</groupId>
+                <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
                 <configuration>
                     <!-- 测试项目 不打包 -->
-                    <skipBundling>true</skipBundling>
+                    <skipPublishing>true</skipPublishing>
                 </configuration>
             </plugin>
         </plugins>
