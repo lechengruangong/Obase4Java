@@ -12,6 +12,7 @@ import io.obase.core.odm.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 发生并发冲突时引发异常
@@ -66,7 +67,7 @@ public class ThrowExceptionConflictHandler extends ConcurrentConflictHandler imp
                 if (associationType == null || associationType.getCompanionEnd() == null) continue;
                 companionTypeNames.add(associationType.getCompanionEnd().getEntityType().getClrType().getSimpleName());
             }
-            throw new IllegalArgumentException("发生了伴随关联保存错误:已建立了伴随关联,但参与该关联的关联端对象中存在没有附加到上下文的对象,请检查以下类型的新对象有没有正确的附加:" + String.join(", ", companionTypeNames) + ".");
+            throw new IllegalArgumentException("发生了伴随关联保存错误:已建立了伴随关联,但参与该关联的关联端对象中存在没有附加到上下文的对象,请检查以下类型的新对象有没有正确的附加:" + companionTypeNames.stream().distinct().collect(Collectors.joining(", ")) + ".");
         }
         ObjectType objType = this.getModel().getObjectType(obj.getClass());
         RuntimeException ex = null;
