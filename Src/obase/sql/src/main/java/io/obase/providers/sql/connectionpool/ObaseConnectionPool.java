@@ -174,8 +174,33 @@ public class ObaseConnectionPool implements AutoCloseable {
                 poolSize = configuration.getMaximumPoolSize();
         }
 
+        //必需的配置
         config.setPoolName(name);
         config.setMaximumPoolSize(poolSize);
+
+        //可选的配置 没有配置时不做调整 由HikariCP使用默认值
+        if (configuration == null) return;
+
+        if (configuration.getMinimumIdle() > 0)
+            config.setMinimumIdle(configuration.getMinimumIdle());
+        if (configuration.getConnectionTimeout() > 0)
+            config.setConnectionTimeout(configuration.getConnectionTimeout());
+        if (configuration.getIdleTimeout() > 0)
+            config.setIdleTimeout(configuration.getIdleTimeout());
+        if (configuration.getValidationTimeout() > 0)
+            config.setValidationTimeout(configuration.getValidationTimeout());
+        if (configuration.getKeepaliveTime() > 0)
+            config.setKeepaliveTime(configuration.getKeepaliveTime());
+        if (configuration.getMaxLifetime() > 0)
+            config.setMaxLifetime(configuration.getMaxLifetime());
+        if (configuration.getLeakDetectionThreshold() > 0)
+            config.setLeakDetectionThreshold(configuration.getLeakDetectionThreshold());
+        if (configuration.getAutoCommit() != null)
+            config.setAutoCommit(configuration.getAutoCommit());
+        if (configuration.getReadOnly() != null)
+            config.setReadOnly(configuration.getReadOnly());
+        if (!Utils.getStringIsEmpty(configuration.getConnectionTestQuery()))
+            config.setConnectionTestQuery(configuration.getConnectionTestQuery());
     }
 
     /**
