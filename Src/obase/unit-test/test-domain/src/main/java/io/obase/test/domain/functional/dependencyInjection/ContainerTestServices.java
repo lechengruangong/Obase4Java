@@ -5,7 +5,7 @@
 │　版权所有：武汉乐程软工科技有限公司
 └──────────────────────────────────────────────────────────────┘
 */
-package io.obase.test.core.dependency.injection;
+package io.obase.test.domain.functional.dependencyInjection;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 依赖注入容器与作用域测试用的服务类型
  * <p>
  * 这些服务在ConfigSetUp中注册,测试用例只负责从已建好的容器中获取.
- * 放在本包而不是{@code io.obase.test.domain}下,是因为该包会被整体注册进对象数据模型.
+ * 本包会被整体注册进对象数据模型,故这些类型在CoreModelRegister中逐个忽略.
  */
 public final class ContainerTestServices {
 

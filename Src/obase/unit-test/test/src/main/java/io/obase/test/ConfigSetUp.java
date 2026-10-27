@@ -6,7 +6,6 @@ import io.obase.multi.tenant.ITenantIdReader;
 import io.obase.providers.sql.EDataSource;
 import io.obase.providers.sql.connectionpool.IObaseConnectionPoolConfiguration;
 import io.obase.test.configuration.TestCaseSourceConfigurationManager;
-import io.obase.test.core.dependency.injection.ContainerTestServices;
 import io.obase.test.domain.functional.dependencyInjection.*;
 import io.obase.test.infrastructure.ObasePreHeater;
 import io.obase.test.infrastructure.configuration.ObaseConnectionPoolConfiguration;

@@ -90,6 +90,29 @@ public class CoreModelRegister {
         modelBuilder.ignore(AnalyserB.class);
         modelBuilder.ignore(AnalyserC.class);
         modelBuilder.ignore(Component.class);
+        //依赖注入容器与作用域测试用的服务类型 不参与建模
+        modelBuilder.ignore(ContainerTestServices.class);
+        modelBuilder.ignore(ContainerTestServices.DisposalLog.class);
+        modelBuilder.ignore(ContainerTestServices.ServiceA.class);
+        modelBuilder.ignore(ContainerTestServices.ServiceB.class);
+        modelBuilder.ignore(ContainerTestServices.Dependency.class);
+        modelBuilder.ignore(ContainerTestServices.NeedsDependency.class);
+        modelBuilder.ignore(ContainerTestServices.NeedsUnregistered.class);
+        modelBuilder.ignore(ContainerTestServices.FactoryOnly.class);
+        modelBuilder.ignore(ContainerTestServices.CyclicA.class);
+        modelBuilder.ignore(ContainerTestServices.CyclicB.class);
+        modelBuilder.ignore(ContainerTestServices.SlowSingleton.class);
+        modelBuilder.ignore(ContainerTestServices.Repository.class);
+        modelBuilder.ignore(ContainerTestServices.Tracked.class);
+        modelBuilder.ignore(ContainerTestServices.LoggedA.class);
+        modelBuilder.ignore(ContainerTestServices.LoggedB.class);
+        modelBuilder.ignore(ContainerTestServices.OuterItem.class);
+        modelBuilder.ignore(ContainerTestServices.InnerItem.class);
+        modelBuilder.ignore(ContainerTestServices.GrandchildItem.class);
+        modelBuilder.ignore(ContainerTestServices.ScopedOnly.class);
+        modelBuilder.ignore(ContainerTestServices.ScopedDisposable.class);
+        modelBuilder.ignore(ContainerTestServices.ScopedWithTransient.class);
+        modelBuilder.ignore(ContainerTestServices.SingletonNeedsScoped.class);
 
         //单独注册几个类型
         modelBuilder.registerType(School.class, Student.class);
