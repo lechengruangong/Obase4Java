@@ -8,10 +8,6 @@
 */
 package io.obase.core.dependency.injection;
 
-import io.obase.core.common.Utils;
-
-import java.lang.reflect.Field;
-
 /**
  * 服务定义
  */
@@ -67,7 +63,7 @@ public class ServiceDefinition {
      * @param <TServiceImplement> 实现类类型
      * @return 服务定义
      */
-    public static <TService, TServiceImplement extends TService> ServiceDefinition singleton(Class<TService> serviceType, Class<TServiceImplement> implementType) {
+    public static <TService, TServiceImplement extends TService> ServiceDefinition singletonService(Class<TService> serviceType, Class<TServiceImplement> implementType) {
         return new ServiceDefinition(serviceType, implementType, null, EServiceLifetime.Singleton);
     }
 
@@ -79,7 +75,7 @@ public class ServiceDefinition {
      * @param <TService>  服务类型
      * @return 服务定义
      */
-    public static <TService> ServiceDefinition singleton(Class<TService> serviceType) {
+    public static <TService> ServiceDefinition singletonService(Class<TService> serviceType) {
         return new ServiceDefinition(serviceType, null, null, EServiceLifetime.Singleton);
     }
 
@@ -92,7 +88,7 @@ public class ServiceDefinition {
      * @param <TService>  服务类型
      * @return 服务定义
      */
-    public static <TService> ServiceDefinition singleton(Class<TService> serviceType, ServiceFactory<TService> factory) {
+    public static <TService> ServiceDefinition singletonService(Class<TService> serviceType, ServiceFactory<TService> factory) {
         return new ServiceDefinition(serviceType, null, factory, EServiceLifetime.Singleton);
     }
 
@@ -107,7 +103,7 @@ public class ServiceDefinition {
      * @param <TServiceImplement> 实现类类型
      * @return 服务定义
      */
-    public static <TService, TServiceImplement extends TService> ServiceDefinition singleton(Class<TService> serviceType, Class<TServiceImplement> implementType, ServiceFactory<TService> factory) {
+    public static <TService, TServiceImplement extends TService> ServiceDefinition singletonService(Class<TService> serviceType, Class<TServiceImplement> implementType, ServiceFactory<TService> factory) {
         return new ServiceDefinition(serviceType, implementType, factory, EServiceLifetime.Singleton);
     }
 
@@ -121,8 +117,8 @@ public class ServiceDefinition {
      * @param <TServiceImplement> 实现类类型
      * @return 服务定义
      */
-    public static <TService, TServiceImplement extends TService> ServiceDefinition transients(Class<TService> serviceType, Class<TServiceImplement> implementType) {
-        return new ServiceDefinition(serviceType, implementType, null, EServiceLifetime.Transients);
+    public static <TService, TServiceImplement extends TService> ServiceDefinition transientService(Class<TService> serviceType, Class<TServiceImplement> implementType) {
+        return new ServiceDefinition(serviceType, implementType, null, EServiceLifetime.Transient);
     }
 
     /**
@@ -133,8 +129,8 @@ public class ServiceDefinition {
      * @param <TService>  服务类型
      * @return 服务定义
      */
-    public static <TService> ServiceDefinition transients(Class<TService> serviceType) {
-        return new ServiceDefinition(serviceType, null, null, EServiceLifetime.Transients);
+    public static <TService> ServiceDefinition transientService(Class<TService> serviceType) {
+        return new ServiceDefinition(serviceType, null, null, EServiceLifetime.Transient);
     }
 
     /**
@@ -146,8 +142,8 @@ public class ServiceDefinition {
      * @param <TService>  服务类型
      * @return 服务定义
      */
-    public static <TService> ServiceDefinition transients(Class<TService> serviceType, ServiceFactory<TService> factory) {
-        return new ServiceDefinition(serviceType, null, factory, EServiceLifetime.Transients);
+    public static <TService> ServiceDefinition transientService(Class<TService> serviceType, ServiceFactory<TService> factory) {
+        return new ServiceDefinition(serviceType, null, factory, EServiceLifetime.Transient);
     }
 
     /**
@@ -161,8 +157,62 @@ public class ServiceDefinition {
      * @param <TServiceImplement> 实现类类型
      * @return 服务定义
      */
-    public static <TService, TServiceImplement extends TService> ServiceDefinition transients(Class<TService> serviceType, Class<TServiceImplement> implementType, ServiceFactory<TService> factory) {
-        return new ServiceDefinition(serviceType, implementType, factory, EServiceLifetime.Transients);
+    public static <TService, TServiceImplement extends TService> ServiceDefinition transientService(Class<TService> serviceType, Class<TServiceImplement> implementType, ServiceFactory<TService> factory) {
+        return new ServiceDefinition(serviceType, implementType, factory, EServiceLifetime.Transient);
+    }
+
+    /**
+     * 构造一个作用域内单例的服务定义
+     * 此服务的创建方式为根据反射获取到的第一个公开或非公开构造函数创建
+     *
+     * @param serviceType         服务类型
+     * @param implementType       实现类类型
+     * @param <TService>          服务类型
+     * @param <TServiceImplement> 实现类类型
+     * @return 服务定义
+     */
+    public static <TService, TServiceImplement extends TService> ServiceDefinition scopedService(Class<TService> serviceType, Class<TServiceImplement> implementType) {
+        return new ServiceDefinition(serviceType, implementType, null, EServiceLifetime.Scoped);
+    }
+
+    /**
+     * 构造一个作用域内单例的服务定义
+     * 此服务的创建方式为根据反射获取到的第一个公开或非公开构造函数创建
+     *
+     * @param serviceType 服务类型
+     * @param <TService>  服务类型
+     * @return 服务定义
+     */
+    public static <TService> ServiceDefinition scopedService(Class<TService> serviceType) {
+        return new ServiceDefinition(serviceType, null, null, EServiceLifetime.Scoped);
+    }
+
+    /**
+     * 构造一个作用域内单例的服务定义
+     * 此服务的创建方式为方法委托创建
+     *
+     * @param serviceType 服务类型
+     * @param factory     构造服务的工厂
+     * @param <TService>  服务类型
+     * @return 服务定义
+     */
+    public static <TService> ServiceDefinition scopedService(Class<TService> serviceType, ServiceFactory<TService> factory) {
+        return new ServiceDefinition(serviceType, null, factory, EServiceLifetime.Scoped);
+    }
+
+    /**
+     * 构造一个作用域内单例的服务定义
+     * 此服务的创建方式为方法委托创建
+     *
+     * @param serviceType         服务类型
+     * @param implementType       实现类类型
+     * @param factory             构造服务的工厂
+     * @param <TService>          服务类型
+     * @param <TServiceImplement> 实现类类型
+     * @return 服务定义
+     */
+    public static <TService, TServiceImplement extends TService> ServiceDefinition scopedService(Class<TService> serviceType, Class<TServiceImplement> implementType, ServiceFactory<TService> factory) {
+        return new ServiceDefinition(serviceType, implementType, factory, EServiceLifetime.Scoped);
     }
 
     /**
@@ -176,6 +226,7 @@ public class ServiceDefinition {
 
     /**
      * 获取实现类型
+     * 注册时未指定实现类型时为服务类型
      *
      * @return 实现类型
      */
@@ -197,30 +248,7 @@ public class ServiceDefinition {
      *
      * @return 构造方法委托
      */
-    public ServiceFactory<?> getFactory() {
+    public ServiceFactory<?> getImplementationFactory() {
         return this.factory;
-    }
-
-    /**
-     * 获取真实实现类型
-     *
-     * @return 真实实现类型
-     */
-    public Class<?> GetImplementType() {
-        if (this.getImplementType() != null)
-            return this.getImplementType();
-
-        if (this.getFactory() != null) {
-            Field field;
-            try {
-                field = this.getClass().getDeclaredField("factory");
-            } catch (NoSuchFieldException e) {
-                throw new RuntimeException("无法获取当前的构造方法委托类型", e);
-            }
-            //factory的第二个类型参数就是结果
-            return Utils.getFieldGenericTypeArguments(field)[1];
-        }
-
-        return this.getServiceType();
     }
 }

@@ -107,7 +107,7 @@ public class DependencyInjectionTest {
         var context = ContextUtils.createContext(dataSource);
 
         var builder = ObaseDependencyInjection.createBuilder(context.getClass());
-        builder.addTransients(ServiceSA.class);
+        builder.addTransient(ServiceSA.class);
         //重复创建会报不能重复创建的InvalidOperationException
         assertThrows(RuntimeException.class, builder::build);
 

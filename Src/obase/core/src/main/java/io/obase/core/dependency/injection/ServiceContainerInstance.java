@@ -69,8 +69,25 @@ public class ServiceContainerInstance implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        for (ServiceContainer container : this.serviceContainers.values()) {
+        //先取快照 避免关闭过程中字典被修改
+        for (ServiceContainer container : new java.util.ArrayList<>(this.serviceContainers.values())) {
             if (container != null) container.close();
+        }
+        //清空登记 关闭之后可以重新建造容器
+        this.serviceContainers.clear();
+    }
+
+    /**
+     * 移除某个登记的服务容器
+     * 仅当登记的就是这个容器时才移除 避免误删重建后的新容器
+     *
+     * @param container 服务容器
+     */
+    void remove(ServiceContainer container) {
+        if (container == null) return;
+
+        for (Class<?> contextType : new java.util.ArrayList<>(this.serviceContainers.keySet())) {
+            if (this.serviceContainers.get(contextType) == container) this.serviceContainers.remove(contextType, container);
         }
     }
 

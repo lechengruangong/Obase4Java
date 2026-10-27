@@ -6,6 +6,7 @@ import io.obase.multi.tenant.ITenantIdReader;
 import io.obase.providers.sql.EDataSource;
 import io.obase.providers.sql.connectionpool.IObaseConnectionPoolConfiguration;
 import io.obase.test.configuration.TestCaseSourceConfigurationManager;
+import io.obase.test.core.dependency.injection.ContainerTestServices;
 import io.obase.test.domain.functional.dependencyInjection.*;
 import io.obase.test.infrastructure.ObasePreHeater;
 import io.obase.test.infrastructure.configuration.ObaseConnectionPoolConfiguration;
@@ -44,12 +45,12 @@ public class ConfigSetUp implements BeforeAllCallback {
                     .addSingleton(ServiceSG.class, container -> new ServiceSG(LocalDateTime.of(2000, 1, 1, 0, 0, 0)))
                     .addSingleton(IServiceSO.class, ServiceSH.class, container -> new ServiceSH(LocalDateTime.of(1999, 1, 1, 0, 0, 0)));
             //注入多例 用于多例测试
-            builder.addTransients(ServiceTA.class).addTransients(ServiceTB.class, ServiceTB.class)
-                    .addTransients(IServiceT.class, ServiceTB.class).addTransients(ServiceTC.class)
-                    .addTransients(IServiceT.class, ServiceTD.class).addTransients(ServiceTD.class)
-                    .addTransients(ServiceTE.class).addTransients(ServiceTF.class)
-                    .addTransients(ServiceTG.class, container -> new ServiceTG(LocalDateTime.of(2000, 1, 1, 0, 0, 0)))
-                    .addTransients(IServiceTO.class, ServiceTH.class, container -> new ServiceTH(LocalDateTime.of(1999, 1, 1, 0, 0, 0)));
+            builder.addTransient(ServiceTA.class).addTransient(ServiceTB.class, ServiceTB.class)
+                    .addTransient(IServiceT.class, ServiceTB.class).addTransient(ServiceTC.class)
+                    .addTransient(IServiceT.class, ServiceTD.class).addTransient(ServiceTD.class)
+                    .addTransient(ServiceTE.class).addTransient(ServiceTF.class)
+                    .addTransient(ServiceTG.class, container -> new ServiceTG(LocalDateTime.of(2000, 1, 1, 0, 0, 0)))
+                    .addTransient(IServiceTO.class, ServiceTH.class, container -> new ServiceTH(LocalDateTime.of(1999, 1, 1, 0, 0, 0)));
 
             //注入消息发送器 用于对象变更通知
             builder.addSingleton(IChangeNoticeSender.class, MessageSender.class);
@@ -57,6 +58,29 @@ public class ConfigSetUp implements BeforeAllCallback {
             //依赖注入连接池配置 可以在日志中看到相关的更改
             builder.addSingleton(IObaseConnectionPoolConfiguration.class, ObaseConnectionPoolConfiguration.class, o ->
                     new ObaseConnectionPoolConfiguration(dataSource + " ConnectionPool"));
+
+            //依赖注入容器与作用域的测试用服务 供ServiceContainerTest使用
+            builder.addSingleton(ContainerTestServices.IService.class, ContainerTestServices.ServiceA.class)
+                    .addSingleton(ContainerTestServices.IService.class, ContainerTestServices.ServiceB.class)//同一服务类型的多个实现
+                    .addSingleton(ContainerTestServices.Dependency.class)
+                    .addSingleton(ContainerTestServices.Dependency.class)//重复注册 只保留一条
+                    .addSingleton(ContainerTestServices.NeedsDependency.class)
+                    .addSingleton(ContainerTestServices.NeedsUnregistered.class)//构造函数参数未注册 获取时才会失败
+                    .addSingleton(ContainerTestServices.CyclicA.class)
+                    .addSingleton(ContainerTestServices.CyclicB.class)//循环依赖 获取时才会失败
+                    .addSingleton(ContainerTestServices.SlowSingleton.class)
+                    .addSingleton(ContainerTestServices.IFactoryOnly.class, container -> new ContainerTestServices.FactoryOnly())
+                    .addTransient(ContainerTestServices.IRepository.class, ContainerTestServices.Repository.class)
+                    .addTransient(ContainerTestServices.Tracked.class)
+                    .addTransient(ContainerTestServices.LoggedA.class)
+                    .addTransient(ContainerTestServices.LoggedB.class)
+                    .addTransient(ContainerTestServices.OuterItem.class)
+                    .addTransient(ContainerTestServices.InnerItem.class)
+                    .addTransient(ContainerTestServices.GrandchildItem.class)
+                    .addScoped(ContainerTestServices.ScopedOnly.class)
+                    .addScoped(ContainerTestServices.ScopedDisposable.class)
+                    .addScoped(ContainerTestServices.ScopedWithTransient.class)
+                    .addSingleton(ContainerTestServices.SingletonNeedsScoped.class);//获取时应当报错
 
             //建造依赖注入容器 结束依赖注入的配置
             builder.build();

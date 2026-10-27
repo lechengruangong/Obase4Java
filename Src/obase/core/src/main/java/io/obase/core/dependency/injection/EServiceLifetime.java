@@ -23,5 +23,12 @@ public enum EServiceLifetime {
      * 多例的
      * 每次使用时创建新的对象
      */
-    Transients
+    Transient,
+
+    /**
+     * 作用域内的单例
+     * 同一个作用域内从始至终使用的都是同一个对象,不同的作用域各自持有自己的对象
+     * 从容器获取时归容器所有,随容器关闭
+     */
+    Scoped
 }
